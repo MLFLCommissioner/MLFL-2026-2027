@@ -142,19 +142,24 @@ function evalOU(g,v,finalOnly){
 }
 // Same rules as the sheet: +1 per correct pick, +3 when both picks in a game hit, a push scores 0, parlay is +20 only if all five legs win.
 function legGame(g,l){if(!g||l.l==null)return g;return Object.assign({},g,l.m==='s'?{sp:l.v==='home'?l.l:-l.l}:{tot:l.l});}
+const ROUNDS=['Wild Card','Divisional','Conference Championships','Super Bowl'];
+const ROUND_SHORT={'Wild Card':'WC','Divisional':'DIV','Conference Championships':'CONF','Super Bowl':'SB'};
+// Postseason rounds score double (+2 per pick, +6 for both in a game). The parlay stays +20 and is only offered when a week has five or more games.
+function weekMult(week){return week&&week.round?2:1;}
+function hasParlay(week){return Object.keys((week&&week.games)||{}).length>=5;}
 function scoreWeek(week,wk,finalOnly){
   const out={spread:0,ou:0,combo:0,parlay:0,parlayState:'none',total:0,correct:0,evaluated:0,per:{},legs:[],pct:null};
-  const games=(week&&week.games)||{},picks=(wk&&wk.p)||{};
+  const games=(week&&week.games)||{},picks=(wk&&wk.p)||{},mult=weekMult(week);out.mult=mult;
   for(const gid in games){
     const g=games[gid],p=picks[gid]||{},sw=evalSpread(g,p.s,finalOnly),ow=evalOU(g,p.o,finalOnly),combo=sw===true&&ow===true;
-    if(combo){out.combo+=3;out.evaluated+=2;out.correct+=2;}
+    if(combo){out.combo+=3*mult;out.evaluated+=2;out.correct+=2;}
     else{
-      if(sw!==null){out.evaluated++;if(sw===true){out.spread++;out.correct++;}}
-      if(ow!==null){out.evaluated++;if(ow===true){out.ou++;out.correct++;}}
+      if(sw!==null){out.evaluated++;if(sw===true){out.spread+=mult;out.correct++;}}
+      if(ow!==null){out.evaluated++;if(ow===true){out.ou+=mult;out.correct++;}}
     }
     out.per[gid]={sw,ow,combo};
   }
-  const legs=(wk&&wk.parlay)||[];
+  const legs=hasParlay(week)?((wk&&wk.parlay)||[]):[];
   if(legs.length===5){
     let miss=false,wins=0;
     for(const l of legs){
@@ -288,6 +293,7 @@ const clone=o=>JSON.parse(JSON.stringify(o==null?{}:o));
 const ls={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 const players=()=>(S.cfg&&S.cfg.players)||[];
 const pname=k=>{const p=players().find(x=>x.key===k);return p?p.name:k;};
+const wname=n=>(S.weeks[n]&&S.weeks[n].round)||('Week '+n);
 const sortedGames=w=>Object.entries((w&&w.games)||{}).sort((a,b)=>(a[1].o||0)-(b[1].o||0));
 const started=g=>g.sa!=null||(g.kick&&Date.now()>=new Date(g.kick).getTime());
 const subWeek=(k,n)=>{const e=S.entries[k];const w=e&&e.weeks&&e.weeks[n];return w&&w.at?w:null;};
@@ -395,8 +401,8 @@ function viewPicks(){
   const n=S.selWeek,week=S.weeks[n];
   let h='';
   const lab=week?(week.label||weekLabel(week)):'';
-  h+='<div class="bar"><h2 class="weekhead">Week '+esc(n)+(lab?' | '+esc(lab):'')+'</h2>';
-  if(nums.length>1)h+='<label class="small muted" for="weeksel">Show week <select id="weeksel">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>Week '+x+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>';
+  h+='<div class="bar"><h2 class="weekhead">'+esc(wname(n))+(lab?' | '+esc(lab):'')+'</h2>';
+  if(nums.length>1)h+='<label class="small muted" for="weeksel">Show week <select id="weeksel">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>';
   h+='</div>';
   if(!week){
     h+='<div class="note"><p><strong>The Week '+esc(n)+' board has not been built yet.</strong></p><p>'+(S.isOwner?'Open the <a href="#commish">Commissioner</a> tab to load this week\'s lines.':'The commissioner will post the lines here. The standings are up to date in the meantime.')+'</p></div>';
@@ -414,6 +420,7 @@ function viewPicks(){
     h+='<p class="muted small">'+(sub.imp?esc(pname(sel))+"'s picks were imported from the Google Sheet. Picks are locked.":esc(pname(sel))+' submitted on '+esc(chi(sub.at,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT. Picks are locked.')+'</p>';
   }else h+='<p class="muted small">'+esc(pname(sel))+' has not submitted picks for this week'+(open?' yet.':'. Picks are closed.')+'</p>';
   if(sub&&sub.manual&&sub.manual.note)h+='<div class="note warn"><p>'+esc(sub.manual.note)+'</p></div>';
+  if(week.round)h+='<p class="muted small"><strong>Postseason: double points.</strong> +2 per correct pick, +6 for both in a game.'+(hasParlay(week)?' The parlay is still worth +20.':' No parlay this round.')+'</p>';
   const draft=editable?getDraft(n,sel):null;
   const wk=editable?{p:draft.p}:sub;
   const sc=scoreWeek(week,sub,false);
@@ -422,7 +429,7 @@ function viewPicks(){
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,wk,sc,editable,visible)).join('')+'</div>';
   h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,editable,visible)+'<div class="stack">'+totalsCard(n,sel,sc,sub)+(editable?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Get my pick code</button>'):'')+'</div></div>';
   h+=weekTable(week,n);
-  h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+1</i> Correct pick</span><span><i class="badge combo">+3</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
+  h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+'+weekMult(week)+'</i> Correct pick</span><span><i class="badge combo">+'+3*weekMult(week)+'</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
   return h;
 }
 function claimCard(){
@@ -443,8 +450,8 @@ function gameCard(gid,g,n,sel,wk,sc,editable,visible){
   let scoreLine;
   if(g.sa!=null&&g.sh!=null){const w=g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie';scoreLine='<div class="score">'+(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+esc(w)+')</div>';}
   else scoreLine='<div class="score pre">'+(started(g)?'In progress':'Not started')+'</div>';
-  const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+1</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
-  const res=r.combo?'<div class="res combo">+3</div>':cell(r.sw)+'<!--o-->'+cell(r.ow);
+  const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+'+sc.mult+'</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
+  const res=r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw)+'<!--o-->'+cell(r.ow);
   const parts=res.split('<!--o-->');
   const hidden=!show&&wk&&wk.p&&wk.p[gid]?'<div class="opt masked" style="grid-column:1 / span 3">Hidden until kickoff</div>':'';
   return '<article class="card game"><header><h3>'+esc(g.away)+' vs '+esc(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+'<div class="rows">'+
@@ -456,6 +463,7 @@ function legLabel(week,code,own){
   return m==='s'?spreadLabel(g,v):g.away+' vs '+g.home+' '+ouLabel(g,v);
 }
 function parlayCard(week,n,sel,sub,draft,sc,editable,visible){
+  if(!hasParlay(week))return '<section class="card"><h3>5 Game Parlay Bonus</h3><div class="pad"><p class="muted">No parlay this week. It needs at least five games on the board.</p></div></section>';
   let h='<section class="card"><h3>5 Game Parlay Bonus (+20 Points)</h3><div class="pad stack">';
   if(editable){
     const opts=[];sortedGames(week).forEach(([gid,g])=>{if(started(g))return;if(g.sp!=null){opts.push(gid+'|s|away',gid+'|s|home');}if(g.tot!=null){opts.push(gid+'|o|over',gid+'|o|under');}});
@@ -474,11 +482,11 @@ function parlayCard(week,n,sel,sub,draft,sc,editable,visible){
   return h+'</div></section>';
 }
 function totalsCard(n,sel,sc,sub){
-  return '<section class="card"><h3>Total Points (Week '+esc(n)+') · '+esc(pname(sel))+'</h3><div class="totals"><span>Spread Points: '+sc.spread+' | O/U Points: '+sc.ou+'</span><span>Same Game Combo Points: '+sc.combo+'</span><span>5 Game Parlay Points: '+sc.parlay+'</span><span class="big">Total Points: '+sc.total+(sc.manualTotal?' *':'')+'</span><span>Correct Pick Percentage: '+(sc.pct==null?'N/A':sc.pct.toFixed(2)+'%')+'</span></div></section>';
+  return '<section class="card"><h3>Total Points ('+esc(wname(n))+') · '+esc(pname(sel))+'</h3><div class="totals"><span>Spread Points: '+sc.spread+' | O/U Points: '+sc.ou+'</span><span>Same Game Combo Points: '+sc.combo+'</span><span>5 Game Parlay Points: '+sc.parlay+'</span><span class="big">Total Points: '+sc.total+(sc.manualTotal?' *':'')+'</span><span>Correct Pick Percentage: '+(sc.pct==null?'N/A':sc.pct.toFixed(2)+'%')+'</span></div></section>';
 }
 function weekTable(week,n){
   const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false)};}).sort((a,b)=>b.sc.total-a.sc.total);
-  return '<section class="card"><h3>Week '+esc(n)+' scoreboard'+(weekComplete(week)?'':' <span class="when">includes games in progress</span>')+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th>Spread</th><th>O/U</th><th>Combo</th><th>Parlay</th><th>Total</th><th>Correct</th></tr></thead><tbody>'+
+  return '<section class="card"><h3>'+esc(wname(n))+' scoreboard'+(weekComplete(week)?'':' <span class="when">includes games in progress</span>')+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th>Spread</th><th>O/U</th><th>Combo</th><th>Parlay</th><th>Total</th><th>Correct</th></tr></thead><tbody>'+
     rows.map(r=>'<tr><td>'+esc(r.p.name)+'</td><td class="l">'+(r.w?'<span class="badge win">In</span>':'<span class="badge">Waiting</span>')+'</td><td>'+r.sc.spread+'</td><td>'+r.sc.ou+'</td><td>'+r.sc.combo+'</td><td>'+r.sc.parlay+'</td><td><strong>'+r.sc.total+'</strong></td><td>'+(r.sc.pct==null?'':r.sc.pct.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
 
@@ -492,10 +500,10 @@ function viewStandings(){
   if(S.cfg.baseLabel)h+='<p class="muted small">'+esc(S.cfg.baseLabel)+'</p>';
   h+='<section class="card"><h3>Points by week</h3>';
   if(!s.nums.length)h+='<div class="pad muted">Weekly results will appear here once the first week is played on this site.</div>';
-  else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">Wk '+n+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
+  else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">'+esc(S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n)+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
     s.list.map(r=>{const p=players().find(x=>x.key===r.key);return '<tr><td>'+esc(r.name)+'</td>'+(hasBase?'<td>'+((p.base&&p.base.points)||0)+'</td>':'')+s.nums.map(n=>'<td class="'+((s.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td>'+r.fut+'</td><td><strong>'+r.points+'</strong></td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">Only final games count here. A gold cell marks the week winner. Tap a week to see every pick.</p>';
   h+='</section>';
-  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></div></section>';
+  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></div></section>';
   return h;
 }
 
@@ -528,7 +536,7 @@ function viewCommish(){
   const n=S.adminWeek,week=S.weeks[n],key=ls.get('mlfl.oddskey')||'';
   const opts=[...new Set(nums.concat([cur,n]))].sort((a,b)=>a-b);
   let h='<h2 class="weekhead">Commissioner</h2>';
-  h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>Week '+x+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(n!==cur?'<button class="btn" data-act="setcurrent">Make Week '+n+' the current week</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="30" value="'+((nums.length?Math.max(...nums):cur-1)+1)+'"></label><button class="btn" data-act="newweek">Start week</button></div><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
+  h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make Week '+n+' the current week</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="30" value="'+((nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
   h+='<section class="card"><h3>Enter a pick code</h3><div class="pad stack"><label for="pcode">Paste the code a player sent you <input type="text" id="pcode" data-f autocomplete="off" size="34"></label><div><button class="btn primary" data-act="loadcode">Load picks</button></div><p class="muted small">The code already says which player and week it is for. You confirm before anything is saved.</p></div></section>';
   if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminBase()+adminFutures();}
   h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
@@ -570,10 +578,10 @@ function collectDraft(n,k){
     const x=d.p[gid]||{},y={};if(x.s&&g.sp!=null){y.s=x.s;made++;}if(x.o&&g.tot!=null){y.o=x.o;made++;}
     if(y.s||y.o)p[gid]=y;
   });
-  const legs=d.parlay.filter(Boolean).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}).filter(l=>week.games[l.g]&&!started(week.games[l.g]));
-  return {p,legs,made,avail};
+  const par=hasParlay(week),legs=par?d.parlay.filter(Boolean).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}).filter(l=>week.games[l.g]&&!started(week.games[l.g])):[];
+  return {p,legs,made,avail,par};
 }
-function draftSummary(c){return '<ul><li>'+c.made+' of '+c.avail+' picks made'+(c.made<c.avail?'. '+(c.avail-c.made===1?'The 1 left blank scores nothing.':'The '+(c.avail-c.made)+' left blank score nothing.'):'.')+'</li><li>'+(c.legs.length===5?'Parlay: all five legs chosen.':'Parlay: '+c.legs.length+' of 5 legs chosen, so no parlay this week.')+'</li></ul>';}
+function draftSummary(c){return '<ul><li>'+c.made+' of '+c.avail+' picks made'+(c.made<c.avail?'. '+(c.avail-c.made===1?'The 1 left blank scores nothing.':'The '+(c.avail-c.made)+' left blank score nothing.'):'.')+'</li>'+(c.par?'<li>'+(c.legs.length===5?'Parlay: all five legs chosen.':'Parlay: '+c.legs.length+' of 5 legs chosen, so no parlay this week.')+'</li>':'')+'</ul>';}
 function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
 const acts={
   async signin(){
@@ -625,7 +633,7 @@ const acts={
     if(subWeek(d.key,d.n)){toast(pname(d.key)+' already has Week '+d.n+' picks in. Unlock them first if this code should replace them.');return;}
     const p={};let made=0,late=0;
     Object.keys(d.p).forEach(gid=>{if(started(week.games[gid])){late+=Object.keys(d.p[gid]).length;return;}p[gid]=d.p[gid];made+=Object.keys(d.p[gid]).length;});
-    const legs=d.parlay.every(l=>!started(week.games[l.g]))?d.parlay:[];
+    const legs=hasParlay(week)&&d.parlay.every(l=>!started(week.games[l.g]))?d.parlay:[];
     if(!made){toast('Every game in that code has already kicked off.');return;}
     confirmBox('Enter Week '+d.n+' picks for '+pname(d.key)+'?','<ul><li>'+made+' picks'+(late?'. '+late+' more were for games that have already kicked off and are left out.':'.')+'</li><li>'+(legs.length===5?'Parlay: five legs.':(d.parlay.length?'Parlay left out because one of its games has kicked off.':'No parlay.'))+'</li></ul>','Submit and lock',async()=>{
       const ok=await saveEntry(d.key,e=>{e.weeks=e.weeks||{};e.weeks[d.n]={p,parlay:legs,at:new Date().toISOString()};});
@@ -643,9 +651,9 @@ const acts={
   async setcurrent(){await saveDoc('league/config',Object.assign(clone(S.cfg),{currentWeek:S.adminWeek}));},
   async newweek(){
     const n=parseInt($('#newweek').value,10);if(!(n>0)){toast('Enter a week number.');return;}
-    if(!S.weeks[n]&&!(await saveDoc('weeks/'+n,{n,open:true,games:{}})))return;
+    if(!S.weeks[n]&&!(await saveDoc('weeks/'+n,{n,open:true,round:$('#newtype').value||'',games:{}})))return;
     await saveDoc('league/config',Object.assign(clone(S.cfg),{currentWeek:n}));
-    S.adminWeek=n;S.selWeek=n;clearForm('newweek');toast('Week '+n+' is now the current week.');requestRender(true);
+    S.adminWeek=n;S.selWeek=n;clearForm('newweek');clearForm('newtype');toast('Week '+n+' is now the current week.');requestRender(true);
   },
   async createweek(){if(await saveDoc('weeks/'+S.adminWeek,{n:S.adminWeek,open:true,games:{}}))requestRender(true);},
   async importodds(){
@@ -703,6 +711,7 @@ document.addEventListener('click',async ev=>{
 document.addEventListener('change',ev=>{
   const el=ev.target;
   if(el.id==='weeksel'){S.selWeek=Number(el.value);requestRender(true);return;}
+  if(el.id==='weektype'){const w=clone(S.weeks[S.adminWeek]);w.round=el.value;saveDoc('weeks/'+S.adminWeek,w).then(ok=>{if(ok)toast(el.value?'Set to '+el.value+': double points.':'Set to regular season.');requestRender(true);});return;}
   if(el.id==='adminweek'){S.adminWeek=Number(el.value);clearForm('g-');S.newRows=[];S.delRows={};requestRender(true);return;}
   if(el.dataset&&el.dataset.act==='leg'){const d=getDraft(S.selWeek,S.selPlayer);d.parlay[Number(el.dataset.i)]=el.value;keepDraft(S.selWeek,S.selPlayer);requestRender(true);}
 });

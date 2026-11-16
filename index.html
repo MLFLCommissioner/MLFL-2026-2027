@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MLFL Pick'em</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a scoreboard. Teal masthead, a wall of game cards that read like the sheet's blocks, results in a right-hand column. */
+:root{
+  --bg:#eef3f3; --surface:#ffffff; --sunk:#e3eaea; --ink:#0f2022; --muted:#586b6d; --line:#cdd8d8;
+  --accent:#0d7f8a; --accent-ink:#ffffff; --board:#10282b; --board-ink:#f1f7f7;
+  --pick:#f7bd0a; --pick-ink:#1d1600; --win:#1b9550; --combo:#9447dc; --miss:#d7372b; --res-ink:#ffffff;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1516; --surface:#152123; --sunk:#1c2b2d; --ink:#e7f0f0; --muted:#93a7a9; --line:#2b3d40;
+    --accent:#3fc1cc; --accent-ink:#04191b; --board:#050b0c; --board-ink:#e7f0f0;
+    --pick:#f2b705; --pick-ink:#1d1600; --win:#27a862; --combo:#a763ea; --miss:#e0483c; --res-ink:#ffffff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1516; --surface:#152123; --sunk:#1c2b2d; --ink:#e7f0f0; --muted:#93a7a9; --line:#2b3d40;
+  --accent:#3fc1cc; --accent-ink:#04191b; --board:#050b0c; --board-ink:#e7f0f0;
+  --pick:#f2b705; --pick-ink:#1d1600; --win:#27a862; --combo:#a763ea; --miss:#e0483c; --res-ink:#ffffff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.mast{background:var(--accent);color:var(--accent-ink)}
+.mast .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-top:14px;padding-bottom:14px}
+.mast h1{font-size:2rem;line-height:1;text-transform:uppercase}
+.mast .sub{font-weight:600;opacity:.9}
+.me{margin-left:auto;font-weight:600;background:rgba(0,0,0,.18);padding:4px 12px;border-radius:999px}
+a{color:var(--accent)}
+nav{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav .wrap{display:flex;gap:4px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.weekhead{font-size:1.9rem;line-height:1.05}
+.note{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);padding:12px 14px;border-radius:6px}
+.note.warn{border-left-color:var(--pick)}
+.note p{margin:0 0 8px}.note p:last-child{margin:0}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:999px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pill[aria-pressed="true"]{background:var(--board);color:var(--board-ink);border-color:var(--board)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.dot.in{background:var(--win)}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card>h3,.game>header{background:var(--sunk);padding:8px 12px;font-size:1.2rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.when{font-family:var(--body);font-size:.85rem;font-weight:600;color:var(--muted)}
+.score{background:var(--board);color:var(--board-ink);font-weight:700;text-align:center;padding:6px 10px}
+.score.pre{font-weight:500;opacity:.85}
+.rows{display:grid;grid-template-columns:1fr 1fr 3.2rem;grid-template-rows:auto auto}
+.opt{border:0;border-top:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);padding:9px 6px 7px;text-align:center;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+button.opt{cursor:pointer}
+button.opt:hover{background:var(--sunk)}
+.opt.picked,button.opt.picked:hover{background:var(--pick);color:var(--pick-ink)}
+.opt.masked{color:var(--muted);font-weight:500;font-size:.85rem}
+.who{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.who span{font-size:.68rem;font-weight:700;background:var(--sunk);color:var(--ink);border-radius:4px;padding:0 4px;line-height:1.4}
+.opt.picked .who span{background:rgba(0,0,0,.16);color:var(--pick-ink)}
+.res{border-top:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--res-ink)}
+.res.none{color:transparent}
+.res.win{background:var(--win)}.res.miss{background:var(--miss)}.res.combo{background:var(--combo);grid-row:1 / span 2;grid-column:3}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;align-items:start}
+.pad{padding:12px}
+.legs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.legs li{display:flex;gap:8px;align-items:center;font-weight:600}
+.legs select{flex:1;min-width:0}
+.mark{width:1.5rem;height:1.5rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--res-ink);background:var(--line);flex:none}
+.mark.win{background:var(--win)}.mark.miss{background:var(--miss)}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;color:var(--res-ink);background:var(--muted)}
+.badge.win{background:var(--win)}.badge.miss{background:var(--miss)}.badge.combo{background:var(--combo)}.badge.pick{background:var(--pick);color:var(--pick-ink)}
+.totals{background:var(--board);color:var(--board-ink);padding:12px;text-align:center;font-weight:700;display:flex;flex-direction:column;gap:4px}
+.totals .big{font-family:var(--display);font-size:1.8rem;line-height:1.1}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tr.lead td{font-weight:700}
+td.winner{background:var(--pick);color:var(--pick-ink);font-weight:700}
+.rank{font-family:var(--display);font-size:1.3rem;color:var(--muted)}
+.meter{height:8px;background:var(--sunk);border-radius:4px;min-width:90px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:6px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--miss)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input[type=text],input[type=number],input[type=datetime-local],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+textarea{width:100%;min-height:90px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem}
+td input[type=text]{width:8.5rem}td input[type=number]{width:4.6rem}
+.stack{display:flex;flex-direction:column;gap:10px}
+.muted{color:var(--muted)}.small{font-size:.88rem}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;font-weight:600}
+.legend span{display:flex;gap:6px;align-items:center}
+.legend i{font-style:normal}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.dialog{background:var(--surface);color:var(--ink);border-radius:10px;max-width:440px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px}
+.dialog h2{font-size:1.5rem}
+.dialog ul{margin:0;padding-left:20px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--board);color:var(--board-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:420px){.mast h1{font-size:1.6rem}.weekhead{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<div class="mast"><div class="wrap"><h1>MLFL Pick'em</h1><span class="sub" id="season"></span><span class="me" id="me" hidden></span></div></div>
+<nav><div class="wrap" id="nav"></div></nav>
+<div class="wrap"><main id="view"><p class="muted">Loading the league…</p></main></div>
+<div id="modal"></div><div id="toast"></div>
+<script>
+/*LOGIC-START*/
+const AFC=['Bills','Dolphins','Patriots','Jets','Ravens','Bengals','Browns','Steelers','Texans','Colts','Jaguars','Titans','Broncos','Chiefs','Raiders','Chargers'];
+const NFC=['Cowboys','Giants','Eagles','Commanders','Bears','Lions','Packers','Vikings','Falcons','Panthers','Saints','Buccaneers','Cardinals','Rams','49ers','Seahawks'];
+const TZ='America/Chicago';
+function fmtLine(n){return n===0?'PK':(n>0?'+':'')+n;}
+function spreadLabel(g,side){const l=side==='away'?-g.sp:g.sp;return fmtLine(l)+' '+(side==='away'?g.away:g.home);}
+function ouLabel(g,v){return (v==='over'?'Over ':'Under ')+g.tot;}
+function hasScore(g,finalOnly){return g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin);}
+function evalSpread(g,side,finalOnly){
+  if(!side||g.sp==null||!hasScore(g,finalOnly))return null;
+  const mine=side==='away'?g.sa:g.sh,opp=side==='away'?g.sh:g.sa,line=side==='away'?-g.sp:g.sp,adj=mine+line;
+  return adj===opp?'push':adj>opp;
+}
+function evalOU(g,v,finalOnly){
+  if(!v||g.tot==null||!hasScore(g,finalOnly))return null;
+  const t=g.sa+g.sh;return t===g.tot?'push':(v==='over'?t>g.tot:t<g.tot);
+}
+// Same rules as the sheet: +1 per correct pick, +3 when both picks in a game hit, a push scores 0, parlay is +20 only if all five legs win.
+function legGame(g,l){if(!g||l.l==null)return g;return Object.assign({},g,l.m==='s'?{sp:l.v==='home'?l.l:-l.l}:{tot:l.l});}
+function scoreWeek(week,wk,finalOnly){
+  const out={spread:0,ou:0,combo:0,parlay:0,parlayState:'none',total:0,correct:0,evaluated:0,per:{},legs:[],pct:null};
+  const games=(week&&week.games)||{},picks=(wk&&wk.p)||{};
+  for(const gid in games){
+    const g=games[gid],p=picks[gid]||{},sw=evalSpread(g,p.s,finalOnly),ow=evalOU(g,p.o,finalOnly),combo=sw===true&&ow===true;
+    if(combo){out.combo+=3;out.evaluated+=2;out.correct+=2;}
+    else{
+      if(sw!==null){out.evaluated++;if(sw===true){out.spread++;out.correct++;}}
+      if(ow!==null){out.evaluated++;if(ow===true){out.ou++;out.correct++;}}
+    }
+    out.per[gid]={sw,ow,combo};
+  }
+  const legs=(wk&&wk.parlay)||[];
+  if(legs.length===5){
+    let miss=false,wins=0;
+    for(const l of legs){
+      const g=legGame(games[l.g],l),r=!g?null:(l.m==='s'?evalSpread(g,l.v,finalOnly):evalOU(g,l.v,finalOnly));
+      out.legs.push(r);if(r===false||r==='push')miss=true;else if(r===true)wins++;
+    }
+    if(miss)out.parlayState='miss';else if(wins===5){out.parlayState='hit';out.parlay=20;}else out.parlayState='pending';
+  }
+  out.total=out.spread+out.ou+out.combo+out.parlay;
+  out.pct=out.evaluated?out.correct/out.evaluated*100:null;
+  // A commissioner-entered result (a week with no picks on file, or a hand-awarded total) overrides the computed one.
+  const man=wk&&wk.manual;
+  if(man){if(man.total!=null){out.total=man.total;out.manualTotal=true;}if(man.pct!=null)out.pct=man.pct;}
+  return out;
+}
+function weekComplete(w){const g=Object.values((w&&w.games)||{});return g.length>0&&g.every(x=>x.fin&&x.sa!=null&&x.sh!=null);}
+function computeSeason(cfg,weeks,entries){
+  const players=(cfg&&cfg.players)||[],rows={},winners={};
+  players.forEach(p=>{const b=p.base||{};rows[p.key]={key:p.key,name:p.name,points:b.points||0,won:b.won||0,cppSum:(b.cpp||0)*(b.weeks||0),cppN:b.weeks||0,byWeek:{},fut:0};});
+  const nums=Object.keys(weeks||{}).map(Number).sort((a,b)=>a-b);
+  for(const n of nums){
+    const w=weeks[n],tot={};let best=-1;
+    for(const p of players){
+      const wk=entries[p.key]&&entries[p.key].weeks&&entries[p.key].weeks[n];
+      if(!wk||!wk.at)continue;
+      const sc=scoreWeek(w,wk,true),r=rows[p.key];
+      r.byWeek[n]=sc.total;r.points+=sc.total;if(sc.pct!=null){r.cppSum+=sc.pct;r.cppN++;}
+      tot[p.key]=sc.total;if(sc.total>best)best=sc.total;
+    }
+    if(weekComplete(w)&&best>=0){winners[n]=Object.keys(tot).filter(k=>tot[k]===best);winners[n].forEach(k=>rows[k].won++);}
+  }
+  const fr=(cfg&&cfg.futuresResult)||{};
+  players.forEach(p=>{
+    const f=entries[p.key]&&entries[p.key].futures,r=rows[p.key];
+    if(f&&f.at){if(fr.afc&&f.afc===fr.afc)r.fut+=10;if(fr.nfc&&f.nfc===fr.nfc)r.fut+=10;if(fr.sb&&f.sb===fr.sb)r.fut+=20;}
+    r.points+=r.fut;r.cpp=r.cppN?r.cppSum/r.cppN:null;
+  });
+  const list=Object.values(rows).sort((a,b)=>b.points-a.points||b.won-a.won||(b.cpp||0)-(a.cpp||0));
+  return {list,winners,nums};
+}
+function chi(iso,opts){return new Intl.DateTimeFormat('en-US',Object.assign({timeZone:TZ},opts)).format(new Date(iso));}
+function kickTag(iso){
+  if(!iso)return '';
+  const d=chi(iso,{weekday:'short'}),h=Number(chi(iso,{hour:'numeric',hourCycle:'h23'}));
+  if(d==='Thu')return 'TNF';if(d==='Mon')return 'MNF';if(d==='Sun'&&h<11)return 'INT';if(d==='Sun'&&h>=18)return 'SNF';return '';
+}
+function kickText(g){if(!g.kick)return g.tag||'';const t=kickTag(g.kick);return chi(g.kick,{weekday:'short',hour:'numeric',minute:'2-digit'})+(t?' · '+t:'');}
+function mascot(full){return String(full).trim().split(' ').pop();}
+// Reads the Odds API "odds" response the sheet used and keeps only the current NFL week (up to Tuesday 1 PM Central).
+function parseOdds(list){
+  if(!Array.isArray(list)||!list.length)throw new Error('That does not look like the lines data. Copy the whole page, starting with [ and ending with ].');
+  const all=list.filter(x=>x&&x.commence_time&&x.home_team&&x.away_team).sort((a,b)=>new Date(a.commence_time)-new Date(b.commence_time));
+  if(!all.length)throw new Error('No games found in the pasted data.');
+  const first=new Date(all[0].commence_time);let d=(9-first.getUTCDay())%7;if(d===0)d=7;
+  const cut=new Date(first);cut.setUTCDate(cut.getUTCDate()+d);cut.setUTCHours(18,0,0,0);
+  const games={};
+  all.filter(x=>new Date(x.commence_time)<cut).forEach((x,i)=>{
+    let sp=null,tot=null;const bm=x.bookmakers&&x.bookmakers[0];
+    if(bm){
+      const s=(bm.markets||[]).find(m=>m.key==='spreads'),t=(bm.markets||[]).find(m=>m.key==='totals');
+      const ho=s&&s.outcomes.find(o=>o.name===x.home_team);if(ho&&typeof ho.point==='number')sp=ho.point;
+      const ov=t&&t.outcomes.find(o=>o.name==='Over');if(ov&&typeof ov.point==='number')tot=ov.point;
+    }
+    const id=String(x.id||('g'+i)).replace(/[^A-Za-z0-9]/g,'')||('g'+i);
+    games[id]={o:i,away:mascot(x.away_team),home:mascot(x.home_team),awayFull:x.away_team,homeFull:x.home_team,apiId:x.id||'',kick:new Date(x.commence_time).toISOString(),sp,tot,sa:null,sh:null,fin:false};
+  });
+  return games;
+}
+// Reads the Odds API "scores" response and returns score updates for the games on this week's board.
+function parseScores(list,games){
+  if(!Array.isArray(list))throw new Error('That does not look like the scores data. Copy the whole page, starting with [ and ending with ].');
+  const upd={};const lc=s=>String(s||'').toLowerCase();
+  for(const gid in games){
+    const g=games[gid];
+    const m=list.find(x=>x&&((g.apiId&&x.id===g.apiId)||((lc(x.away_team).includes(lc(g.away))&&lc(x.home_team).includes(lc(g.home)))||(lc(x.away_team).includes(lc(g.home))&&lc(x.home_team).includes(lc(g.away))))));
+    if(!m||!m.scores||m.scores.length<2)continue;
+    const a=m.scores.find(s=>lc(s.name).includes(lc(g.away))),h=m.scores.find(s=>lc(s.name).includes(lc(g.home)));
+    if(!a||!h)continue;
+    const sa=parseInt(a.score,10),sh=parseInt(h.score,10);if(isNaN(sa)||isNaN(sh))continue;
+    upd[gid]={sa,sh,fin:!!m.completed};
+  }
+  return upd;
+}
+function weekLabel(w){
+  const ks=Object.values((w&&w.games)||{}).map(g=>g.kick).filter(Boolean).sort();
+  if(!ks.length)return '';
+  const seen=[];let lastM='';const parts=[];
+  ks.forEach(k=>{const key=chi(k,{month:'short',day:'numeric'});if(seen.includes(key))return;seen.push(key);const [m,dd]=key.split(' ');parts.push(m===lastM?dd:key);lastM=m;});
+  return parts.join(', ')+' | '+chi(ks[0],{year:'numeric'});
+}
+/*LOGIC-END*/
+
+const S={got:{},cfg:null,weeks:{},entries:{},form:{},drafts:{},newRows:[],delRows:{},view:'picks',busy:false};
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o==null?{}:o));
+const ls={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+const players=()=>(S.cfg&&S.cfg.players)||[];
+const pname=k=>{const p=players().find(x=>x.key===k);return p?p.name:k;};
+const sortedGames=w=>Object.entries((w&&w.games)||{}).sort((a,b)=>(a[1].o||0)-(b[1].o||0));
+const started=g=>g.sa!=null||(g.kick&&Date.now()>=new Date(g.kick).getTime());
+const subWeek=(k,n)=>{const e=S.entries[k];const w=e&&e.weeks&&e.weeks[n];return w&&w.at?w:null;};
+let toastT;
+function toast(msg){$('#toast').innerHTML='<div class="toast" role="status">'+esc(msg)+'</div>';clearTimeout(toastT);toastT=setTimeout(()=>{$('#toast').innerHTML='';},4200);}
+function confirmBox(title,bodyHtml,yesLabel,onYes){
+  $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>'+esc(title)+'</h2>'+bodyHtml+'<div class="bar"><button class="btn primary" id="dlg-yes">'+esc(yesLabel)+'</button><button class="btn" id="dlg-no">Go back</button></div></div></div>';
+  $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};
+  $('#dlg-yes').onclick=()=>{$('#modal').innerHTML='';onYes();};
+  $('#dlg-yes').focus();
+}
+function whoAmI(){
+  return null; // the commissioner enters every player's picks; everyone else only views
+}
+const SEED={"cfg":{"name":"MLFL","season":2026,"currentWeek":10,"futuresOpen":false,"futuresResult":{"afc":"","nfc":"","sb":""},"baseLabel":"Weeks 1 to 10 were imported from the Google Sheets. Every total here is rescored from the picks themselves.","players":[{"key":"ron","name":"Ron","base":{"points":0,"won":0,"cpp":0,"weeks":0}},{"key":"josh","name":"Josh","base":{"points":0,"won":0,"cpp":0,"weeks":0}},{"key":"thomas","name":"Thomas","base":{"points":0,"won":0,"cpp":0,"weeks":0}},{"key":"steve","name":"Steve","base":{"points":0,"won":0,"cpp":0,"weeks":0}},{"key":"charlie","name":"Charlie","base":{"points":0,"won":0,"cpp":0,"weeks":0}},{"key":"tyler","name":"Tyler","base":{"points":0,"won":0,"cpp":0,"weeks":0}}]},"weeks":{"1":{"n":1,"label":"Sep 9, 10, 13, 14 | 2026","open":false,"games":{"w1g1":{"o":0,"away":"Patriots","home":"Seahawks","tag":"7:20 PM WNF","kick":"","sp":-3.5,"tot":44.5,"sa":10,"sh":13,"fin":true},"w1g2":{"o":1,"away":"49ers","home":"Rams","tag":"7:35 PM TNF","kick":"","sp":-3.5,"tot":48.5,"sa":27,"sh":7,"fin":true},"w1g3":{"o":2,"away":"Falcons","home":"Steelers","tag":"12:00 PM","kick":"","sp":-3.5,"tot":42.0,"sa":13,"sh":20,"fin":true},"w1g4":{"o":3,"away":"Ravens","home":"Colts","tag":"12:00 PM","kick":"","sp":3.5,"tot":48.0,"sa":41,"sh":23,"fin":true},"w1g5":{"o":4,"away":"Bills","home":"Texans","tag":"12:00 PM","kick":"","sp":1.0,"tot":44.5,"sa":36,"sh":31,"fin":true},"w1g6":{"o":5,"away":"Bears","home":"Panthers","tag":"12:00 PM","kick":"","sp":3.0,"tot":47.5,"sa":59,"sh":37,"fin":true},"w1g7":{"o":6,"away":"Browns","home":"Jaguars","tag":"12:00 PM","kick":"","sp":-9.0,"tot":40.5,"sa":10,"sh":34,"fin":true},"w1g8":{"o":7,"away":"Saints","home":"Lions","tag":"12:00 PM","kick":"","sp":-7.0,"tot":50.0,"sa":30,"sh":31,"fin":true},"w1g9":{"o":8,"away":"Jets","home":"Titans","tag":"12:00 PM","kick":"","sp":-1.5,"tot":39.5,"sa":23,"sh":10,"fin":true},"w1g10":{"o":9,"away":"Buccaneers","home":"Bengals","tag":"12:00 PM","kick":"","sp":-4.0,"tot":50.5,"sa":27,"sh":33,"fin":true},"w1g11":{"o":10,"away":"Cardinals","home":"Chargers","tag":"3:25 PM","kick":"","sp":-10.0,"tot":47.0,"sa":26,"sh":14,"fin":true},"w1g12":{"o":11,"away":"Packers","home":"Vikings","tag":"3:25 PM","kick":"","sp":-1.0,"tot":46.0,"sa":22,"sh":39,"fin":true},"w1g13":{"o":12,"away":"Dolphins","home":"Raiders","tag":"3:25 PM","kick":"","sp":-3.5,"tot":40.0,"sa":13,"sh":27,"fin":true},"w1g14":{"o":13,"away":"Commanders","home":"Eagles","tag":"3:25 PM","kick":"","sp":-5.5,"tot":44.5,"sa":22,"sh":24,"fin":true},"w1g15":{"o":14,"away":"Cowboys","home":"Giants","tag":"7:20 PM SNF","kick":"","sp":3.0,"tot":48.5,"sa":20,"sh":28,"fin":true},"w1g16":{"o":15,"away":"Broncos","home":"Chiefs","tag":"7:15 PM MNF","kick":"","sp":-3.0,"tot":42.5,"sa":10,"sh":31,"fin":true}}},"2":{"n":2,"label":"Sep 17, 20, 21 | 2026","open":false,"games":{"w2g1":{"o":0,"away":"Lions","home":"Bills","tag":"7:15 PM TNF","kick":"","sp":-5.0,"tot":54.5,"sa":31,"sh":41,"fin":true},"w2g2":{"o":1,"away":"Panthers","home":"Falcons","tag":"12:00 PM","kick":"","sp":2.5,"tot":44.0,"sa":34,"sh":3,"fin":true},"w2g3":{"o":2,"away":"Bengals","home":"Texans","tag":"12:00 PM","kick":"","sp":-2.5,"tot":46.5,"sa":20,"sh":6,"fin":true},"w2g4":{"o":3,"away":"Browns","home":"Buccaneers","tag":"12:00 PM","kick":"","sp":-8.5,"tot":41.0,"sa":23,"sh":19,"fin":true},"w2g5":{"o":4,"away":"Packers","home":"Jets","tag":"12:00 PM","kick":"","sp":3.5,"tot":44.5,"sa":20,"sh":17,"fin":true},"w2g6":{"o":5,"away":"Vikings","home":"Bears","tag":"12:00 PM","kick":"","sp":-4.5,"tot":48.5,"sa":9,"sh":3,"fin":true},"w2g7":{"o":6,"away":"Saints","home":"Ravens","tag":"12:00 PM","kick":"","sp":-8.5,"tot":47.0,"sa":24,"sh":17,"fin":true},"w2g8":{"o":7,"away":"Eagles","home":"Titans","tag":"12:00 PM","kick":"","sp":7.0,"tot":39.5,"sa":24,"sh":20,"fin":true},"w2g9":{"o":8,"away":"Steelers","home":"Patriots","tag":"12:00 PM","kick":"","sp":-5.5,"tot":41.5,"sa":3,"sh":20,"fin":true},"w2g10":{"o":9,"away":"Jaguars","home":"Broncos","tag":"3:05 PM","kick":"","sp":-3.0,"tot":45.0,"sa":13,"sh":20,"fin":true},"w2g11":{"o":10,"away":"Raiders","home":"Chargers","tag":"3:05 PM","kick":"","sp":-6.5,"tot":43.5,"sa":26,"sh":14,"fin":true},"w2g12":{"o":11,"away":"Dolphins","home":"49ers","tag":"3:25 PM","kick":"","sp":-13.5,"tot":45.5,"sa":13,"sh":35,"fin":true},"w2g13":{"o":12,"away":"Seahawks","home":"Cardinals","tag":"3:25 PM","kick":"","sp":4.0,"tot":41.0,"sa":31,"sh":7,"fin":true},"w2g14":{"o":13,"away":"Commanders","home":"Cowboys","tag":"3:25 PM","kick":"","sp":-4.0,"tot":50.5,"sa":20,"sh":37,"fin":true},"w2g15":{"o":14,"away":"Colts","home":"Chiefs","tag":"7:20 PM SNF","kick":"","sp":-7.0,"tot":47.0,"sa":30,"sh":33,"fin":true},"w2g16":{"o":15,"away":"Giants","home":"Rams","tag":"7:15 PM MNF","kick":"","sp":-7.0,"tot":48.0,"sa":6,"sh":28,"fin":true}}},"3":{"n":3,"label":"Sep 24, 27, 28 | 2026","open":false,"games":{"w3g1":{"o":0,"away":"Packers","home":"Falcons","tag":"7:15 PM TNF","kick":"","sp":5.0,"tot":43.0,"sa":14,"sh":35,"fin":true},"w3g2":{"o":1,"away":"Panthers","home":"Browns","tag":"12:00 PM","kick":"","sp":3.0,"tot":41.5,"sa":18,"sh":21,"fin":true},"w3g3":{"o":2,"away":"Bengals","home":"Steelers","tag":"12:00 PM","kick":"","sp":3.5,"tot":42.5,"sa":27,"sh":30,"fin":true},"w3g4":{"o":3,"away":"Texans","home":"Colts","tag":"12:00 PM","kick":"","sp":2.5,"tot":43.0,"sa":17,"sh":19,"fin":true},"w3g5":{"o":4,"away":"Chiefs","home":"Dolphins","tag":"12:00 PM","kick":"","sp":11.5,"tot":46.0,"sa":24,"sh":10,"fin":true},"w3g6":{"o":5,"away":"Chargers","home":"Bills","tag":"12:00 PM","kick":"","sp":-7.0,"tot":50.0,"sa":16,"sh":24,"fin":true},"w3g7":{"o":6,"away":"Patriots","home":"Jaguars","tag":"12:00 PM","kick":"","sp":-3.0,"tot":45.0,"sa":6,"sh":35,"fin":true},"w3g8":{"o":7,"away":"Jets","home":"Lions","tag":"12:00 PM","kick":"","sp":-6.5,"tot":47.5,"sa":24,"sh":31,"fin":true},"w3g9":{"o":8,"away":"Seahawks","home":"Commanders","tag":"12:00 PM","kick":"","sp":7.0,"tot":40.0,"sa":31,"sh":33,"fin":true},"w3g10":{"o":9,"away":"Titans","home":"Giants","tag":"12:00 PM","kick":"","sp":-2.5,"tot":40.0,"sa":7,"sh":12,"fin":true},"w3g11":{"o":10,"away":"Cardinals","home":"49ers","tag":"3:05 PM","kick":"","sp":-8.5,"tot":48.0,"sa":30,"sh":36,"fin":true},"w3g12":{"o":11,"away":"Vikings","home":"Buccaneers","tag":"3:05 PM","kick":"","sp":1.5,"tot":42.5,"sa":23,"sh":16,"fin":true},"w3g13":{"o":12,"away":"Ravens","home":"Cowboys","tag":"3:25 PM","kick":"","sp":3.5,"tot":53.0,"sa":34,"sh":31,"fin":true},"w3g14":{"o":13,"away":"Raiders","home":"Saints","tag":"3:25 PM","kick":"","sp":-3.0,"tot":43.5,"sa":35,"sh":27,"fin":true},"w3g15":{"o":14,"away":"Rams","home":"Broncos","tag":"7:20 PM SNF","kick":"","sp":2.5,"tot":45.5,"sa":26,"sh":30,"fin":true},"w3g16":{"o":15,"away":"Eagles","home":"Bears","tag":"7:15 PM MNF","kick":"","sp":5.0,"tot":41.0,"sa":7,"sh":27,"fin":true}}},"4":{"n":4,"label":"Oct 1, 4, 5 | 2026","open":false,"games":{"w4g1":{"o":0,"away":"Steelers","home":"Browns","tag":"7:15 PM TNF","kick":"","sp":2.5,"tot":38.0,"sa":24,"sh":27,"fin":true},"w4g2":{"o":1,"away":"Colts","home":"Commanders","tag":"8:30 AM","kick":"","sp":3.5,"tot":47.0,"sa":30,"sh":13,"fin":true},"w4g3":{"o":2,"away":"Cardinals","home":"Giants","tag":"12:00 PM","kick":"","sp":2.5,"tot":44.5,"sa":24,"sh":36,"fin":true},"w4g4":{"o":3,"away":"Cowboys","home":"Texans","tag":"12:00 PM","kick":"","sp":-3.0,"tot":48.0,"sa":34,"sh":30,"fin":true},"w4g5":{"o":4,"away":"Packers","home":"Buccaneers","tag":"12:00 PM","kick":"","sp":3.5,"tot":39.0,"sa":17,"sh":14,"fin":true},"w4g6":{"o":5,"away":"Jaguars","home":"Bengals","tag":"12:00 PM","kick":"","sp":-2.5,"tot":51.5,"sa":22,"sh":17,"fin":true},"w4g7":{"o":6,"away":"Rams","home":"Eagles","tag":"12:00 PM","kick":"","sp":3.0,"tot":43.0,"sa":24,"sh":20,"fin":true},"w4g8":{"o":7,"away":"Patriots","home":"Bills","tag":"12:00 PM","kick":"","sp":-6.5,"tot":48.0,"sa":29,"sh":26,"fin":true},"w4g9":{"o":8,"away":"Jets","home":"Bears","tag":"12:00 PM","kick":"","sp":-3.0,"tot":43.0,"sa":12,"sh":23,"fin":true},"w4g10":{"o":9,"away":"Titans","home":"Ravens","tag":"12:00 PM","kick":"","sp":-11.5,"tot":43.5,"sa":18,"sh":24,"fin":true},"w4g11":{"o":10,"away":"Dolphins","home":"Vikings","tag":"3:05 PM","kick":"","sp":-10.5,"tot":39.5,"sa":10,"sh":15,"fin":true},"w4g12":{"o":11,"away":"Broncos","home":"49ers","tag":"3:25 PM","kick":"","sp":-2.5,"tot":47.5,"sa":14,"sh":24,"fin":true},"w4g13":{"o":12,"away":"Chiefs","home":"Raiders","tag":"3:25 PM","kick":"","sp":5.0,"tot":47.5,"sa":30,"sh":27,"fin":true},"w4g14":{"o":13,"away":"Chargers","home":"Seahawks","tag":"3:25 PM","kick":"","sp":-7.0,"tot":43.0,"sa":23,"sh":30,"fin":true},"w4g15":{"o":14,"away":"Lions","home":"Panthers","tag":"7:20 PM SNF","kick":"","sp":4.0,"tot":51.0,"sa":26,"sh":32,"fin":true},"w4g16":{"o":15,"away":"Falcons","home":"Saints","tag":"7:15 PM MNF","kick":"","sp":-2.5,"tot":47.5,"sa":45,"sh":24,"fin":true}}},"5":{"n":5,"label":"Oct 8, 11, 12 | 2026","open":false,"games":{"w5g1":{"o":0,"away":"Buccaneers","home":"Cowboys","tag":"7:15 PM TNF","kick":"","sp":-9.0,"tot":48.0,"sa":24,"sh":16,"fin":true},"w5g2":{"o":1,"away":"Eagles","home":"Jaguars","tag":"8:30 AM","kick":"","sp":-7.0,"tot":41.5,"sa":17,"sh":19,"fin":true},"w5g3":{"o":2,"away":"Bears","home":"Packers","tag":"12:00 PM","kick":"","sp":2.0,"tot":45.5,"sa":7,"sh":31,"fin":true},"w5g4":{"o":3,"away":"Bengals","home":"Dolphins","tag":"12:00 PM","kick":"","sp":6.5,"tot":42.5,"sa":31,"sh":24,"fin":true},"w5g5":{"o":4,"away":"Browns","home":"Jets","tag":"12:00 PM","kick":"","sp":-2.0,"tot":40.0,"sa":12,"sh":17,"fin":true},"w5g6":{"o":5,"away":"Texans","home":"Titans","tag":"12:00 PM","kick":"","sp":7.5,"tot":37.0,"sa":26,"sh":3,"fin":true},"w5g7":{"o":6,"away":"Colts","home":"Steelers","tag":"12:00 PM","kick":"","sp":-2.5,"tot":44.5,"sa":22,"sh":34,"fin":true},"w5g8":{"o":7,"away":"Raiders","home":"Patriots","tag":"12:00 PM","kick":"","sp":-3.5,"tot":45.0,"sa":17,"sh":45,"fin":true},"w5g9":{"o":8,"away":"Vikings","home":"Saints","tag":"12:00 PM","kick":"","sp":2.0,"tot":42.0,"sa":23,"sh":13,"fin":true},"w5g10":{"o":9,"away":"Giants","home":"Commanders","tag":"12:00 PM","kick":"","sp":-4.0,"tot":42.0,"sa":27,"sh":27,"fin":true},"w5g11":{"o":10,"away":"Broncos","home":"Chargers","tag":"3:05 PM","kick":"","sp":3.0,"tot":42.0,"sa":23,"sh":17,"fin":true},"w5g12":{"o":11,"away":"Lions","home":"Cardinals","tag":"3:25 PM","kick":"","sp":5.5,"tot":54.0,"sa":45,"sh":21,"fin":true},"w5g13":{"o":12,"away":"49ers","home":"Seahawks","tag":"3:25 PM","kick":"","sp":-3.0,"tot":46.0,"sa":32,"sh":29,"fin":true},"w5g14":{"o":13,"away":"Ravens","home":"Falcons","tag":"7:20 PM SNF","kick":"","sp":-3.5,"tot":43.5,"sa":30,"sh":23,"fin":true},"w5g15":{"o":14,"away":"Bills","home":"Rams","tag":"7:15 PM MNF","kick":"","sp":-3.5,"tot":54.5,"sa":37,"sh":34,"fin":true}}},"6":{"n":6,"label":"Oct 15, 18, 19 | 2026","open":false,"games":{"w6g1":{"o":0,"away":"Seahawks","home":"Broncos","tag":"7:15 PM TNF","kick":"","sp":2.5,"tot":40.5,"sa":14,"sh":17,"fin":true},"w6g2":{"o":1,"away":"Texans","home":"Jaguars","tag":"8:30 AM INT","kick":"","sp":-2.5,"tot":42.5,"sa":34,"sh":31,"fin":true},"w6g3":{"o":2,"away":"Bears","home":"Falcons","tag":"12:00 PM","kick":"","sp":1.5,"tot":51.5,"sa":31,"sh":23,"fin":true},"w6g4":{"o":3,"away":"Ravens","home":"Browns","tag":"12:00 PM","kick":"","sp":4.5,"tot":41.5,"sa":10,"sh":13,"fin":true},"w6g5":{"o":4,"away":"Panthers","home":"Eagles","tag":"12:00 PM","kick":"","sp":3.5,"tot":38.5,"sa":25,"sh":14,"fin":true},"w6g6":{"o":5,"away":"Titans","home":"Colts","tag":"12:00 PM","kick":"","sp":-7.0,"tot":44.5,"sa":26,"sh":20,"fin":true},"w6g7":{"o":6,"away":"Jets","home":"Patriots","tag":"12:00 PM","kick":"","sp":-7.5,"tot":43.5,"sa":19,"sh":26,"fin":true},"w6g8":{"o":7,"away":"Saints","home":"Giants","tag":"12:00 PM","kick":"","sp":1.5,"tot":45.5,"sa":34,"sh":27,"fin":true},"w6g9":{"o":8,"away":"Steelers","home":"Buccaneers","tag":"12:00 PM","kick":"","sp":2.5,"tot":39.5,"sa":26,"sh":19,"fin":true},"w6g10":{"o":9,"away":"Cardinals","home":"Rams","tag":"3:05 PM","kick":"","sp":-12.5,"tot":51.5,"sa":18,"sh":16,"fin":true},"w6g11":{"o":10,"away":"Bills","home":"Raiders","tag":"3:25 PM","kick":"","sp":5.5,"tot":53.5,"sa":33,"sh":30,"fin":true},"w6g12":{"o":11,"away":"Chargers","home":"Chiefs","tag":"3:25 PM","kick":"","sp":-8.5,"tot":42.5,"sa":6,"sh":22,"fin":true},"w6g13":{"o":12,"away":"Cowboys","home":"Packers","tag":"7:20 PM SNF","kick":"","sp":-1.5,"tot":53.5,"sa":13,"sh":23,"fin":true},"w6g14":{"o":13,"away":"Commanders","home":"49ers","tag":"7:15 PM MNF","kick":"","sp":-7.5,"tot":51.5,"sa":17,"sh":23,"fin":true}}},"7":{"n":7,"label":"Oct 22, 25, 26 | 2026","open":false,"games":{"w7g1":{"o":0,"away":"Patriots","home":"Bears","tag":"7:15 PM TNF","kick":"","sp":-3.0,"tot":50.5,"sa":24,"sh":30,"fin":true},"w7g2":{"o":1,"away":"Steelers","home":"Saints","tag":"8:30 AM INT","kick":"","sp":3.5,"tot":44.5,"sa":16,"sh":10,"fin":true},"w7g3":{"o":2,"away":"49ers","home":"Falcons","tag":"12:00 PM","kick":"","sp":2.5,"tot":49.5,"sa":20,"sh":29,"fin":true},"w7g4":{"o":3,"away":"Bengals","home":"Ravens","tag":"12:00 PM","kick":"","sp":-1.5,"tot":48.5,"sa":35,"sh":13,"fin":true},"w7g5":{"o":4,"away":"Buccaneers","home":"Panthers","tag":"12:00 PM","kick":"","sp":-3.0,"tot":44.5,"sa":43,"sh":13,"fin":true},"w7g6":{"o":5,"away":"Browns","home":"Titans","tag":"12:00 PM","kick":"","sp":1.5,"tot":37.5,"sa":27,"sh":24,"fin":true},"w7g7":{"o":6,"away":"Giants","home":"Texans","tag":"12:00 PM","kick":"","sp":-10.5,"tot":42.5,"sa":27,"sh":21,"fin":true},"w7g8":{"o":7,"away":"Colts","home":"Vikings","tag":"12:00 PM","kick":"","sp":-6.5,"tot":41.5,"sa":10,"sh":16,"fin":true},"w7g9":{"o":8,"away":"Dolphins","home":"Jets","tag":"12:00 PM","kick":"","sp":-4.5,"tot":39.5,"sa":28,"sh":25,"fin":true},"w7g10":{"o":9,"away":"Broncos","home":"Cardinals","tag":"3:05 PM","kick":"","sp":4.5,"tot":43.5,"sa":30,"sh":16,"fin":true},"w7g11":{"o":10,"away":"Packers","home":"Lions","tag":"3:25 PM","kick":"","sp":-3.0,"tot":53.5,"sa":17,"sh":20,"fin":true},"w7g12":{"o":11,"away":"Rams","home":"Raiders","tag":"3:25 PM","kick":"","sp":3.5,"tot":48.5,"sa":35,"sh":21,"fin":true},"w7g13":{"o":12,"away":"Chiefs","home":"Seahawks","tag":"7:20 PM SNF","kick":"","sp":-3.0,"tot":42.5,"sa":3,"sh":20,"fin":true},"w7g14":{"o":13,"away":"Cowboys","home":"Eagles","tag":"7:15 PM MNF","kick":"","sp":4.5,"tot":44.5,"sa":38,"sh":21,"fin":true}}},"8":{"n":8,"label":"Oct/Nov 29, 1, 2 | 2026","open":false,"games":{"w8g1":{"o":0,"away":"Panthers","home":"Packers","tag":"7:15 PM TNF","kick":"","sp":-3.5,"tot":46.5,"sa":19,"sh":27,"fin":true},"w8g2":{"o":1,"away":"Cardinals","home":"Cowboys","tag":"12:00 PM","kick":"","sp":-7.0,"tot":54.5,"sa":33,"sh":30,"fin":true},"w8g3":{"o":2,"away":"Falcons","home":"Buccaneers","tag":"12:00 PM","kick":"","sp":-2.5,"tot":44.5,"sa":0,"sh":16,"fin":true},"w8g4":{"o":3,"away":"Ravens","home":"Bills","tag":"12:00 PM","kick":"","sp":-3.0,"tot":54.5,"sa":10,"sh":36,"fin":true},"w8g5":{"o":4,"away":"Titans","home":"Bengals","tag":"12:00 PM","kick":"","sp":-11.5,"tot":46.5,"sa":36,"sh":43,"fin":true},"w8g6":{"o":5,"away":"Browns","home":"Steelers","tag":"12:00 PM","kick":"","sp":-3.5,"tot":39.5,"sa":6,"sh":27,"fin":true},"w8g7":{"o":6,"away":"Vikings","home":"Lions","tag":"12:00 PM","kick":"","sp":-3.0,"tot":46.5,"sa":15,"sh":19,"fin":true},"w8g8":{"o":7,"away":"Colts","home":"Jaguars","tag":"12:00 PM","kick":"","sp":-10.0,"tot":46.5,"sa":7,"sh":42,"fin":true},"w8g9":{"o":8,"away":"Raiders","home":"Jets","tag":"12:00 PM","kick":"","sp":-1.5,"tot":45.5,"sa":38,"sh":33,"fin":true},"w8g10":{"o":9,"away":"Chargers","home":"Rams","tag":"3:05 PM","kick":"","sp":-6.5,"tot":45.5,"sa":9,"sh":24,"fin":true},"w8g11":{"o":10,"away":"Chiefs","home":"Broncos","tag":"3:25 PM","kick":"","sp":1.5,"tot":40.5,"sa":24,"sh":28,"fin":true},"w8g12":{"o":11,"away":"Patriots","home":"Dolphins","tag":"3:25 PM","kick":"","sp":7.0,"tot":43.5,"sa":24,"sh":19,"fin":true},"w8g13":{"o":12,"away":"Eagles","home":"Commanders","tag":"7:20 PM SNF","kick":"","sp":-6.0,"tot":40.5,"sa":10,"sh":27,"fin":true},"w8g14":{"o":13,"away":"Bears","home":"Seahawks","tag":"7:20 PM MNF","kick":"","sp":-3.0,"tot":46.5,"sa":34,"sh":17,"fin":true}}},"9":{"n":9,"label":"Nov 5, 8, 9 | 2026","open":false,"games":{"w9g1":{"o":0,"away":"Jaguars","home":"Ravens","tag":"7:15 PM TNF","kick":"","sp":10.0,"tot":39.5,"sa":33,"sh":10,"fin":true},"w9g2":{"o":1,"away":"Bengals","home":"Falcons","tag":"8:30 AM INT","kick":"","sp":3.0,"tot":52.5,"sa":34,"sh":17,"fin":true},"w9g3":{"o":2,"away":"Broncos","home":"Panthers","tag":"12:00 PM","kick":"","sp":2.5,"tot":44.5,"sa":26,"sh":21,"fin":true},"w9g4":{"o":3,"away":"Browns","home":"Saints","tag":"12:00 PM","kick":"","sp":-3.0,"tot":42.5,"sa":22,"sh":23,"fin":true},"w9g5":{"o":4,"away":"Cowboys","home":"Colts","tag":"12:00 PM","kick":"","sp":5.5,"tot":51.5,"sa":27,"sh":23,"fin":true},"w9g6":{"o":5,"away":"Lions","home":"Dolphins","tag":"12:00 PM","kick":"","sp":7.0,"tot":50.5,"sa":19,"sh":9,"fin":true},"w9g7":{"o":6,"away":"Jets","home":"Chiefs","tag":"12:00 PM","kick":"","sp":-10.0,"tot":47.5,"sa":12,"sh":35,"fin":true},"w9g8":{"o":7,"away":"Rams","home":"Commanders","tag":"12:00 PM","kick":"","sp":4.5,"tot":48.5,"sa":20,"sh":13,"fin":true},"w9g9":{"o":8,"away":"Giants","home":"Eagles","tag":"12:00 PM","kick":"","sp":3.5,"tot":38.5,"sa":19,"sh":11,"fin":true},"w9g10":{"o":9,"away":"Texans","home":"Chargers","tag":"3:05 PM","kick":"","sp":5.5,"tot":40.5,"sa":44,"sh":22,"fin":true},"w9g11":{"o":10,"away":"Raiders","home":"49ers","tag":"3:05 PM","kick":"","sp":-10.0,"tot":51.5,"sa":17,"sh":38,"fin":true},"w9g12":{"o":11,"away":"Cardinals","home":"Seahawks","tag":"3:25 PM","kick":"","sp":-8.5,"tot":39.5,"sa":3,"sh":17,"fin":true},"w9g13":{"o":12,"away":"Packers","home":"Patriots","tag":"3:25 PM","kick":"","sp":-3.0,"tot":44.5,"sa":45,"sh":27,"fin":true},"w9g14":{"o":13,"away":"Buccaneers","home":"Bears","tag":"7:20 PM SNF","kick":"","sp":-6.0,"tot":47.5,"sa":24,"sh":27,"fin":true},"w9g15":{"o":14,"away":"Bills","home":"Vikings","tag":"7:15 PM MNF","kick":"","sp":3.0,"tot":44.5,"sa":23,"sh":6,"fin":true}}},"10":{"n":10,"label":"Nov 12, 15, 16 | 2026","open":false,"games":{"w10g1":{"o":0,"away":"Commanders","home":"Giants","tag":"7:15 PM TNF","kick":"","sp":-2.5,"tot":40.5,"sa":24,"sh":21,"fin":true},"w10g2":{"o":1,"away":"Patriots","home":"Lions","tag":"8:30 AM INT","kick":"","sp":-2.5,"tot":51.5,"sa":10,"sh":35,"fin":true},"w10g3":{"o":2,"away":"Chiefs","home":"Falcons","tag":"12:00 PM","kick":"","sp":3.0,"tot":46.5,"sa":35,"sh":13,"fin":true},"w10g4":{"o":3,"away":"Bills","home":"Jets","tag":"12:00 PM","kick":"","sp":8.5,"tot":50.5,"sa":31,"sh":12,"fin":true},"w10g5":{"o":4,"away":"Panthers","home":"Saints","tag":"12:00 PM","kick":"","sp":-2.5,"tot":48.5,"sa":20,"sh":17,"fin":true},"w10g6":{"o":5,"away":"Texans","home":"Browns","tag":"12:00 PM","kick":"","sp":4.5,"tot":40.5,"sa":24,"sh":27,"fin":true},"w10g7":{"o":6,"away":"Vikings","home":"Packers","tag":"12:00 PM","kick":"","sp":-3.0,"tot":41.5,"sa":30,"sh":10,"fin":true},"w10g8":{"o":7,"away":"Dolphins","home":"Colts","tag":"12:00 PM","kick":"","sp":-3.5,"tot":38.5,"sa":22,"sh":24,"fin":true},"w10g9":{"o":8,"away":"Jaguars","home":"Titans","tag":"12:00 PM","kick":"","sp":10.5,"tot":46.5,"sa":40,"sh":23,"fin":true},"w10g10":{"o":9,"away":"Rams","home":"Cardinals","tag":"3:05 PM","kick":"","sp":9.5,"tot":39.5,"sa":34,"sh":6,"fin":true},"w10g11":{"o":10,"away":"Seahawks","home":"Raiders","tag":"3:05 PM","kick":"","sp":6.5,"tot":40.5,"sa":21,"sh":13,"fin":true},"w10g12":{"o":11,"away":"49ers","home":"Cowboys","tag":"3:25 PM","kick":"","sp":3.5,"tot":55.5,"sa":46,"sh":40,"fin":true},"w10g13":{"o":12,"away":"Steelers","home":"Bengals","tag":"7:20 PM SNF","kick":"","sp":-3.5,"tot":49.5,"sa":18,"sh":38,"fin":true},"w10g14":{"o":13,"away":"Chargers","home":"Ravens","tag":"7:15 PM MNF","kick":"2026-11-17T01:15:00.000Z","sp":-4.5,"tot":38.5,"sa":null,"sh":null,"fin":false}}}},"entries":{"tyler":{"weeks":{"1":{"p":{"w1g1":{"s":"away","o":"over"},"w1g2":{"s":"home","o":"under"},"w1g3":{"s":"away","o":"under"},"w1g4":{"s":"away","o":"under"},"w1g5":{"s":"away","o":"over"},"w1g6":{"s":"away","o":"over"},"w1g7":{"s":"home","o":"over"},"w1g8":{"s":"home","o":"under"},"w1g9":{"s":"away","o":"under"},"w1g10":{"s":"home","o":"under"},"w1g11":{"s":"away","o":"under"},"w1g12":{"s":"home","o":"under"},"w1g13":{"s":"home","o":"over"},"w1g14":{"s":"home","o":"over"},"w1g15":{"s":"home","o":"under"},"w1g16":{"s":"away","o":"over"}},"parlay":[{"g":"w1g2","m":"s","v":"home"},{"g":"w1g3","m":"o","v":"under"},{"g":"w1g5","m":"s","v":"away"},{"g":"w1g6","m":"s","v":"away"},{"g":"w1g12","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"2":{"p":{"w2g1":{"s":"home","o":"over"},"w2g2":{"s":"away","o":"over"},"w2g3":{"s":"away","o":"over"},"w2g4":{"s":"home","o":"under"},"w2g5":{"s":"away","o":"over"},"w2g6":{"s":"home","o":"over"},"w2g7":{"s":"home","o":"over"},"w2g8":{"s":"away","o":"over"},"w2g9":{"s":"away","o":"under"},"w2g10":{"s":"away","o":"under"},"w2g11":{"s":"away","o":"over"},"w2g12":{"s":"home","o":"under"},"w2g13":{"s":"away","o":"under"},"w2g14":{"s":"home","o":"under"},"w2g15":{"s":"home","o":"under"},"w2g16":{"s":"away","o":"under"}},"parlay":[{"g":"w2g4","m":"s","v":"home"},{"g":"w2g5","m":"o","v":"over"},{"g":"w2g6","m":"s","v":"home"},{"g":"w2g11","m":"s","v":"away"},{"g":"w2g16","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"away","o":"under"},"w3g2":{"s":"away","o":"over"},"w3g3":{"s":"away","o":"over"},"w3g4":{"s":"away","o":"over"},"w3g5":{"s":"away","o":"under"},"w3g6":{"s":"home","o":"under"},"w3g7":{"s":"home","o":"under"},"w3g8":{"s":"home","o":"under"},"w3g9":{"s":"away","o":"over"},"w3g10":{"s":"away","o":"under"},"w3g11":{"s":"away","o":"over"},"w3g12":{"s":"away","o":"over"},"w3g13":{"s":"away","o":"under"},"w3g14":{"s":"away","o":"over"},"w3g15":{"s":"away","o":"over"},"w3g16":{"s":"away","o":"under"}},"parlay":[{"g":"w3g2","m":"s","v":"away"},{"g":"w3g3","m":"s","v":"away"},{"g":"w3g8","m":"o","v":"under","l":46.5},{"g":"w3g10","m":"s","v":"away"},{"g":"w3g15","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g1":{"s":"away","o":"over"},"w4g2":{"s":"home","o":"over"},"w4g3":{"s":"home","o":"under"},"w4g4":{"s":"away","o":"under"},"w4g5":{"s":"away","o":"over"},"w4g6":{"s":"home","o":"over"},"w4g7":{"s":"away","o":"over"},"w4g8":{"s":"home","o":"under"},"w4g9":{"s":"home","o":"over"},"w4g10":{"s":"home","o":"over"},"w4g11":{"s":"home","o":"over"},"w4g12":{"s":"home","o":"under"},"w4g13":{"s":"away","o":"under"},"w4g14":{"s":"home","o":"over"},"w4g15":{"s":"away","o":"under"},"w4g16":{"s":"away","o":"over"}},"parlay":[{"g":"w4g1","m":"o","v":"over"},{"g":"w4g8","m":"s","v":"home"},{"g":"w4g12","m":"s","v":"home"},{"g":"w4g11","m":"o","v":"over"},{"g":"w4g15","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"5":{"p":{"w5g1":{"s":"home","o":"under"},"w5g2":{"s":"away","o":"under"},"w5g3":{"s":"away","o":"over"},"w5g4":{"s":"away","o":"under"},"w5g5":{"s":"away","o":"over"},"w5g6":{"s":"home","o":"over"},"w5g7":{"s":"home","o":"under"},"w5g8":{"s":"home","o":"under"},"w5g9":{"s":"away","o":"over"},"w5g10":{"s":"away","o":"under"},"w5g11":{"s":"away","o":"under"},"w5g12":{"s":"home","o":"under"},"w5g13":{"s":"away","o":"over"},"w5g14":{"s":"away","o":"over"},"w5g15":{"s":"away","o":"under"}},"parlay":[{"g":"w5g1","m":"s","v":"home"},{"g":"w5g4","m":"s","v":"away"},{"g":"w5g3","m":"s","v":"away"},{"g":"w5g12","m":"o","v":"under","l":54.5},{"g":"w5g5","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"6":{"p":{"w6g1":{"s":"away","o":"over"},"w6g2":{"s":"home","o":"under"},"w6g3":{"s":"home","o":"under"},"w6g4":{"s":"home","o":"under"},"w6g5":{"s":"away","o":"under"},"w6g6":{"s":"home","o":"over"},"w6g7":{"s":"home","o":"over"},"w6g8":{"s":"home","o":"under"},"w6g9":{"s":"away","o":"over"},"w6g10":{"s":"away","o":"over"},"w6g11":{"s":"away","o":"over"},"w6g12":{"s":"home","o":"over"},"w6g13":{"s":"away","o":"under"},"w6g14":{"s":"away","o":"over"}},"parlay":[{"g":"w6g6","m":"s","v":"home"},{"g":"w6g3","m":"s","v":"home"},{"g":"w6g4","m":"o","v":"under"},{"g":"w6g5","m":"s","v":"away"},{"g":"w6g9","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"home","o":"under"},"w7g2":{"s":"home","o":"over"},"w7g3":{"s":"away","o":"under"},"w7g4":{"s":"away","o":"over"},"w7g5":{"s":"home","o":"over"},"w7g6":{"s":"away","o":"under"},"w7g7":{"s":"away","o":"over"},"w7g8":{"s":"home","o":"over"},"w7g9":{"s":"home","o":"under"},"w7g10":{"s":"home","o":"over"},"w7g11":{"s":"away","o":"under"},"w7g12":{"s":"away","o":"over"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"away","o":"under"}},"parlay":[{"g":"w7g13","m":"s","v":"away"},{"g":"w7g3","m":"s","v":"away"},{"g":"w7g4","m":"s","v":"away"},{"g":"w7g7","m":"s","v":"away"},{"g":"w7g13","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"home","o":"over"},"w8g2":{"s":"away","o":"under"},"w8g3":{"s":"home","o":"over"},"w8g4":{"s":"home","o":"over"},"w8g5":{"s":"away","o":"under"},"w8g6":{"s":"home","o":"under"},"w8g7":{"s":"away","o":"under"},"w8g8":{"s":"away","o":"over"},"w8g9":{"s":"away","o":"under"},"w8g10":{"s":"home","o":"under"},"w8g11":{"s":"away","o":"over"},"w8g12":{"s":"away","o":"over"},"w8g13":{"s":"home","o":"over"},"w8g14":{"s":"away","o":"under"}},"parlay":[{"g":"w8g1","m":"o","v":"over"},{"g":"w8g3","m":"s","v":"home"},{"g":"w8g9","m":"s","v":"away"},{"g":"w8g9","m":"o","v":"under"},{"g":"w8g11","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"under"},"w9g2":{"s":"away","o":"over"},"w9g3":{"s":"away","o":"over"},"w9g4":{"s":"home","o":"under"},"w9g5":{"s":"away","o":"under"},"w9g6":{"s":"away","o":"over"},"w9g7":{"s":"home","o":"under"},"w9g8":{"s":"away","o":"under"},"w9g9":{"s":"away","o":"under"},"w9g10":{"s":"away","o":"over"},"w9g11":{"s":"away","o":"over"},"w9g12":{"s":"home","o":"over"},"w9g13":{"s":"away","o":"under"},"w9g14":{"s":"home","o":"over"},"w9g15":{"s":"away","o":"over"}},"parlay":[{"g":"w9g1","m":"s","v":"away"},{"g":"w9g2","m":"s","v":"away"},{"g":"w9g3","m":"s","v":"away"},{"g":"w9g7","m":"o","v":"under"},{"g":"w9g12","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"home","o":"over"},"w10g2":{"s":"home","o":"under"},"w10g3":{"s":"away","o":"under"},"w10g4":{"s":"away","o":"under"},"w10g5":{"s":"away","o":"over"},"w10g6":{"s":"away","o":"over"},"w10g7":{"s":"home","o":"over"},"w10g8":{"s":"home","o":"over"},"w10g9":{"s":"away","o":"under"},"w10g10":{"s":"away","o":"under"},"w10g11":{"s":"home","o":"under"},"w10g12":{"s":"away","o":"under"},"w10g13":{"s":"away","o":"over"},"w10g14":{"s":"away","o":"under"}},"parlay":[{"g":"w10g2","m":"s","v":"home"},{"g":"w10g5","m":"s","v":"away"},{"g":"w10g7","m":"o","v":"over"},{"g":"w10g3","m":"s","v":"away"},{"g":"w10g13","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true}},"futures":{"afc":"Bills","nfc":"Rams","sb":"Bills","at":"2026-09-01T12:00:00Z","imp":true}},"steve":{"weeks":{"1":{"p":{"w1g1":{"s":"home","o":"under"},"w1g2":{"s":"away","o":"under"},"w1g3":{"s":"away","o":"under"},"w1g4":{"s":"home","o":"under"},"w1g5":{"s":"home","o":"under"},"w1g6":{"s":"home","o":"under"},"w1g7":{"s":"away","o":"under"},"w1g8":{"s":"away","o":"under"},"w1g9":{"s":"away","o":"under"},"w1g10":{"s":"away","o":"under"},"w1g11":{"s":"away","o":"under"},"w1g12":{"s":"away","o":"under"},"w1g13":{"s":"away","o":"under"},"w1g14":{"s":"away","o":"under"},"w1g15":{"s":"home","o":"under"},"w1g16":{"s":"away","o":"under"}},"parlay":[],"at":"2026-09-01T12:00:00Z","imp":true},"2":{"p":{"w2g1":{"s":"away","o":"over"},"w2g2":{"s":"away","o":"under"},"w2g3":{"s":"away","o":"under"},"w2g4":{"s":"home","o":"under"},"w2g5":{"s":"away","o":"over"},"w2g6":{"s":"home","o":"under"},"w2g7":{"s":"away","o":"under"},"w2g8":{"s":"away","o":"under"},"w2g9":{"s":"away","o":"under"},"w2g10":{"s":"away","o":"over"},"w2g11":{"s":"away","o":"under"},"w2g12":{"s":"home","o":"under"},"w2g13":{"s":"away","o":"under"},"w2g14":{"s":"away","o":"over"},"w2g15":{"s":"home","o":"under"},"w2g16":{"s":"away","o":"over"}},"parlay":[{"g":"w2g6","m":"s","v":"home"},{"g":"w2g9","m":"o","v":"under"},{"g":"w2g12","m":"s","v":"home"},{"g":"w2g13","m":"o","v":"under"},{"g":"w2g16","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"home","o":"over"},"w3g2":{"s":"away","o":"over"},"w3g3":{"s":"away","o":"under"},"w3g4":{"s":"away","o":"over"},"w3g5":{"s":"away","o":"under"},"w3g6":{"s":"home","o":"over"},"w3g7":{"s":"home","o":"under"},"w3g8":{"s":"home","o":"over"},"w3g9":{"s":"away","o":"under"},"w3g10":{"s":"away","o":"over"},"w3g11":{"s":"home","o":"under"},"w3g12":{"s":"home","o":"under"},"w3g13":{"s":"away","o":"over"},"w3g14":{"s":"home","o":"over"},"w3g15":{"s":"away","o":"over"},"w3g16":{"s":"away","o":"under"}},"parlay":[{"g":"w3g9","m":"s","v":"away"},{"g":"w3g16","m":"s","v":"away"},{"g":"w3g8","m":"s","v":"home"},{"g":"w3g15","m":"s","v":"away"},{"g":"w3g7","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g1":{"s":"home","o":"over"},"w4g2":{"s":"away","o":"over"},"w4g3":{"s":"home","o":"under"},"w4g4":{"s":"away","o":"over"},"w4g5":{"s":"away","o":"under"},"w4g6":{"s":"away","o":"over"},"w4g7":{"s":"away","o":"over"},"w4g8":{"s":"home","o":"under"},"w4g9":{"s":"home","o":"over"},"w4g10":{"s":"home","o":"under"},"w4g11":{"s":"away","o":"under"},"w4g12":{"s":"home","o":"over"},"w4g13":{"s":"home","o":"under"},"w4g14":{"s":"home","o":"over"},"w4g15":{"s":"away","o":"over"},"w4g16":{"s":"home","o":"over"}},"parlay":[{"g":"w4g6","m":"s","v":"away"},{"g":"w4g6","m":"o","v":"over"},{"g":"w4g7","m":"s","v":"away"},{"g":"w4g15","m":"s","v":"away"},{"g":"w4g15","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"5":{"p":{"w5g1":{"s":"home","o":"under"},"w5g2":{"s":"home","o":"under"},"w5g3":{"s":"away","o":"under"},"w5g4":{"s":"home","o":"under"},"w5g5":{"s":"away","o":"over"},"w5g6":{"s":"home","o":"over"},"w5g7":{"s":"home","o":"over"},"w5g8":{"s":"home","o":"under"},"w5g9":{"s":"away","o":"under"},"w5g10":{"s":"away","o":"under"},"w5g11":{"s":"away","o":"under"},"w5g12":{"s":"home","o":"over"},"w5g13":{"s":"away","o":"over"},"w5g14":{"s":"home","o":"over"},"w5g15":{"s":"home","o":"under"}},"parlay":[],"at":"2026-09-01T12:00:00Z","imp":true},"6":{"p":{"w6g1":{"s":"home","o":"over"},"w6g2":{"s":"home","o":"under"},"w6g3":{"s":"away","o":"over"},"w6g4":{"s":"home","o":"under"},"w6g5":{"s":"away","o":"under"},"w6g6":{"s":"home","o":"under"},"w6g7":{"s":"home","o":"under"},"w6g8":{"s":"home","o":"over"},"w6g9":{"s":"away","o":"under"},"w6g10":{"s":"home","o":"under"},"w6g11":{"s":"home","o":"over"},"w6g12":{"s":"away","o":"under"},"w6g13":{"s":"home","o":"over"},"w6g14":{"s":"away","o":"over"}},"parlay":[{"g":"w6g9","m":"s","v":"away"},{"g":"w6g9","m":"o","v":"under"},{"g":"w6g2","m":"s","v":"home"},{"g":"w6g5","m":"o","v":"under"},{"g":"w6g4","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"away","o":"over"},"w7g2":{"s":"away","o":"under"},"w7g3":{"s":"away","o":"under"},"w7g4":{"s":"away","o":"over"},"w7g5":{"s":"home","o":"over"},"w7g6":{"s":"away","o":"under"},"w7g7":{"s":"home","o":"under"},"w7g8":{"s":"away","o":"under"},"w7g9":{"s":"home","o":"under"},"w7g10":{"s":"away","o":"under"},"w7g11":{"s":"home","o":"over"},"w7g12":{"s":"home","o":"over"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"away","o":"under"}},"parlay":[{"g":"w7g3","m":"s","v":"away"},{"g":"w7g6","m":"s","v":"away"},{"g":"w7g3","m":"o","v":"under"},{"g":"w7g6","m":"o","v":"under"},{"g":"w7g14","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"home","o":"under"},"w8g2":{"s":"home","o":"over"},"w8g3":{"s":"away","o":"over"},"w8g4":{"s":"home","o":"over"},"w8g5":{"s":"away","o":"over"},"w8g6":{"s":"away","o":"under"},"w8g7":{"s":"home","o":"over"},"w8g8":{"s":"home","o":"under"},"w8g9":{"s":"away","o":"under"},"w8g10":{"s":"home","o":"under"},"w8g11":{"s":"home","o":"under"},"w8g12":{"s":"away","o":"under"},"w8g13":{"s":"home","o":"over"},"w8g14":{"s":"away","o":"over"}},"parlay":[{"g":"w8g9","m":"s","v":"away"},{"g":"w8g2","m":"s","v":"home"},{"g":"w8g14","m":"s","v":"away"},{"g":"w8g10","m":"s","v":"home"},{"g":"w8g12","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"under"},"w9g2":{"s":"away","o":"over"},"w9g3":{"s":"away","o":"under"},"w9g4":{"s":"home","o":"over"},"w9g5":{"s":"away","o":"under"},"w9g6":{"s":"away","o":"over"},"w9g7":{"s":"home","o":"under"},"w9g8":{"s":"away","o":"over"},"w9g9":{"s":"away","o":"under"},"w9g10":{"s":"away","o":"under"},"w9g11":{"s":"away","o":"over"},"w9g12":{"s":"home","o":"over"},"w9g13":{"s":"home","o":"under"},"w9g14":{"s":"home","o":"over"},"w9g15":{"s":"away","o":"under"}},"parlay":[{"g":"w9g3","m":"s","v":"away"},{"g":"w9g4","m":"s","v":"home"},{"g":"w9g5","m":"s","v":"away"},{"g":"w9g6","m":"s","v":"away"},{"g":"w9g14","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"home","o":"over"},"w10g2":{"s":"home","o":"over"},"w10g3":{"s":"away","o":"under"},"w10g4":{"s":"away","o":"under"},"w10g5":{"s":"away","o":"under"},"w10g6":{"s":"away","o":"under"},"w10g7":{"s":"home","o":"under"},"w10g8":{"s":"home","o":"under"},"w10g9":{"s":"away","o":"under"},"w10g10":{"s":"home","o":"under"},"w10g11":{"s":"away","o":"under"},"w10g12":{"s":"away","o":"over"},"w10g13":{"s":"home","o":"under"},"w10g14":{"s":"away","o":"under"}},"parlay":[{"g":"w10g3","m":"o","v":"under"},{"g":"w10g9","m":"s","v":"away"},{"g":"w10g2","m":"s","v":"home"},{"g":"w10g4","m":"o","v":"under"},{"g":"w10g8","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true}},"futures":{"afc":"Bills","nfc":"Rams","sb":"Rams","at":"2026-09-01T12:00:00Z","imp":true}},"ron":{"weeks":{"1":{"p":{"w1g1":{"s":"home","o":"under"},"w1g2":{"s":"home","o":"under"},"w1g3":{"s":"home","o":"under"},"w1g4":{"s":"away","o":"under"},"w1g5":{"s":"away","o":"under"},"w1g6":{"s":"away","o":"under"},"w1g7":{"s":"home","o":"under"},"w1g8":{"s":"home","o":"under"},"w1g9":{"s":"home","o":"under"},"w1g10":{"s":"home","o":"under"},"w1g11":{"s":"home","o":"under"},"w1g12":{"s":"away","o":"under"},"w1g13":{"s":"home","o":"under"},"w1g14":{"s":"home","o":"under"},"w1g15":{"s":"away","o":"under"},"w1g16":{"s":"away","o":"under"}},"parlay":[{"g":"w1g8","m":"s","v":"home"},{"g":"w1g14","m":"s","v":"home"},{"g":"w1g5","m":"s","v":"away"},{"g":"w1g3","m":"s","v":"home"},{"g":"w1g2","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"2":{"p":{"w2g1":{"s":"home","o":"over"},"w2g2":{"s":"away","o":"under"},"w2g3":{"s":"home","o":"under"},"w2g4":{"s":"home","o":"over"},"w2g5":{"s":"away","o":"over"},"w2g6":{"s":"home","o":"over"},"w2g7":{"s":"home","o":"under"},"w2g8":{"s":"away","o":"over"},"w2g9":{"s":"home","o":"over"},"w2g10":{"s":"away","o":"under"},"w2g11":{"s":"home","o":"over"},"w2g12":{"s":"home","o":"over"},"w2g13":{"s":"away","o":"under"},"w2g14":{"s":"home","o":"under"},"w2g15":{"s":"home","o":"over"},"w2g16":{"s":"home","o":"under"}},"parlay":[{"g":"w2g8","m":"s","v":"away"},{"g":"w2g12","m":"s","v":"home"},{"g":"w2g4","m":"s","v":"home"},{"g":"w2g7","m":"s","v":"home"},{"g":"w2g15","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"away","o":"under"},"w3g2":{"s":"away","o":"under"},"w3g3":{"s":"away","o":"under"},"w3g4":{"s":"away","o":"under"},"w3g5":{"s":"away","o":"over"},"w3g6":{"s":"home","o":"under"},"w3g7":{"s":"away","o":"under"},"w3g8":{"s":"home","o":"under"},"w3g9":{"s":"away","o":"over"},"w3g10":{"s":"away","o":"under"},"w3g11":{"s":"home","o":"under"},"w3g12":{"s":"away","o":"over"},"w3g13":{"s":"away","o":"under"},"w3g14":{"s":"home","o":"under"},"w3g15":{"s":"away","o":"over"},"w3g16":{"s":"away","o":"under"}},"parlay":[{"g":"w3g6","m":"s","v":"home"},{"g":"w3g1","m":"s","v":"away"},{"g":"w3g5","m":"s","v":"away"},{"g":"w3g8","m":"s","v":"home"},{"g":"w3g9","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g1":{"s":"away","o":"under"},"w4g2":{"s":"away","o":"under"},"w4g3":{"s":"home","o":"under"},"w4g4":{"s":"home","o":"under"},"w4g5":{"s":"home","o":"under"},"w4g6":{"s":"home","o":"under"},"w4g7":{"s":"away","o":"over"},"w4g8":{"s":"home","o":"over"},"w4g9":{"s":"home","o":"over"},"w4g10":{"s":"home","o":"over"},"w4g11":{"s":"home","o":"over"},"w4g12":{"s":"home","o":"under"},"w4g13":{"s":"away","o":"over"},"w4g14":{"s":"home","o":"over"},"w4g15":{"s":"away","o":"under"},"w4g16":{"s":"away","o":"over"}},"parlay":[{"g":"w4g8","m":"s","v":"home"},{"g":"w4g13","m":"s","v":"away"},{"g":"w4g15","m":"s","v":"away"},{"g":"w4g14","m":"s","v":"home"},{"g":"w4g12","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"5":{"p":{"w5g1":{"s":"away","o":"over"},"w5g2":{"s":"away","o":"under"},"w5g3":{"s":"away","o":"under"},"w5g4":{"s":"away","o":"under"},"w5g5":{"s":"away","o":"under"},"w5g6":{"s":"home","o":"under"},"w5g7":{"s":"home","o":"over"},"w5g8":{"s":"away","o":"under"},"w5g9":{"s":"away","o":"under"},"w5g10":{"s":"away","o":"over"},"w5g11":{"s":"home","o":"under"},"w5g12":{"s":"away","o":"under"},"w5g13":{"s":"away","o":"over"},"w5g14":{"s":"home","o":"under"},"w5g15":{"s":"away","o":"over"}},"parlay":[{"g":"w5g15","m":"s","v":"away"},{"g":"w5g9","m":"s","v":"away"},{"g":"w5g2","m":"s","v":"away"},{"g":"w5g1","m":"s","v":"away"},{"g":"w5g13","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"6":{"p":{"w6g1":{"s":"away","o":"under"},"w6g2":{"s":"home","o":"under"},"w6g3":{"s":"home","o":"under"},"w6g4":{"s":"away","o":"under"},"w6g5":{"s":"away","o":"under"},"w6g6":{"s":"home","o":"under"},"w6g7":{"s":"home","o":"under"},"w6g8":{"s":"home","o":"under"},"w6g9":{"s":"home","o":"over"},"w6g10":{"s":"home","o":"over"},"w6g11":{"s":"away","o":"over"},"w6g12":{"s":"home","o":"over"},"w6g13":{"s":"home","o":"over"},"w6g14":{"s":"home","o":"over"}},"parlay":[{"g":"w6g10","m":"s","v":"home"},{"g":"w6g14","m":"s","v":"home"},{"g":"w6g12","m":"s","v":"home"},{"g":"w6g11","m":"s","v":"away"},{"g":"w6g13","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"home","o":"over"},"w7g2":{"s":"away","o":"over"},"w7g3":{"s":"away","o":"under"},"w7g4":{"s":"home","o":"under"},"w7g5":{"s":"away","o":"under"},"w7g6":{"s":"away","o":"under"},"w7g7":{"s":"home","o":"under"},"w7g8":{"s":"home","o":"over"},"w7g9":{"s":"away","o":"under"},"w7g10":{"s":"away","o":"under"},"w7g11":{"s":"home","o":"over"},"w7g12":{"s":"away","o":"under"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"home","o":"over"}},"parlay":[{"g":"w7g5","m":"s","v":"away"},{"g":"w7g2","m":"s","v":"away"},{"g":"w7g8","m":"s","v":"home"},{"g":"w7g6","m":"s","v":"away"},{"g":"w7g13","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"home","o":"under"},"w8g2":{"s":"home","o":"under"},"w8g3":{"s":"home","o":"over"},"w8g4":{"s":"home","o":"over"},"w8g5":{"s":"home","o":"under"},"w8g6":{"s":"home","o":"over"},"w8g7":{"s":"away","o":"under"},"w8g8":{"s":"home","o":"under"},"w8g9":{"s":"away","o":"over"},"w8g10":{"s":"home","o":"over"},"w8g11":{"s":"away","o":"under"},"w8g12":{"s":"away","o":"under"},"w8g13":{"s":"away","o":"under"},"w8g14":{"s":"home","o":"over"}},"parlay":[{"g":"w8g5","m":"s","v":"home"},{"g":"w8g2","m":"s","v":"home"},{"g":"w8g3","m":"s","v":"home"},{"g":"w8g8","m":"s","v":"home"},{"g":"w8g10","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"under"},"w9g2":{"s":"away","o":"under"},"w9g3":{"s":"away","o":"over"},"w9g4":{"s":"away","o":"under"},"w9g5":{"s":"away","o":"under"},"w9g6":{"s":"away","o":"under"},"w9g7":{"s":"home","o":"over"},"w9g8":{"s":"away","o":"under"},"w9g9":{"s":"away","o":"under"},"w9g10":{"s":"away","o":"over"},"w9g11":{"s":"home","o":"over"},"w9g12":{"s":"away","o":"over"},"w9g13":{"s":"away","o":"over"},"w9g14":{"s":"away","o":"under"},"w9g15":{"s":"away","o":"over"}},"parlay":[{"g":"w9g6","m":"s","v":"away"},{"g":"w9g11","m":"s","v":"home"},{"g":"w9g3","m":"s","v":"away"},{"g":"w9g7","m":"s","v":"home"},{"g":"w9g15","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"home","o":"under"},"w10g2":{"s":"home","o":"under"},"w10g3":{"s":"away","o":"over"},"w10g4":{"s":"away","o":"over"},"w10g5":{"s":"home","o":"under"},"w10g6":{"s":"away","o":"under"},"w10g7":{"s":"home","o":"over"},"w10g8":{"s":"home","o":"under"},"w10g9":{"s":"away","o":"over"},"w10g10":{"s":"away","o":"over"},"w10g11":{"s":"home","o":"under"},"w10g12":{"s":"away","o":"over"},"w10g13":{"s":"home","o":"under"},"w10g14":{"s":"home","o":"under"}},"parlay":[{"g":"w10g4","m":"s","v":"away"},{"g":"w10g12","m":"s","v":"away"},{"g":"w10g10","m":"s","v":"away"},{"g":"w10g14","m":"s","v":"home"},{"g":"w10g2","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true}},"futures":{"afc":"Bills","nfc":"Seahawks","sb":"Rams","at":"2026-09-01T12:00:00Z","imp":true}},"thomas":{"weeks":{"1":{"p":{"w1g1":{"s":"home","o":"under"},"w1g2":{"s":"home","o":"under"},"w1g3":{"s":"home","o":"over"},"w1g4":{"s":"away","o":"over"},"w1g5":{"s":"away","o":"over"},"w1g6":{"s":"away","o":"under"},"w1g7":{"s":"home","o":"over"},"w1g8":{"s":"home","o":"under"},"w1g9":{"s":"away","o":"under"},"w1g10":{"s":"home","o":"under"},"w1g11":{"s":"away","o":"under"},"w1g12":{"s":"away","o":"over"},"w1g13":{"s":"home","o":"over"},"w1g14":{"s":"home","o":"over"},"w1g15":{"s":"home","o":"under"},"w1g16":{"s":"home","o":"over"}},"parlay":[{"g":"w1g1","m":"s","v":"home"},{"g":"w1g2","m":"s","v":"home"},{"g":"w1g5","m":"s","v":"away"},{"g":"w1g9","m":"o","v":"under"},{"g":"w1g15","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"2":{"p":{"w2g1":{"s":"away","o":"under"},"w2g2":{"s":"away","o":"over"},"w2g3":{"s":"home","o":"over"},"w2g4":{"s":"home","o":"over"},"w2g5":{"s":"home","o":"under"},"w2g6":{"s":"home","o":"over"},"w2g7":{"s":"home","o":"over"},"w2g8":{"s":"away","o":"over"},"w2g9":{"s":"away","o":"under"},"w2g10":{"s":"away","o":"over"},"w2g11":{"s":"away","o":"over"},"w2g12":{"s":"home","o":"over"},"w2g13":{"s":"home","o":"over"},"w2g14":{"s":"away","o":"under"},"w2g15":{"s":"home","o":"under"},"w2g16":{"s":"away","o":"under"}},"parlay":[{"g":"w2g3","m":"s","v":"home"},{"g":"w2g7","m":"s","v":"home"},{"g":"w2g8","m":"o","v":"over"},{"g":"w2g12","m":"s","v":"home"},{"g":"w2g16","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"away","o":"over"},"w3g2":{"s":"home","o":"over"},"w3g3":{"s":"away","o":"over"},"w3g4":{"s":"away","o":"over"},"w3g5":{"s":"away","o":"over"},"w3g6":{"s":"home","o":"over"},"w3g7":{"s":"away","o":"under"},"w3g8":{"s":"home","o":"under"},"w3g9":{"s":"away","o":"over"},"w3g10":{"s":"home","o":"under"},"w3g11":{"s":"home","o":"under"},"w3g12":{"s":"home","o":"over"},"w3g13":{"s":"home","o":"under"},"w3g14":{"s":"away","o":"over"},"w3g15":{"s":"away","o":"under"},"w3g16":{"s":"away","o":"over"}},"parlay":[{"g":"w3g1","m":"s","v":"away"},{"g":"w3g7","m":"o","v":"under"},{"g":"w3g13","m":"s","v":"home"},{"g":"w3g10","m":"s","v":"home"},{"g":"w3g14","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g1":{"s":"home","o":"under"},"w4g2":{"s":"home","o":"under"},"w4g3":{"s":"away","o":"under"},"w4g4":{"s":"away","o":"over"},"w4g5":{"s":"away","o":"under"},"w4g6":{"s":"home","o":"over"},"w4g7":{"s":"away","o":"under"},"w4g8":{"s":"home","o":"under"},"w4g9":{"s":"home","o":"under"},"w4g10":{"s":"home","o":"under"},"w4g11":{"s":"away","o":"over"},"w4g12":{"s":"home","o":"under"},"w4g13":{"s":"home","o":"under"},"w4g14":{"s":"home","o":"under"},"w4g15":{"s":"away","o":"under"},"w4g16":{"s":"away","o":"over"}},"parlay":[{"g":"w4g7","m":"s","v":"away"},{"g":"w4g8","m":"s","v":"home"},{"g":"w4g12","m":"s","v":"home"},{"g":"w4g6","m":"s","v":"home"},{"g":"w4g4","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"5":{"p":{"w5g1":{"s":"home","o":"under"},"w5g2":{"s":"home","o":"over"},"w5g3":{"s":"home","o":"over"},"w5g4":{"s":"away","o":"over"},"w5g5":{"s":"away","o":"over"},"w5g6":{"s":"home","o":"over"},"w5g7":{"s":"away","o":"over"},"w5g8":{"s":"away","o":"over"},"w5g9":{"s":"home","o":"over"},"w5g10":{"s":"home","o":"over"},"w5g11":{"s":"home","o":"over"},"w5g12":{"s":"home","o":"under"},"w5g13":{"s":"away","o":"over"},"w5g14":{"s":"away","o":"over"},"w5g15":{"s":"away","o":"over"}},"parlay":[{"g":"w5g3","m":"s","v":"home"},{"g":"w5g5","m":"s","v":"away"},{"g":"w5g12","m":"o","v":"under"},{"g":"w5g15","m":"s","v":"away"},{"g":"w5g9","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"6":{"p":{"w6g1":{"s":"away","o":"over"},"w6g2":{"s":"home","o":"over"},"w6g3":{"s":"away","o":"under"},"w6g4":{"s":"away","o":"over"},"w6g5":{"s":"home","o":"over"},"w6g6":{"s":"home","o":"under"},"w6g7":{"s":"home","o":"over"},"w6g8":{"s":"home","o":"under"},"w6g9":{"s":"away","o":"over"},"w6g10":{"s":"away","o":"under"},"w6g11":{"s":"away","o":"over"},"w6g12":{"s":"home","o":"over"},"w6g13":{"s":"home","o":"under"},"w6g14":{"s":"home","o":"under"}},"parlay":[{"g":"w6g2","m":"s","v":"home"},{"g":"w6g3","m":"s","v":"away"},{"g":"w6g8","m":"s","v":"home"},{"g":"w6g13","m":"s","v":"home"},{"g":"w6g14","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"away","o":"over"},"w7g2":{"s":"away","o":"under"},"w7g3":{"s":"away","o":"under"},"w7g4":{"s":"away","o":"over"},"w7g5":{"s":"home","o":"over"},"w7g6":{"s":"home","o":"over"},"w7g7":{"s":"away","o":"over"},"w7g8":{"s":"home","o":"over"},"w7g9":{"s":"away","o":"under"},"w7g10":{"s":"home","o":"under"},"w7g11":{"s":"away","o":"under"},"w7g12":{"s":"home","o":"over"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"away","o":"under"}},"parlay":[{"g":"w7g1","m":"s","v":"away"},{"g":"w7g4","m":"s","v":"away"},{"g":"w7g12","m":"s","v":"home"},{"g":"w7g14","m":"o","v":"under"},{"g":"w7g11","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"home","o":"under"},"w8g2":{"s":"home","o":"under"},"w8g3":{"s":"home","o":"over"},"w8g4":{"s":"home","o":"over"},"w8g5":{"s":"away","o":"over"},"w8g6":{"s":"home","o":"under"},"w8g7":{"s":"away","o":"over"},"w8g8":{"s":"home","o":"under"},"w8g9":{"s":"away","o":"under"},"w8g10":{"s":"home","o":"under"},"w8g11":{"s":"home","o":"over"},"w8g12":{"s":"away","o":"over"},"w8g13":{"s":"home","o":"under"},"w8g14":{"s":"away","o":"over"}},"parlay":[{"g":"w8g4","m":"s","v":"home"},{"g":"w8g5","m":"s","v":"away"},{"g":"w8g10","m":"s","v":"home"},{"g":"w8g12","m":"s","v":"away"},{"g":"w8g14","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"over"},"w9g2":{"s":"away","o":"under"},"w9g3":{"s":"away","o":"under"},"w9g4":{"s":"away","o":"over"},"w9g5":{"s":"away","o":"over"},"w9g6":{"s":"away","o":"under"},"w9g7":{"s":"home","o":"over"},"w9g8":{"s":"away","o":"over"},"w9g9":{"s":"away","o":"over"},"w9g10":{"s":"away","o":"over"},"w9g11":{"s":"home","o":"over"},"w9g12":{"s":"home","o":"over"},"w9g13":{"s":"away","o":"over"},"w9g14":{"s":"home","o":"over"},"w9g15":{"s":"away","o":"over"}},"parlay":[{"g":"w9g2","m":"s","v":"away"},{"g":"w9g9","m":"s","v":"away"},{"g":"w9g9","m":"o","v":"over"},{"g":"w9g14","m":"s","v":"home"},{"g":"w9g13","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"home","o":"over"},"w10g2":{"s":"home","o":"under"},"w10g3":{"s":"away","o":"over"},"w10g4":{"s":"away","o":"under"},"w10g5":{"s":"away","o":"over"},"w10g6":{"s":"away","o":"over"},"w10g7":{"s":"home","o":"over"},"w10g8":{"s":"away","o":"over"},"w10g9":{"s":"away","o":"over"},"w10g10":{"s":"away","o":"under"},"w10g11":{"s":"away","o":"over"},"w10g12":{"s":"away","o":"under"},"w10g13":{"s":"home","o":"over"},"w10g14":{"s":"away","o":"over"}},"parlay":[{"g":"w10g1","m":"s","v":"home"},{"g":"w10g2","m":"s","v":"home"},{"g":"w10g3","m":"s","v":"away"},{"g":"w10g7","m":"s","v":"home"},{"g":"w10g14","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true}},"futures":{"afc":"Bills","nfc":"Rams","sb":"Rams","at":"2026-09-01T12:00:00Z","imp":true}},"josh":{"weeks":{"1":{"p":{"w1g1":{"s":"home","o":"over"},"w1g2":{"s":"home","o":"over"},"w1g3":{"s":"home","o":"under"},"w1g4":{"s":"away","o":"under"},"w1g5":{"s":"home","o":"under"},"w1g6":{"s":"away","o":"under"},"w1g7":{"s":"home","o":"over"},"w1g8":{"s":"home","o":"over"},"w1g9":{"s":"home","o":"under"},"w1g10":{"s":"away","o":"under"},"w1g11":{"s":"home","o":"over"},"w1g12":{"s":"away","o":"under"},"w1g13":{"s":"away","o":"under"},"w1g14":{"s":"home","o":"under"},"w1g15":{"s":"home","o":"over"},"w1g16":{"s":"away","o":"over"}},"parlay":[{"g":"w1g3","m":"s","v":"home"},{"g":"w1g9","m":"s","v":"home"},{"g":"w1g15","m":"s","v":"home"},{"g":"w1g4","m":"s","v":"away"},{"g":"w1g8","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"2":{"p":{"w2g1":{"s":"away","o":"over"},"w2g2":{"s":"away","o":"under"},"w2g3":{"s":"home","o":"under"},"w2g4":{"s":"home","o":"under"},"w2g5":{"s":"away","o":"under"},"w2g6":{"s":"home","o":"over"},"w2g7":{"s":"home","o":"over"},"w2g8":{"s":"away","o":"under"},"w2g9":{"s":"home","o":"under"},"w2g10":{"s":"home","o":"under"},"w2g11":{"s":"home","o":"under"},"w2g12":{"s":"home","o":"under"},"w2g13":{"s":"away","o":"under"},"w2g14":{"s":"home","o":"under"},"w2g15":{"s":"home","o":"over"},"w2g16":{"s":"away","o":"under"}},"parlay":[{"g":"w2g5","m":"s","v":"away"},{"g":"w2g13","m":"s","v":"away"},{"g":"w2g15","m":"s","v":"home"},{"g":"w2g14","m":"o","v":"under"},{"g":"w2g1","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"away","o":"under"},"w3g2":{"s":"away","o":"under"},"w3g3":{"s":"away","o":"under"},"w3g4":{"s":"away","o":"over"},"w3g5":{"s":"away","o":"under"},"w3g6":{"s":"home","o":"under"},"w3g7":{"s":"away","o":"under"},"w3g8":{"s":"home","o":"over"},"w3g9":{"s":"away","o":"under"},"w3g10":{"s":"home","o":"under"},"w3g11":{"s":"home","o":"under"},"w3g12":{"s":"away","o":"over"},"w3g13":{"s":"away","o":"over"},"w3g14":{"s":"home","o":"over"},"w3g15":{"s":"away","o":"over"},"w3g16":{"s":"away","o":"over"}},"parlay":[{"g":"w3g1","m":"s","v":"away"},{"g":"w3g9","m":"s","v":"away"},{"g":"w3g14","m":"s","v":"home"},{"g":"w3g4","m":"s","v":"away"},{"g":"w3g2","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g1":{"s":"away","o":"over"},"w4g2":{"s":"away","o":"under"},"w4g3":{"s":"home","o":"under"},"w4g4":{"s":"home","o":"under"},"w4g5":{"s":"away","o":"over"},"w4g6":{"s":"home","o":"under"},"w4g7":{"s":"away","o":"over"},"w4g8":{"s":"home","o":"over"},"w4g9":{"s":"home","o":"under"},"w4g10":{"s":"home","o":"over"},"w4g11":{"s":"home","o":"over"},"w4g12":{"s":"home","o":"over"},"w4g13":{"s":"away","o":"under"},"w4g14":{"s":"home","o":"over"},"w4g15":{"s":"away","o":"under"},"w4g16":{"s":"away","o":"over"}},"parlay":[{"g":"w4g7","m":"s","v":"away"},{"g":"w4g13","m":"s","v":"away"},{"g":"w4g15","m":"s","v":"away"},{"g":"w4g8","m":"s","v":"home"},{"g":"w4g16","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"5":{"p":{"w5g1":{"s":"home","o":"over"},"w5g2":{"s":"home","o":"under"},"w5g3":{"s":"home","o":"under"},"w5g4":{"s":"away","o":"under"},"w5g5":{"s":"away","o":"under"},"w5g6":{"s":"away","o":"over"},"w5g7":{"s":"away","o":"under"},"w5g8":{"s":"away","o":"under"},"w5g9":{"s":"away","o":"under"},"w5g10":{"s":"home","o":"under"},"w5g11":{"s":"away","o":"over"},"w5g12":{"s":"away","o":"under"},"w5g13":{"s":"away","o":"over"},"w5g14":{"s":"away","o":"under"},"w5g15":{"s":"away","o":"over"}},"parlay":[{"g":"w5g5","m":"s","v":"away"},{"g":"w5g1","m":"s","v":"home"},{"g":"w5g14","m":"s","v":"away"},{"g":"w5g6","m":"s","v":"away"},{"g":"w5g13","m":"o","v":"over"}],"at":"2026-09-01T12:00:00Z","imp":true},"6":{"p":{"w6g1":{"s":"home","o":"over"},"w6g2":{"s":"away","o":"over"},"w6g3":{"s":"away","o":"under"},"w6g4":{"s":"away","o":"over"},"w6g5":{"s":"away","o":"over"},"w6g6":{"s":"home","o":"under"},"w6g7":{"s":"home","o":"under"},"w6g8":{"s":"away","o":"under"},"w6g9":{"s":"away","o":"over"},"w6g10":{"s":"home","o":"under"},"w6g11":{"s":"away","o":"under"},"w6g12":{"s":"home","o":"over"},"w6g13":{"s":"home","o":"over"},"w6g14":{"s":"home","o":"over"}},"parlay":[{"g":"w6g11","m":"s","v":"away"},{"g":"w6g13","m":"s","v":"home"},{"g":"w6g5","m":"o","v":"over"},{"g":"w6g6","m":"o","v":"under"},{"g":"w6g3","m":"o","v":"under"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"home","o":"over"},"w7g2":{"s":"home","o":"over"},"w7g3":{"s":"away","o":"over"},"w7g4":{"s":"away","o":"over"},"w7g5":{"s":"home","o":"under"},"w7g6":{"s":"away","o":"over"},"w7g7":{"s":"home","o":"over"},"w7g8":{"s":"home","o":"over"},"w7g9":{"s":"home","o":"under"},"w7g10":{"s":"away","o":"under"},"w7g11":{"s":"away","o":"over"},"w7g12":{"s":"away","o":"over"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"away","o":"under"}},"parlay":[{"g":"w7g7","m":"o","v":"over"},{"g":"w7g11","m":"o","v":"over"},{"g":"w7g3","m":"s","v":"away"},{"g":"w7g5","m":"s","v":"home"},{"g":"w7g13","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"home","o":"over"},"w8g2":{"s":"home","o":"under"},"w8g3":{"s":"home","o":"over"},"w8g4":{"s":"home","o":"under"},"w8g5":{"s":"home","o":"under"},"w8g6":{"s":"home","o":"over"},"w8g7":{"s":"home","o":"over"},"w8g8":{"s":"home","o":"under"},"w8g9":{"s":"away","o":"under"},"w8g10":{"s":"home","o":"under"},"w8g11":{"s":"away","o":"over"},"w8g12":{"s":"away","o":"under"},"w8g13":{"s":"home","o":"over"},"w8g14":{"s":"away","o":"over"}},"parlay":[{"g":"w8g3","m":"s","v":"home"},{"g":"w8g11","m":"s","v":"away"},{"g":"w8g4","m":"s","v":"home"},{"g":"w8g6","m":"o","v":"over"},{"g":"w8g2","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"over"},"w9g2":{"s":"away","o":"over"},"w9g3":{"s":"away","o":"under"},"w9g4":{"s":"home","o":"over"},"w9g5":{"s":"away","o":"under"},"w9g6":{"s":"away","o":"under"},"w9g7":{"s":"home","o":"under"},"w9g8":{"s":"away","o":"over"},"w9g9":{"s":"away","o":"over"},"w9g10":{"s":"away","o":"over"},"w9g11":{"s":"home","o":"under"},"w9g12":{"s":"home","o":"over"},"w9g13":{"s":"away","o":"over"},"w9g14":{"s":"home","o":"over"},"w9g15":{"s":"away","o":"over"}},"parlay":[{"g":"w9g13","m":"s","v":"away"},{"g":"w9g15","m":"s","v":"away"},{"g":"w9g6","m":"s","v":"away"},{"g":"w9g3","m":"s","v":"away"},{"g":"w9g2","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"home","o":"under"},"w10g2":{"s":"home","o":"over"},"w10g3":{"s":"away","o":"under"},"w10g4":{"s":"away","o":"over"},"w10g5":{"s":"home","o":"over"},"w10g6":{"s":"away","o":"under"},"w10g7":{"s":"home","o":"over"},"w10g8":{"s":"home","o":"under"},"w10g9":{"s":"away","o":"under"},"w10g10":{"s":"away","o":"over"},"w10g11":{"s":"home","o":"under"},"w10g12":{"s":"away","o":"under"},"w10g13":{"s":"home","o":"over"},"w10g14":{"s":"away","o":"over"}},"parlay":[{"g":"w10g3","m":"s","v":"away"},{"g":"w10g13","m":"s","v":"home"},{"g":"w10g6","m":"s","v":"away"},{"g":"w10g7","m":"s","v":"home"},{"g":"w10g12","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true}},"futures":{"afc":"Broncos","nfc":"Rams","sb":"Rams","at":"2026-09-01T12:00:00Z","imp":true}},"charlie":{"weeks":{"2":{"p":{"w2g1":{"s":"away","o":"over"},"w2g2":{"s":"away","o":"under"},"w2g3":{"s":"away","o":"over"},"w2g4":{"s":"home","o":"over"},"w2g5":{"s":"away","o":"under"},"w2g6":{"s":"home","o":"under"},"w2g7":{"s":"home","o":"under"},"w2g8":{"s":"away","o":"over"},"w2g9":{"s":"away","o":"over"},"w2g10":{"s":"away","o":"over"},"w2g11":{"s":"home","o":"over"},"w2g12":{"s":"home","o":"under"},"w2g13":{"s":"away","o":"over"},"w2g14":{"s":"home","o":"under"},"w2g15":{"s":"home","o":"over"},"w2g16":{"s":"home","o":"over"}},"parlay":[{"g":"w2g2","m":"s","v":"away"},{"g":"w2g6","m":"s","v":"home"},{"g":"w2g5","m":"s","v":"away"},{"g":"w2g8","m":"s","v":"away"},{"g":"w2g16","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"3":{"p":{"w3g1":{"s":"away","o":"under"},"w3g2":{"s":"away","o":"over"},"w3g3":{"s":"home","o":"over"},"w3g4":{"s":"home","o":"under"},"w3g5":{"s":"away","o":"over"},"w3g6":{"s":"home","o":"under"},"w3g7":{"s":"away","o":"over"},"w3g8":{"s":"away","o":"over"},"w3g9":{"s":"home","o":"over"},"w3g10":{"s":"home","o":"under"},"w3g11":{"s":"home","o":"under"},"w3g12":{"s":"away","o":"under"},"w3g13":{"s":"home","o":"under"},"w3g14":{"s":"away","o":"over"},"w3g15":{"s":"home","o":"under"},"w3g16":{"s":"home","o":"over"}},"parlay":[{"g":"w3g1","m":"s","v":"away"},{"g":"w3g3","m":"s","v":"home"},{"g":"w3g7","m":"s","v":"away"},{"g":"w3g11","m":"s","v":"home"},{"g":"w3g12","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"4":{"p":{"w4g2":{"s":"home","o":"under"},"w4g3":{"s":"home","o":"under"},"w4g4":{"s":"away","o":"under"},"w4g6":{"s":"home","o":"under"},"w4g7":{"s":"home","o":"over"},"w4g8":{"s":"home","o":"under"},"w4g9":{"s":"home","o":"under"},"w4g10":{"s":"home","o":"over"},"w4g11":{"s":"home","o":"under"},"w4g12":{"s":"home","o":"under"},"w4g13":{"s":"away","o":"under"},"w4g14":{"s":"away","o":"over"},"w4g15":{"s":"home","o":"under"},"w4g16":{"s":"away","o":"under"}},"parlay":[{"g":"w4g9","m":"s","v":"away"},{"g":"w4g5","m":"s","v":"away"},{"g":"w4g15","m":"s","v":"home"},{"g":"w4g8","m":"s","v":"home"},{"g":"w4g12","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true,"manual":{"pct":40.63,"note":"Four picks were left blank. The Google Sheet counted them as misses in the percentage."}},"5":{"p":{"w5g1":{"s":"away","o":"under"}},"parlay":[],"at":"2026-09-01T12:00:00Z","imp":true,"manual":{"total":20,"pct":50,"note":"Only one game was picked this week. The total (20) and percentage (50%) are the ones recorded on the Google Sheet."}},"6":{"p":{"w6g1":{"s":"away","o":"under"},"w6g2":{"s":"away","o":"over"},"w6g3":{"s":"home","o":"under"},"w6g4":{"s":"away","o":"under"},"w6g5":{"s":"home","o":"over"},"w6g6":{"s":"away","o":"under"},"w6g7":{"s":"home","o":"under"},"w6g8":{"s":"home","o":"under"},"w6g9":{"s":"home","o":"under"},"w6g10":{"s":"away","o":"under"},"w6g11":{"s":"home","o":"under"},"w6g12":{"s":"away","o":"over"},"w6g13":{"s":"home","o":"under"},"w6g14":{"s":"away","o":"under"}},"parlay":[{"g":"w6g4","m":"s","v":"away"},{"g":"w6g8","m":"s","v":"home"},{"g":"w6g14","m":"s","v":"away"},{"g":"w6g13","m":"s","v":"home"},{"g":"w6g5","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"7":{"p":{"w7g1":{"s":"home","o":"under"},"w7g2":{"s":"away","o":"under"},"w7g3":{"s":"home","o":"over"},"w7g4":{"s":"home","o":"over"},"w7g5":{"s":"away","o":"under"},"w7g6":{"s":"home","o":"over"},"w7g7":{"s":"away","o":"under"},"w7g8":{"s":"away","o":"under"},"w7g9":{"s":"home","o":"under"},"w7g10":{"s":"home","o":"under"},"w7g11":{"s":"away","o":"over"},"w7g12":{"s":"home","o":"over"},"w7g13":{"s":"away","o":"over"},"w7g14":{"s":"home","o":"under"}},"parlay":[{"g":"w7g9","m":"s","v":"home"},{"g":"w7g13","m":"s","v":"away"},{"g":"w7g11","m":"s","v":"away"},{"g":"w7g7","m":"s","v":"away"},{"g":"w7g12","m":"s","v":"home"}],"at":"2026-09-01T12:00:00Z","imp":true},"8":{"p":{"w8g1":{"s":"away","o":"under"},"w8g2":{"s":"away","o":"under"},"w8g3":{"s":"away","o":"under"},"w8g4":{"s":"home","o":"over"},"w8g5":{"s":"home","o":"under"},"w8g6":{"s":"home","o":"under"},"w8g7":{"s":"away","o":"over"},"w8g8":{"s":"home","o":"over"},"w8g9":{"s":"away","o":"under"},"w8g10":{"s":"away","o":"over"},"w8g11":{"s":"away","o":"over"},"w8g12":{"s":"home","o":"under"},"w8g13":{"s":"away","o":"under"},"w8g14":{"s":"away","o":"over"}},"parlay":[{"g":"w8g10","m":"s","v":"away"},{"g":"w8g4","m":"s","v":"home"},{"g":"w8g7","m":"s","v":"away"},{"g":"w8g6","m":"s","v":"home"},{"g":"w8g14","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"9":{"p":{"w9g1":{"s":"away","o":"under"},"w9g2":{"s":"away","o":"under"},"w9g3":{"s":"home","o":"under"},"w9g4":{"s":"away","o":"under"},"w9g5":{"s":"home","o":"under"},"w9g6":{"s":"away","o":"over"},"w9g7":{"s":"home","o":"over"},"w9g8":{"s":"away","o":"over"},"w9g9":{"s":"home","o":"under"},"w9g10":{"s":"home","o":"under"},"w9g11":{"s":"away","o":"under"},"w9g12":{"s":"home","o":"over"},"w9g13":{"s":"away","o":"over"},"w9g14":{"s":"away","o":"over"},"w9g15":{"s":"home","o":"under"}},"parlay":[{"g":"w9g13","m":"s","v":"away"},{"g":"w9g11","m":"s","v":"away"},{"g":"w9g3","m":"s","v":"home"},{"g":"w9g2","m":"s","v":"away"},{"g":"w9g8","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"10":{"p":{"w10g1":{"s":"away","o":"under"},"w10g2":{"s":"home","o":"over"},"w10g3":{"s":"away","o":"over"},"w10g4":{"s":"home","o":"under"},"w10g5":{"s":"away","o":"under"},"w10g6":{"s":"away","o":"over"},"w10g7":{"s":"away","o":"over"},"w10g8":{"s":"home","o":"under"},"w10g9":{"s":"away","o":"under"},"w10g10":{"s":"away","o":"over"},"w10g11":{"s":"away","o":"over"},"w10g12":{"s":"away","o":"under"},"w10g13":{"s":"away","o":"under"},"w10g14":{"s":"away","o":"under"}},"parlay":[{"g":"w10g7","m":"s","v":"away"},{"g":"w10g9","m":"s","v":"away"},{"g":"w10g13","m":"s","v":"away"},{"g":"w10g4","m":"s","v":"away"},{"g":"w10g10","m":"s","v":"away"}],"at":"2026-09-01T12:00:00Z","imp":true},"1":{"p":{},"parlay":[],"at":"2026-09-01T12:00:00Z","imp":true,"manual":{"total":22,"pct":56.25,"note":"No picks on file for this week. The total and percentage are the ones recorded on the Google Sheet."}}},"futures":{"afc":"Bills","nfc":"Eagles","sb":"Bills","at":"2026-09-01T12:00:00Z","imp":true}}}};
+/* League data lives in data.json in the same GitHub repository as this page. Everyone reads it; only the commissioner's token can write it. */
+const GH={owner:'',repo:'',token:'',sha:null};
+function detectRepo(){
+  let saved=null;try{saved=JSON.parse(ls.get('mlfl.gh')||'null');}catch(e){}
+  if(saved&&saved.owner&&saved.repo)return saved;
+  const m=location.hostname.match(/^([^.]+)\.github\.io$/i);if(!m)return {owner:'',repo:''};
+  const seg=location.pathname.split('/').filter(Boolean)[0];
+  return {owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'};
+}
+const ghApi=()=>'https://api.github.com/repos/'+encodeURIComponent(GH.owner)+'/'+encodeURIComponent(GH.repo)+'/contents/data.json';
+const ghHdr=()=>Object.assign({Accept:'application/vnd.github+json'},GH.token?{Authorization:'Bearer '+GH.token}:{});
+const b64enc=str=>{const b=new TextEncoder().encode(str);let o='';for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o);};
+const b64dec=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g,'')),c=>c.charCodeAt(0)));
+async function loadData(){
+  let data=null,missing=false;
+  if(GH.owner&&GH.repo){
+    try{
+      const r=await fetch(ghApi()+'?t='+Date.now(),{headers:ghHdr(),cache:'no-store'});
+      if(r.ok){const j=await r.json();GH.sha=j.sha;data=JSON.parse(b64dec(j.content));}
+      else if(r.status===404)missing=true;
+    }catch(e){}
+  }
+  if(!data&&!missing){try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(r.ok)data=await r.json();}catch(e){}}
+  if(!data)data=clone(SEED);
+  S.cfg=data.cfg||clone(SEED.cfg);S.weeks=data.weeks||{};S.entries=data.entries||{};
+  S.got={cfg:true,weeks:true,entries:true};S.loadedAt=Date.now();
+}
+async function persist(){
+  if(!GH.token){toast('Sign in on the Commissioner tab to save changes.');return false;}
+  const body={message:'Update league data',content:b64enc(JSON.stringify({cfg:S.cfg,weeks:S.weeks,entries:S.entries},null,1))};
+  const put=()=>{if(GH.sha)body.sha=GH.sha;else delete body.sha;return fetch(ghApi(),{method:'PUT',headers:ghHdr(),body:JSON.stringify(body)});};
+  try{
+    let r=await put();
+    if(r.status===409||r.status===422){const g=await fetch(ghApi()+'?t='+Date.now(),{headers:ghHdr(),cache:'no-store'});GH.sha=g.ok?(await g.json()).sha:null;r=await put();}
+    if(!r.ok){toast(r.status===401||r.status===403||r.status===404?'GitHub did not accept the token. Check that it has Contents read and write access to this repository.':'Could not save to GitHub (error '+r.status+'). Try again.');return false;}
+    GH.sha=(await r.json()).content.sha;return true;
+  }catch(e){toast('Could not reach GitHub. Check your connection and try again.');return false;}
+}
+async function saveEntry(key,mut){
+  const prev=S.entries[key],cur=clone(prev);mut(cur);S.entries[key]=cur;
+  if(await persist())return true;
+  S.entries[key]=prev;return false;
+}
+async function saveDoc(path,data){
+  const parts=path.split('/'),isCfg=parts[0]==='league',prev=isCfg?S.cfg:S.weeks[parts[1]];
+  if(isCfg)S.cfg=data;else S.weeks[parts[1]]=data;
+  if(await persist())return true;
+  if(isCfg)S.cfg=prev;else if(prev)S.weeks[parts[1]]=prev;else delete S.weeks[parts[1]];
+  return false;
+}
+function draftKey(n,k){return n+':'+k;}
+function getDraft(n,k){
+  const id=draftKey(n,k);
+  if(!S.drafts[id]){
+    let d=null;try{d=JSON.parse(ls.get('mlfl.draft.'+id)||'null');}catch(e){}
+    if(!d){const ex=S.entries[k]&&S.entries[k].weeks&&S.entries[k].weeks[n];d={p:clone(ex&&ex.p),parlay:((ex&&ex.parlay)||[]).map(l=>l.g+'|'+l.m+'|'+l.v)};}
+    while(d.parlay.length<5)d.parlay.push('');
+    S.drafts[id]=d;
+  }
+  return S.drafts[id];
+}
+function keepDraft(n,k){ls.set('mlfl.draft.'+draftKey(n,k),JSON.stringify(S.drafts[draftKey(n,k)]));}
+
+function typing(){const a=document.activeElement;return a&&$('#view').contains(a)&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=='checkbox';}
+function requestRender(force){if(!force&&typing()){S.stale=true;return;}S.stale=false;render();}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(S.stale&&!typing())requestRender();},60));
+
+function render(){
+  const act=document.activeElement&&document.activeElement.id;
+  S.me=whoAmI();
+  const tabs=[['picks','Picks'],['standings','Standings'],['futures','Futures'],['commish','Commissioner']];
+  if(!tabs.some(t=>t[0]===S.view))S.view='picks';
+  $('#nav').innerHTML=tabs.map(t=>'<a href="#'+t[0]+'"'+(S.view===t[0]?' aria-current="page"':'')+'>'+t[1]+'</a>').join('');
+  $('#season').textContent=S.cfg&&S.cfg.season?S.cfg.season+' season':'';
+  const me=$('#me');me.hidden=!S.me;if(S.me)me.textContent='You: '+pname(S.me);
+  let h;
+  if(!(S.got.cfg&&S.got.weeks&&S.got.entries))h='<p class="muted">Loading the league…</p>';
+  else if(!S.cfg)h='<div class="note warn"><p>The league has not been set up yet.</p></div>';
+  else h=({picks:viewPicks,standings:viewStandings,futures:viewFutures,commish:viewCommish}[S.view])();
+  $('#view').innerHTML=h;
+  document.querySelectorAll('#view [data-f]').forEach(el=>{if(el.id in S.form){if(el.type==='checkbox')el.checked=!!S.form[el.id];else el.value=S.form[el.id];}});
+  if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el))el.focus();}
+}
+
+/* ---------- Picks ---------- */
+function viewPicks(){
+  const nums=Object.keys(S.weeks).map(Number).sort((a,b)=>a-b);
+  const cur=S.cfg.currentWeek;
+  if(S.selWeek==null||(!S.weeks[S.selWeek]&&S.selWeek!==cur))S.selWeek=S.weeks[cur]?cur:(nums.length?nums[nums.length-1]:cur);
+  const n=S.selWeek,week=S.weeks[n];
+  let h='';
+  const lab=week?(week.label||weekLabel(week)):'';
+  h+='<div class="bar"><h2 class="weekhead">Week '+esc(n)+(lab?' | '+esc(lab):'')+'</h2>';
+  if(nums.length>1)h+='<label class="small muted" for="weeksel">Show week <select id="weeksel">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>Week '+x+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>';
+  h+='</div>';
+  if(!week){
+    h+='<div class="note"><p><strong>The Week '+esc(n)+' board has not been built yet.</strong></p><p>'+(S.isOwner?'Open the <a href="#commish">Commissioner</a> tab to load this week\'s lines.':'The commissioner will post the lines here. The standings are up to date in the meantime.')+'</p></div>';
+    return h;
+  }
+  const ps=players();
+  if(!S.selPlayer||!ps.some(p=>p.key===S.selPlayer))S.selPlayer=S.me||(ps[0]&&ps[0].key);
+  const sel=S.selPlayer,open=week.open!==false,sub=subWeek(sel,n),mySub=!!(S.me&&subWeek(S.me,n));
+  const editable=open&&!sub&&!!S.isOwner;
+  h+='<div class="pills" role="group" aria-label="Whose picks to show">'+ps.map(p=>'<button class="pill" data-act="selp" data-k="'+esc(p.key)+'" aria-pressed="'+(p.key===sel)+'"><span class="dot'+(subWeek(p.key,n)?' in':'')+'" title="'+(subWeek(p.key,n)?'Submitted':'Not submitted')+'"></span>'+esc(p.name)+(p.key===S.me?' (you)':'')+'</button>').join('')+'</div>';
+  const games=sortedGames(week);
+  if(editable){
+    h+='<div class="note"><p>'+'<strong>Entering Week '+esc(n)+' picks for '+esc(pname(sel))+'.</strong> Tap one side of the spread and one side of the total in each game, choose five parlay legs, then submit. Everyone can see the picks once you submit. Games that have kicked off can no longer be picked.</p></div>';
+  }else if(sub){
+    h+='<p class="muted small">'+(sub.imp?esc(pname(sel))+"'s picks were imported from the Google Sheet. Picks are locked.":esc(pname(sel))+' submitted on '+esc(chi(sub.at,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT. Picks are locked.')+'</p>';
+  }else h+='<p class="muted small">'+esc(pname(sel))+' has not submitted picks for this week'+(open?' yet.':'. Picks are closed.')+'</p>';
+  if(sub&&sub.manual&&sub.manual.note)h+='<div class="note warn"><p>'+esc(sub.manual.note)+'</p></div>';
+  const draft=editable?getDraft(n,sel):null;
+  const wk=editable?{p:draft.p}:sub;
+  const sc=scoreWeek(week,sub,false);
+  const visible=()=>true;
+  if(!games.length)h+='<div class="note"><p>No games on the board yet.</p></div>';
+  h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,wk,sc,editable,visible)).join('')+'</div>';
+  h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,editable,visible)+'<div class="stack">'+totalsCard(n,sel,sc,sub)+(editable?'<button class="btn primary" data-act="submit">Submit '+(sel===S.me?'my':esc(pname(sel))+"'s")+' picks</button>':'')+'</div></div>';
+  h+=weekTable(week,n);
+  h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+1</i> Correct pick</span><span><i class="badge combo">+3</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
+  return h;
+}
+function claimCard(){
+  const free=players().filter(p=>{const u=S.entries[p.key]&&S.entries[p.key].uid;return !u||u===S.uid;});
+  return '<div class="note warn"><p><strong>Which player are you?</strong> Choose once and this page remembers you.</p><div class="pills">'+free.map(p=>'<button class="pill" data-act="claim" data-k="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div></div>';
+}
+function whoChips(gid,m,v,n,sel,g,visible){
+  const out=players().filter(p=>p.key!==sel&&visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
+  return out.length?'<span class="who">'+out.map(p=>'<span title="'+esc(p.name)+'">'+esc(p.name.slice(0,2))+'</span>').join('')+'</span>':'';
+}
+function gameCard(gid,g,n,sel,wk,sc,editable,visible){
+  const p=(wk&&wk.p&&wk.p[gid])||{},canPick=editable&&!started(g),show=editable||visible(g,sel);
+  const opt=(m,v,label,ok)=>{
+    const picked=show&&p[m]===v,inner=esc(label)+whoChips(gid,m,v,n,sel,g,visible);
+    if(!ok)return '<div class="opt muted">N/A</div>';
+    return canPick?'<button class="opt'+(picked?' picked':'')+'" data-act="pick" data-g="'+esc(gid)+'" data-m="'+m+'" data-v="'+v+'" aria-pressed="'+picked+'">'+inner+'</button>':'<div class="opt'+(picked?' picked':'')+'">'+inner+'</div>';
+  };
+  let scoreLine;
+  if(g.sa!=null&&g.sh!=null){const w=g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie';scoreLine='<div class="score">'+(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+esc(w)+')</div>';}
+  else scoreLine='<div class="score pre">'+(started(g)?'In progress':'Not started')+'</div>';
+  const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+1</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
+  const res=r.combo?'<div class="res combo">+3</div>':cell(r.sw)+'<!--o-->'+cell(r.ow);
+  const parts=res.split('<!--o-->');
+  const hidden=!show&&wk&&wk.p&&wk.p[gid]?'<div class="opt masked" style="grid-column:1 / span 3">Hidden until you submit your picks</div>':'';
+  return '<article class="card game"><header><h3>'+esc(g.away)+' vs '+esc(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+'<div class="rows">'+
+    opt('s','away',g.sp==null?'':spreadLabel(g,'away'),g.sp!=null)+opt('s','home',g.sp==null?'':spreadLabel(g,'home'),g.sp!=null)+(r.combo?parts[0]:parts[0])+
+    opt('o','over',g.tot==null?'':ouLabel(g,'over'),g.tot!=null)+opt('o','under',g.tot==null?'':ouLabel(g,'under'),g.tot!=null)+(r.combo?'':parts[1])+hidden+'</div></article>';
+}
+function legLabel(week,code,own){
+  const [gid,m,v]=String(code).split('|'),g=legGame(week.games[gid],{m,v,l:own});if(!g)return '';
+  return m==='s'?spreadLabel(g,v):g.away+' vs '+g.home+' '+ouLabel(g,v);
+}
+function parlayCard(week,n,sel,sub,draft,sc,editable,visible){
+  let h='<section class="card"><h3>5 Game Parlay Bonus (+20 Points)</h3><div class="pad stack">';
+  if(editable){
+    const opts=[];sortedGames(week).forEach(([gid,g])=>{if(started(g))return;if(g.sp!=null){opts.push(gid+'|s|away',gid+'|s|home');}if(g.tot!=null){opts.push(gid+'|o|over',gid+'|o|under');}});
+    h+='<ol class="legs">'+[0,1,2,3,4].map(i=>{
+      const cur=draft.parlay[i]||'',used=draft.parlay.filter((x,j)=>j!==i&&x).map(x=>x.split('|').slice(0,2).join('|'));
+      return '<li><span>'+(i+1)+'.</span><select id="leg'+i+'" data-act="leg" data-i="'+i+'" aria-label="Parlay leg '+(i+1)+'"><option value="">Choose a pick</option>'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===cur?' selected':'')+(used.includes(o.split('|').slice(0,2).join('|'))?' disabled':'')+'>'+esc(legLabel(week,o))+'</option>').join('')+'</select></li>';
+    }).join('')+'</ol><p class="muted small">Any five spread or over/under picks from this week. All five must win. A push or a loss scores 0.</p>';
+  }else if(sub&&sub.parlay&&sub.parlay.length===5){
+    const show=sub.parlay.every(l=>{const g=week.games[l.g];return !g||visible(g,sel);});
+    if(!show)h+='<p class="muted">Hidden until you submit your picks.</p>';
+    else{
+      h+='<ol class="legs">'+sub.parlay.map((l,i)=>{const r=sc.legs[i];return '<li><span class="mark'+(r===true?' win':(r===false||r==='push')?' miss':'')+'">'+(r===true?'✓':(r===false||r==='push')?'✕':'')+'</span>'+(i+1)+'. '+esc(legLabel(week,l.g+'|'+l.m+'|'+l.v,l.l))+'</li>';}).join('')+'</ol>';
+      h+='<div>'+(sc.parlayState==='hit'?'<span class="badge win">+20</span>':sc.parlayState==='miss'?'<span class="badge miss">0</span>':'<span class="badge">Still alive</span>')+'</div>';
+    }
+  }else h+='<p class="muted">'+(sub?'No parlay entered this week.':'Nothing here until picks are submitted.')+'</p>';
+  return h+'</div></section>';
+}
+function totalsCard(n,sel,sc,sub){
+  return '<section class="card"><h3>Total Points (Week '+esc(n)+') · '+esc(pname(sel))+'</h3><div class="totals"><span>Spread Points: '+sc.spread+' | O/U Points: '+sc.ou+'</span><span>Same Game Combo Points: '+sc.combo+'</span><span>5 Game Parlay Points: '+sc.parlay+'</span><span class="big">Total Points: '+sc.total+(sc.manualTotal?' *':'')+'</span><span>Correct Pick Percentage: '+(sc.pct==null?'N/A':sc.pct.toFixed(2)+'%')+'</span></div></section>';
+}
+function weekTable(week,n){
+  const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false)};}).sort((a,b)=>b.sc.total-a.sc.total);
+  return '<section class="card"><h3>Week '+esc(n)+' scoreboard'+(weekComplete(week)?'':' <span class="when">includes games in progress</span>')+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th>Spread</th><th>O/U</th><th>Combo</th><th>Parlay</th><th>Total</th><th>Correct</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td>'+esc(r.p.name)+'</td><td class="l">'+(r.w?'<span class="badge win">In</span>':'<span class="badge">Waiting</span>')+'</td><td>'+r.sc.spread+'</td><td>'+r.sc.ou+'</td><td>'+r.sc.combo+'</td><td>'+r.sc.parlay+'</td><td><strong>'+r.sc.total+'</strong></td><td>'+(r.sc.pct==null?'':r.sc.pct.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
+}
+
+/* ---------- Standings ---------- */
+function viewStandings(){
+  const hasBase=players().some(p=>p.base&&p.base.points);
+  const s=computeSeason(S.cfg,S.weeks,S.entries),max=Math.max(1,...s.list.map(r=>r.points));
+  let h='<h2 class="weekhead">Current Point Standings</h2>';
+  h+='<section class="card"><div class="tw"><table><thead><tr><th>#</th><th class="l">Player</th><th>Points</th><th class="l"></th><th>Weeks won</th><th>Correct pick %</th></tr></thead><tbody>'+
+    s.list.map((r,i)=>'<tr class="'+(i===0?'lead':'')+'"><td><span class="rank">'+(i+1)+'</span></td><td class="l">'+esc(r.name)+(r.key===S.me?' (you)':'')+'</td><td><strong>'+r.points+'</strong></td><td class="l"><div class="meter"><i style="width:'+(r.points/max*100).toFixed(1)+'%"></i></div></td><td>'+r.won+'</td><td>'+(r.cpp==null?'':r.cpp.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
+  if(S.cfg.baseLabel)h+='<p class="muted small">'+esc(S.cfg.baseLabel)+'</p>';
+  h+='<section class="card"><h3>Points by week</h3>';
+  if(!s.nums.length)h+='<div class="pad muted">Weekly results will appear here once the first week is played on this site.</div>';
+  else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">Wk '+n+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
+    s.list.map(r=>{const p=players().find(x=>x.key===r.key);return '<tr><td>'+esc(r.name)+'</td>'+(hasBase?'<td>'+((p.base&&p.base.points)||0)+'</td>':'')+s.nums.map(n=>'<td class="'+((s.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td>'+r.fut+'</td><td><strong>'+r.points+'</strong></td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">Only final games count here. A gold cell marks the week winner. Tap a week to see every pick.</p>';
+  h+='</section>';
+  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></div></section>';
+  return h;
+}
+
+/* ---------- Futures ---------- */
+function viewFutures(){
+  const fr=S.cfg.futuresResult||{},me=S.me,mine=me&&S.entries[me]&&S.entries[me].futures,open=S.cfg.futuresOpen!==false;
+  let h='<h2 class="weekhead">Future Picks</h2><p class="muted">AFC winner +10 | NFC winner +10 | Super Bowl winner +20</p>';
+  const pending=players().filter(p=>!(S.entries[p.key]&&S.entries[p.key].futures&&S.entries[p.key].futures.at));
+  if(S.isOwner&&open&&pending.length){
+    const sel=(id,label,list)=>'<label for="'+id+'">'+label+' <select id="'+id+'" data-f><option value="">Choose</option>'+list.map(t=>'<option>'+t+'</option>').join('')+'</select></label>';
+    h+='<section class="card"><h3>Enter future picks</h3><div class="pad stack"><div class="bar"><label for="fu-who">Player <select id="fu-who" data-f>'+pending.map(p=>'<option value="'+esc(p.key)+'">'+esc(p.name)+'</option>').join('')+'</select></label>'+sel('fu-afc','AFC winner',AFC)+sel('fu-nfc','NFC winner',NFC)+sel('fu-sb','Super Bowl winner',AFC.concat(NFC).sort())+'</div><div><button class="btn primary" data-act="futsubmit">Submit future picks</button></div><p class="muted small">Future picks lock when you submit.</p></div></section>';
+  }
+  const mark=(pick,res)=>!pick?'':esc(pick)+(res?(pick===res?' <span class="badge win">✓</span>':' <span class="badge miss">✕</span>'):'');
+  h+='<section class="card"><div class="tw"><table><thead><tr><th>Player</th><th class="l">AFC winner</th><th class="l">NFC winner</th><th class="l">Super Bowl winner</th></tr></thead><tbody>'+players().map(p=>{const f=S.entries[p.key]&&S.entries[p.key].futures;const ok=f&&f.at;return '<tr><td>'+esc(p.name)+'</td>'+(ok?'<td class="l">'+mark(f.afc,fr.afc)+'</td><td class="l">'+mark(f.nfc,fr.nfc)+'</td><td class="l">'+mark(f.sb,fr.sb)+'</td>':'<td class="l muted" colspan="3">Not entered yet</td>')+'</tr>';}).join('')+'</tbody></table></div></section>';
+  if(!open)h+='<p class="muted small">Future picks are closed.</p>';
+  return h;
+}
+
+/* ---------- Commissioner ---------- */
+function oddsUrl(k){return 'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey='+encodeURIComponent(k)+'&regions=us&markets=spreads,totals&bookmakers=draftkings';}
+function scoresUrl(k){return 'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?daysFrom=3&apiKey='+encodeURIComponent(k);}
+function toLocalInput(iso){if(!iso)return '';const d=new Date(iso),p=x=>String(x).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function signInCard(){
+  return '<h2 class="weekhead">Commissioner</h2><section class="card"><h3>Commissioner sign-in</h3><div class="pad stack"><p>Only the commissioner needs this. Everyone else can use the other tabs without signing in.</p><label for="gh-owner">GitHub username <input type="text" id="gh-owner" data-f value="'+esc(GH.owner)+'" autocomplete="off"></label><label for="gh-repo">Repository name <input type="text" id="gh-repo" data-f value="'+esc(GH.repo)+'" autocomplete="off"></label><label for="gh-token">Access token <input type="password" id="gh-token" data-f autocomplete="off" size="40"></label><div><button class="btn primary" data-act="signin">Sign in</button></div><p class="muted small">The token is kept in this browser only. It is what lets this page save picks and scores to your repository.</p></div></section>';
+}
+function viewCommish(){
+  if(!S.isOwner)return signInCard();
+  const nums=Object.keys(S.weeks).map(Number).sort((a,b)=>a-b),cur=S.cfg.currentWeek;
+  if(S.adminWeek==null)S.adminWeek=cur;
+  const n=S.adminWeek,week=S.weeks[n],key=ls.get('mlfl.oddskey')||'';
+  const opts=[...new Set(nums.concat([cur,n]))].sort((a,b)=>a-b);
+  let h='<h2 class="weekhead">Commissioner</h2>';
+  h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>Week '+x+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(n!==cur?'<button class="btn" data-act="setcurrent">Make Week '+n+' the current week</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="30" value="'+((nums.length?Math.max(...nums):cur-1)+1)+'"></label><button class="btn" data-act="newweek">Start week</button></div><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
+  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminBase()+adminFutures();}
+  h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
+  const rows=sortedGames(week).filter(([gid])=>!S.delRows[gid]).concat(S.newRows.filter(id=>!S.delRows[id]).map(id=>[id,{}]));
+  const inp=(gid,k,type,val,extra)=>'<input type="'+type+'" id="g-'+esc(gid)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(val==null?'':val)+'" '+(extra||'')+' aria-label="'+k+'">';
+  h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th></th></tr></thead><tbody>'+
+    rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
+    '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
+  return h+adminPlayers(n)+adminBase()+adminFutures();
+}
+function adminPlayers(n){
+  const week=S.weeks[n];
+  let h='<section class="card"><h3>Players · Week '+esc(n)+'</h3><div class="pad stack">';
+  if(week)h+='<div class="bar"><span>Picks are <strong>'+(week.open!==false?'open':'closed')+'</strong> for Week '+esc(n)+'.</span><button class="btn" data-act="toggleopen">'+(week.open!==false?'Close picks':'Reopen picks')+'</button></div>';
+  h+='</div><div class="tw"><table><thead><tr><th>Player</th><th class="l">Week '+esc(n)+' picks</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone, open Picks and choose their name. Unlock lets you change their picks and submit again.</p></section>';
+  return h;
+}
+function adminBase(){
+  return '<section class="card"><h3>Starting totals carried over from the sheet</h3><div class="tw"><table><thead><tr><th>Player</th><th>Points</th><th>Weeks won</th><th>Correct pick %</th><th>Weeks counted</th></tr></thead><tbody>'+players().map(p=>{const b=p.base||{};const i=(k,v,st)=>'<input type="number" id="b-'+esc(p.key)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(v==null?0:v)+'" step="'+st+'" aria-label="'+k+'">';return '<tr data-bk="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td>'+i('points',b.points,'1')+'</td><td>'+i('won',b.won,'1')+'</td><td>'+i('cpp',b.cpp,'0.01')+'</td><td>'+i('weeks',b.weeks,'1')+'</td></tr>';}).join('')+'</tbody></table></div><div class="pad bar"><button class="btn primary" data-act="savebase">Save starting totals</button><span class="muted small">The season percentage is the average of each week\'s percentage.</span></div></section>';
+}
+function adminFutures(){
+  const fr=S.cfg.futuresResult||{};
+  const sel=(id,label,list,v)=>'<label for="'+id+'">'+label+' <select id="'+id+'" data-f><option value="">Not decided</option>'+list.map(t=>'<option'+(t===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label>';
+  return '<section class="card"><h3>Futures results</h3><div class="pad stack"><div class="bar">'+sel('fr-afc','AFC winner',AFC,fr.afc)+sel('fr-nfc','NFC winner',NFC,fr.nfc)+sel('fr-sb','Super Bowl winner',AFC.concat(NFC).sort(),fr.sb)+'</div><label for="fr-open"><input type="checkbox" id="fr-open" data-f'+(S.cfg.futuresOpen!==false?' checked':'')+'> Players can still enter future picks</label><div><button class="btn primary" data-act="savefut">Save futures</button></div></div></section>';
+}
+
+/* ---------- Actions ---------- */
+async function oddsData(urlFn){
+  const pasted=$('#paste').value.trim();if(pasted)return pasted;
+  const key=(ls.get('mlfl.oddskey')||'').trim();if(!key){toast('Enter your Odds API key first.');return null;}
+  try{const r=await fetch(urlFn(key));const t=await r.text();if(!r.ok){toast('The odds service answered with an error ('+r.status+'). Check the key.');return null;}return t;}
+  catch(e){toast('This page could not reach the odds service. Use the links below and paste the result instead.');return null;}
+}
+function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
+const acts={
+  async signin(){
+    const owner=$('#gh-owner').value.trim(),repo=$('#gh-repo').value.trim(),token=$('#gh-token').value.trim();
+    if(!owner||!repo||!token){toast('Fill in all three boxes.');return;}
+    try{
+      const r=await fetch('https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),{headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+token}});
+      if(!r.ok){toast('GitHub did not accept that. Check the username, repository name and token.');return;}
+    }catch(e){toast('Could not reach GitHub. Check your connection and try again.');return;}
+    GH.owner=owner;GH.repo=repo;GH.token=token;ls.set('mlfl.gh',JSON.stringify({owner,repo}));ls.set('mlfl.token',token);
+    S.isOwner=true;clearForm('gh-');await loadData();toast('Signed in as commissioner.');requestRender(true);
+  },
+  signout(){ls.del('mlfl.token');GH.token='';S.isOwner=false;requestRender(true);},
+  selp(el){S.selPlayer=el.dataset.k;requestRender(true);},
+  goweek(el){S.selWeek=Number(el.dataset.n);},
+  async claim(el){
+    const k=el.dataset.k,e=S.entries[k]||{};
+    if(e.uid&&e.uid!==S.uid){toast('That name is already linked to another account. Ask the commissioner to unlink it.');return;}
+    ls.set('mlfl.me',k);S.selPlayer=k;
+    if(S.uid&&S.canWrite!==false)await saveEntry(k,c=>{c.uid=S.uid;});
+    requestRender(true);
+  },
+  pick(el){
+    const n=S.selWeek,d=getDraft(n,S.selPlayer),g=el.dataset.g,m=el.dataset.m,v=el.dataset.v;
+    d.p[g]=d.p[g]||{};if(d.p[g][m]===v)delete d.p[g][m];else d.p[g][m]=v;
+    keepDraft(n,S.selPlayer);requestRender(true);
+  },
+  submit(){
+    const n=S.selWeek,k=S.selPlayer,week=S.weeks[n],d=getDraft(n,k),p={};let made=0,avail=0;
+    sortedGames(week).forEach(([gid,g])=>{
+      if(started(g))return;
+      if(g.sp!=null)avail++;if(g.tot!=null)avail++;
+      const x=d.p[gid]||{},y={};if(x.s&&g.sp!=null){y.s=x.s;made++;}if(x.o&&g.tot!=null){y.o=x.o;made++;}
+      if(y.s||y.o)p[gid]=y;
+    });
+    const legs=d.parlay.filter(Boolean).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}).filter(l=>week.games[l.g]&&!started(week.games[l.g]));
+    if(!made){toast('Make at least one pick before you submit.');return;}
+    const body='<ul><li>'+made+' of '+avail+' picks made'+(made<avail?'. The '+(avail-made)+' you left blank score nothing.':'.')+'</li><li>'+(legs.length===5?'Parlay: all five legs chosen.':'Parlay: '+legs.length+' of 5 legs chosen, so no parlay this week.')+'</li></ul><p>Picks lock when you submit. You can unlock them from the Commissioner tab.</p>';
+    confirmBox('Submit Week '+n+' picks for '+pname(k)+'?',body,'Submit and lock',async()=>{
+      const ok=await saveEntry(k,e=>{e.weeks=e.weeks||{};e.weeks[n]={p,parlay:legs.length===5?legs:[],at:new Date().toISOString()};});
+      if(ok){delete S.drafts[draftKey(n,k)];ls.del('mlfl.draft.'+draftKey(n,k));toast('Picks submitted and locked.');requestRender(true);}
+    });
+  },
+  futsubmit(){
+    const f={afc:$('#fu-afc').value,nfc:$('#fu-nfc').value,sb:$('#fu-sb').value};
+    if(!f.afc||!f.nfc||!f.sb){toast('Choose all three before you submit.');return;}
+    const who=$('#fu-who').value;
+    confirmBox('Submit future picks for '+pname(who)+'?','<ul><li>AFC winner: '+esc(f.afc)+'</li><li>NFC winner: '+esc(f.nfc)+'</li><li>Super Bowl winner: '+esc(f.sb)+'</li></ul><p>These lock when you submit.</p>','Submit and lock',async()=>{
+      f.at=new Date().toISOString();if(await saveEntry(who,e=>{e.futures=f;})){clearForm('fu-');toast('Future picks submitted.');requestRender(true);}
+    });
+  },
+  async setcurrent(){await saveDoc('league/config',Object.assign(clone(S.cfg),{currentWeek:S.adminWeek}));},
+  async newweek(){
+    const n=parseInt($('#newweek').value,10);if(!(n>0)){toast('Enter a week number.');return;}
+    if(!S.weeks[n]&&!(await saveDoc('weeks/'+n,{n,open:true,games:{}})))return;
+    await saveDoc('league/config',Object.assign(clone(S.cfg),{currentWeek:n}));
+    S.adminWeek=n;S.selWeek=n;clearForm('newweek');toast('Week '+n+' is now the current week.');requestRender(true);
+  },
+  async createweek(){if(await saveDoc('weeks/'+S.adminWeek,{n:S.adminWeek,open:true,games:{}}))requestRender(true);},
+  async importodds(){
+    const n=S.adminWeek,week=S.weeks[n];let games;
+    const raw=await oddsData(oddsUrl);if(raw==null)return;
+    try{games=parseOdds(JSON.parse(raw));}catch(e){toast(e instanceof SyntaxError?'The pasted text is not complete. Copy the whole page and paste again.':e.message);return;}
+    const subs=players().filter(p=>subWeek(p.key,n)).length;
+    if(subs){toast(subs+' player'+(subs>1?'s have':' has')+' already submitted against this board. Unlock them first, or edit the lines in the table below.');return;}
+    if(await saveDoc('weeks/'+n,Object.assign(clone(week),{games}))){clearForm('g-');clearForm('paste');S.newRows=[];S.delRows={};toast('Odds board built: '+Object.keys(games).length+' games loaded.');requestRender(true);}
+  },
+  async importscores(){
+    const n=S.adminWeek,week=clone(S.weeks[n]);let upd;
+    const raw=await oddsData(scoresUrl);if(raw==null)return;
+    try{upd=parseScores(JSON.parse(raw),week.games||{});}catch(e){toast(e instanceof SyntaxError?'The pasted text is not complete. Copy the whole page and paste again.':e.message);return;}
+    const ids=Object.keys(upd);if(!ids.length){toast('No scores in that data matched this week\'s games.');return;}
+    ids.forEach(id=>Object.assign(week.games[id],upd[id]));
+    if(await saveDoc('weeks/'+n,week)){clearForm('g-');clearForm('paste');toast('Scores updated: '+ids.length+' games.');requestRender(true);}
+  },
+  addrow(){S.newRows.push('m'+Date.now().toString(36));requestRender(true);},
+  delrow(el){S.delRows[el.dataset.g]=true;requestRender(true);},
+  async saveboard(){
+    const n=S.adminWeek,week=clone(S.weeks[n]),old=week.games||{},games={};let o=0,bad=false;
+    document.querySelectorAll('#view tr[data-gid]').forEach(tr=>{
+      const gid=tr.dataset.gid,f=k=>tr.querySelector('[data-k="'+k+'"]'),num=k=>{const v=f(k).value.trim();if(v==='')return null;const x=Number(v);if(isNaN(x)){bad=true;return null;}return x;};
+      const away=f('away').value.trim(),home=f('home').value.trim();if(!away||!home)return;
+      const g=Object.assign({},old[gid],{o:o++,away,home,sp:num('sp'),tot:num('tot'),kick:f('kick').value?new Date(f('kick').value).toISOString():'',sa:num('sa'),sh:num('sh')});
+      g.fin=f('fin').checked&&g.sa!=null&&g.sh!=null;games[gid]=g;
+    });
+    if(bad){toast('One of the numbers is not valid. Fix it and save again.');return;}
+    week.games=games;
+    if(await saveDoc('weeks/'+n,week)){clearForm('g-');S.newRows=[];S.delRows={};toast('Games and scores saved.');requestRender(true);}
+  },
+  async toggleopen(){const n=S.adminWeek,week=clone(S.weeks[n]);week.open=week.open===false;await saveDoc('weeks/'+n,week);},
+  unlock(el){
+    const k=el.dataset.k,n=S.adminWeek;
+    confirmBox('Unlock '+pname(k)+"'s Week "+n+' picks?','<p>They will be able to change their picks and submit again.</p>','Unlock',async()=>{
+      if(await saveEntry(k,e=>{if(e.weeks&&e.weeks[n])delete e.weeks[n].at;})){delete S.drafts[draftKey(n,k)];toast('Unlocked.');}
+    });
+  },
+  async unlink(el){await saveEntry(el.dataset.k,e=>{delete e.uid;});},
+  async savebase(){
+    const cfg=clone(S.cfg);
+    document.querySelectorAll('#view tr[data-bk]').forEach(tr=>{const p=cfg.players.find(x=>x.key===tr.dataset.bk);if(!p)return;p.base={};['points','won','cpp','weeks'].forEach(k=>{p.base[k]=Number(tr.querySelector('[data-k="'+k+'"]').value)||0;});});
+    if(await saveDoc('league/config',cfg)){clearForm('b-');toast('Starting totals saved.');}
+  },
+  async savefut(){
+    const cfg=clone(S.cfg);cfg.futuresResult={afc:$('#fr-afc').value,nfc:$('#fr-nfc').value,sb:$('#fr-sb').value};cfg.futuresOpen=$('#fr-open').checked;
+    if(await saveDoc('league/config',cfg)){clearForm('fr-');toast('Futures saved.');}
+  }
+};
+document.addEventListener('click',async ev=>{
+  const el=ev.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||!acts[el.dataset.act])return;
+  if(S.busy)return;S.busy=true;try{await acts[el.dataset.act](el);}finally{S.busy=false;}
+});
+document.addEventListener('change',ev=>{
+  const el=ev.target;
+  if(el.id==='weeksel'){S.selWeek=Number(el.value);requestRender(true);return;}
+  if(el.id==='adminweek'){S.adminWeek=Number(el.value);clearForm('g-');S.newRows=[];S.delRows={};requestRender(true);return;}
+  if(el.dataset&&el.dataset.act==='leg'){const d=getDraft(S.selWeek,S.selPlayer);d.parlay[Number(el.dataset.i)]=el.value;keepDraft(S.selWeek,S.selPlayer);requestRender(true);}
+});
+document.addEventListener('input',ev=>{
+  const el=ev.target;
+  if(el.id==='oddskey'){ls.set('mlfl.oddskey',el.value.trim());$('#lnk-odds').href=oddsUrl(el.value.trim());$('#lnk-scores').href=scoresUrl(el.value.trim());return;}
+  if(el.dataset&&'f' in el.dataset&&el.id)S.form[el.id]=el.type==='checkbox'?el.checked:el.value;
+});
+function route(){const v=location.hash.replace('#','');S.view=['picks','standings','futures','commish'].includes(v)?v:'picks';requestRender(true);window.scrollTo(0,0);}
+window.addEventListener('hashchange',route);
+// Tabs switch on the click itself, so they also work where the page cannot change its own address (file previews).
+document.addEventListener('click',ev=>{
+  const a=ev.target.closest('a[href^="#"]');if(!a)return;
+  const v=a.getAttribute('href').slice(1);if(!['picks','standings','futures','commish'].includes(v))return;
+  ev.preventDefault();S.view=v;requestRender(true);window.scrollTo(0,0);
+  try{history.replaceState(null,'','#'+v);}catch(e){}
+});
+
+async function init(){
+  S.view=['picks','standings','futures','commish'].includes(location.hash.replace('#',''))?location.hash.replace('#',''):'picks';
+  render();
+  Object.assign(GH,detectRepo());GH.token=ls.get('mlfl.token')||'';S.isOwner=!!GH.token;
+  await loadData();requestRender(true);
+  // Viewers pick up new picks and scores when they come back to the tab.
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!S.isOwner&&Date.now()-S.loadedAt>60000){await loadData();requestRender();}});
+}
+init();
+</script>
+</body>
+</html>

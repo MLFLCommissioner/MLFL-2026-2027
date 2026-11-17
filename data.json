@@ -1,0 +1,7379 @@
+{
+ "cfg": {
+  "name": "MLFL",
+  "season": 2026,
+  "currentWeek": 10,
+  "futuresOpen": false,
+  "futuresResult": {
+   "afc": "",
+   "nfc": "",
+   "sb": ""
+  },
+  "baseLabel": "Weeks 1 to 10 were imported from the Google Sheets. Every total here is rescored from the picks themselves.",
+  "players": [
+   {
+    "key": "ron",
+    "name": "Ron",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   },
+   {
+    "key": "josh",
+    "name": "Josh",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   },
+   {
+    "key": "thomas",
+    "name": "Thomas",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   },
+   {
+    "key": "steve",
+    "name": "Steve",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   },
+   {
+    "key": "charlie",
+    "name": "Charlie",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   },
+   {
+    "key": "tyler",
+    "name": "Tyler",
+    "base": {
+     "points": 0,
+     "won": 0,
+     "cpp": 0,
+     "weeks": 0
+    }
+   }
+  ]
+ },
+ "weeks": {
+  "1": {
+   "n": 1,
+   "label": "Sep 9, 10, 13, 14 | 2026",
+   "open": false,
+   "games": {
+    "w1g1": {
+     "o": 0,
+     "away": "Patriots",
+     "home": "Seahawks",
+     "tag": "7:20 PM WNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 44.5,
+     "sa": 10,
+     "sh": 13,
+     "fin": true
+    },
+    "w1g2": {
+     "o": 1,
+     "away": "49ers",
+     "home": "Rams",
+     "tag": "7:35 PM TNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 48.5,
+     "sa": 27,
+     "sh": 7,
+     "fin": true
+    },
+    "w1g3": {
+     "o": 2,
+     "away": "Falcons",
+     "home": "Steelers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 42,
+     "sa": 13,
+     "sh": 20,
+     "fin": true
+    },
+    "w1g4": {
+     "o": 3,
+     "away": "Ravens",
+     "home": "Colts",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 48,
+     "sa": 41,
+     "sh": 23,
+     "fin": true
+    },
+    "w1g5": {
+     "o": 4,
+     "away": "Bills",
+     "home": "Texans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 1,
+     "tot": 44.5,
+     "sa": 36,
+     "sh": 31,
+     "fin": true
+    },
+    "w1g6": {
+     "o": 5,
+     "away": "Bears",
+     "home": "Panthers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3,
+     "tot": 47.5,
+     "sa": 59,
+     "sh": 37,
+     "fin": true
+    },
+    "w1g7": {
+     "o": 6,
+     "away": "Browns",
+     "home": "Jaguars",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -9,
+     "tot": 40.5,
+     "sa": 10,
+     "sh": 34,
+     "fin": true
+    },
+    "w1g8": {
+     "o": 7,
+     "away": "Saints",
+     "home": "Lions",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -7,
+     "tot": 50,
+     "sa": 30,
+     "sh": 31,
+     "fin": true
+    },
+    "w1g9": {
+     "o": 8,
+     "away": "Jets",
+     "home": "Titans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -1.5,
+     "tot": 39.5,
+     "sa": 23,
+     "sh": 10,
+     "fin": true
+    },
+    "w1g10": {
+     "o": 9,
+     "away": "Buccaneers",
+     "home": "Bengals",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -4,
+     "tot": 50.5,
+     "sa": 27,
+     "sh": 33,
+     "fin": true
+    },
+    "w1g11": {
+     "o": 10,
+     "away": "Cardinals",
+     "home": "Chargers",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -10,
+     "tot": 47,
+     "sa": 26,
+     "sh": 14,
+     "fin": true
+    },
+    "w1g12": {
+     "o": 11,
+     "away": "Packers",
+     "home": "Vikings",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -1,
+     "tot": 46,
+     "sa": 22,
+     "sh": 39,
+     "fin": true
+    },
+    "w1g13": {
+     "o": 12,
+     "away": "Dolphins",
+     "home": "Raiders",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 40,
+     "sa": 13,
+     "sh": 27,
+     "fin": true
+    },
+    "w1g14": {
+     "o": 13,
+     "away": "Commanders",
+     "home": "Eagles",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -5.5,
+     "tot": 44.5,
+     "sa": 22,
+     "sh": 24,
+     "fin": true
+    },
+    "w1g15": {
+     "o": 14,
+     "away": "Cowboys",
+     "home": "Giants",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": 3,
+     "tot": 48.5,
+     "sa": 20,
+     "sh": 28,
+     "fin": true
+    },
+    "w1g16": {
+     "o": 15,
+     "away": "Broncos",
+     "home": "Chiefs",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": -3,
+     "tot": 42.5,
+     "sa": 10,
+     "sh": 31,
+     "fin": true
+    }
+   }
+  },
+  "2": {
+   "n": 2,
+   "label": "Sep 17, 20, 21 | 2026",
+   "open": false,
+   "games": {
+    "w2g1": {
+     "o": 0,
+     "away": "Lions",
+     "home": "Bills",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": -5,
+     "tot": 54.5,
+     "sa": 31,
+     "sh": 41,
+     "fin": true
+    },
+    "w2g2": {
+     "o": 1,
+     "away": "Panthers",
+     "home": "Falcons",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 44,
+     "sa": 34,
+     "sh": 3,
+     "fin": true
+    },
+    "w2g3": {
+     "o": 2,
+     "away": "Bengals",
+     "home": "Texans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 46.5,
+     "sa": 20,
+     "sh": 6,
+     "fin": true
+    },
+    "w2g4": {
+     "o": 3,
+     "away": "Browns",
+     "home": "Buccaneers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -8.5,
+     "tot": 41,
+     "sa": 23,
+     "sh": 19,
+     "fin": true
+    },
+    "w2g5": {
+     "o": 4,
+     "away": "Packers",
+     "home": "Jets",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 44.5,
+     "sa": 20,
+     "sh": 17,
+     "fin": true
+    },
+    "w2g6": {
+     "o": 5,
+     "away": "Vikings",
+     "home": "Bears",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -4.5,
+     "tot": 48.5,
+     "sa": 9,
+     "sh": 3,
+     "fin": true
+    },
+    "w2g7": {
+     "o": 6,
+     "away": "Saints",
+     "home": "Ravens",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -8.5,
+     "tot": 47,
+     "sa": 24,
+     "sh": 17,
+     "fin": true
+    },
+    "w2g8": {
+     "o": 7,
+     "away": "Eagles",
+     "home": "Titans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 7,
+     "tot": 39.5,
+     "sa": 24,
+     "sh": 20,
+     "fin": true
+    },
+    "w2g9": {
+     "o": 8,
+     "away": "Steelers",
+     "home": "Patriots",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -5.5,
+     "tot": 41.5,
+     "sa": 3,
+     "sh": 20,
+     "fin": true
+    },
+    "w2g10": {
+     "o": 9,
+     "away": "Jaguars",
+     "home": "Broncos",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 45,
+     "sa": 13,
+     "sh": 20,
+     "fin": true
+    },
+    "w2g11": {
+     "o": 10,
+     "away": "Raiders",
+     "home": "Chargers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -6.5,
+     "tot": 43.5,
+     "sa": 26,
+     "sh": 14,
+     "fin": true
+    },
+    "w2g12": {
+     "o": 11,
+     "away": "Dolphins",
+     "home": "49ers",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -13.5,
+     "tot": 45.5,
+     "sa": 13,
+     "sh": 35,
+     "fin": true
+    },
+    "w2g13": {
+     "o": 12,
+     "away": "Seahawks",
+     "home": "Cardinals",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 4,
+     "tot": 41,
+     "sa": 31,
+     "sh": 7,
+     "fin": true
+    },
+    "w2g14": {
+     "o": 13,
+     "away": "Commanders",
+     "home": "Cowboys",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -4,
+     "tot": 50.5,
+     "sa": 20,
+     "sh": 37,
+     "fin": true
+    },
+    "w2g15": {
+     "o": 14,
+     "away": "Colts",
+     "home": "Chiefs",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -7,
+     "tot": 47,
+     "sa": 30,
+     "sh": 33,
+     "fin": true
+    },
+    "w2g16": {
+     "o": 15,
+     "away": "Giants",
+     "home": "Rams",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": -7,
+     "tot": 48,
+     "sa": 6,
+     "sh": 28,
+     "fin": true
+    }
+   }
+  },
+  "3": {
+   "n": 3,
+   "label": "Sep 24, 27, 28 | 2026",
+   "open": false,
+   "games": {
+    "w3g1": {
+     "o": 0,
+     "away": "Packers",
+     "home": "Falcons",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": 5,
+     "tot": 43,
+     "sa": 14,
+     "sh": 35,
+     "fin": true
+    },
+    "w3g2": {
+     "o": 1,
+     "away": "Panthers",
+     "home": "Browns",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3,
+     "tot": 41.5,
+     "sa": 18,
+     "sh": 21,
+     "fin": true
+    },
+    "w3g3": {
+     "o": 2,
+     "away": "Bengals",
+     "home": "Steelers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 42.5,
+     "sa": 27,
+     "sh": 30,
+     "fin": true
+    },
+    "w3g4": {
+     "o": 3,
+     "away": "Texans",
+     "home": "Colts",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 43,
+     "sa": 17,
+     "sh": 19,
+     "fin": true
+    },
+    "w3g5": {
+     "o": 4,
+     "away": "Chiefs",
+     "home": "Dolphins",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 11.5,
+     "tot": 46,
+     "sa": 24,
+     "sh": 10,
+     "fin": true
+    },
+    "w3g6": {
+     "o": 5,
+     "away": "Chargers",
+     "home": "Bills",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -7,
+     "tot": 50,
+     "sa": 16,
+     "sh": 24,
+     "fin": true
+    },
+    "w3g7": {
+     "o": 6,
+     "away": "Patriots",
+     "home": "Jaguars",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 45,
+     "sa": 6,
+     "sh": 35,
+     "fin": true
+    },
+    "w3g8": {
+     "o": 7,
+     "away": "Jets",
+     "home": "Lions",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -6.5,
+     "tot": 47.5,
+     "sa": 24,
+     "sh": 31,
+     "fin": true
+    },
+    "w3g9": {
+     "o": 8,
+     "away": "Seahawks",
+     "home": "Commanders",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 7,
+     "tot": 40,
+     "sa": 31,
+     "sh": 33,
+     "fin": true
+    },
+    "w3g10": {
+     "o": 9,
+     "away": "Titans",
+     "home": "Giants",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 40,
+     "sa": 7,
+     "sh": 12,
+     "fin": true
+    },
+    "w3g11": {
+     "o": 10,
+     "away": "Cardinals",
+     "home": "49ers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -8.5,
+     "tot": 48,
+     "sa": 30,
+     "sh": 36,
+     "fin": true
+    },
+    "w3g12": {
+     "o": 11,
+     "away": "Vikings",
+     "home": "Buccaneers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 1.5,
+     "tot": 42.5,
+     "sa": 23,
+     "sh": 16,
+     "fin": true
+    },
+    "w3g13": {
+     "o": 12,
+     "away": "Ravens",
+     "home": "Cowboys",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 53,
+     "sa": 34,
+     "sh": 31,
+     "fin": true
+    },
+    "w3g14": {
+     "o": 13,
+     "away": "Raiders",
+     "home": "Saints",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 43.5,
+     "sa": 35,
+     "sh": 27,
+     "fin": true
+    },
+    "w3g15": {
+     "o": 14,
+     "away": "Rams",
+     "home": "Broncos",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 45.5,
+     "sa": 26,
+     "sh": 30,
+     "fin": true
+    },
+    "w3g16": {
+     "o": 15,
+     "away": "Eagles",
+     "home": "Bears",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": 5,
+     "tot": 41,
+     "sa": 7,
+     "sh": 27,
+     "fin": true
+    }
+   }
+  },
+  "4": {
+   "n": 4,
+   "label": "Oct 1, 4, 5 | 2026",
+   "open": false,
+   "games": {
+    "w4g1": {
+     "o": 0,
+     "away": "Steelers",
+     "home": "Browns",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 38,
+     "sa": 24,
+     "sh": 27,
+     "fin": true
+    },
+    "w4g2": {
+     "o": 1,
+     "away": "Colts",
+     "home": "Commanders",
+     "tag": "8:30 AM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 47,
+     "sa": 30,
+     "sh": 13,
+     "fin": true
+    },
+    "w4g3": {
+     "o": 2,
+     "away": "Cardinals",
+     "home": "Giants",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 44.5,
+     "sa": 24,
+     "sh": 36,
+     "fin": true
+    },
+    "w4g4": {
+     "o": 3,
+     "away": "Cowboys",
+     "home": "Texans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 48,
+     "sa": 34,
+     "sh": 30,
+     "fin": true
+    },
+    "w4g5": {
+     "o": 4,
+     "away": "Packers",
+     "home": "Buccaneers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 39,
+     "sa": 17,
+     "sh": 14,
+     "fin": true
+    },
+    "w4g6": {
+     "o": 5,
+     "away": "Jaguars",
+     "home": "Bengals",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 51.5,
+     "sa": 22,
+     "sh": 17,
+     "fin": true
+    },
+    "w4g7": {
+     "o": 6,
+     "away": "Rams",
+     "home": "Eagles",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3,
+     "tot": 43,
+     "sa": 24,
+     "sh": 20,
+     "fin": true
+    },
+    "w4g8": {
+     "o": 7,
+     "away": "Patriots",
+     "home": "Bills",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -6.5,
+     "tot": 48,
+     "sa": 29,
+     "sh": 26,
+     "fin": true
+    },
+    "w4g9": {
+     "o": 8,
+     "away": "Jets",
+     "home": "Bears",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 43,
+     "sa": 12,
+     "sh": 23,
+     "fin": true
+    },
+    "w4g10": {
+     "o": 9,
+     "away": "Titans",
+     "home": "Ravens",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -11.5,
+     "tot": 43.5,
+     "sa": 18,
+     "sh": 24,
+     "fin": true
+    },
+    "w4g11": {
+     "o": 10,
+     "away": "Dolphins",
+     "home": "Vikings",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -10.5,
+     "tot": 39.5,
+     "sa": 10,
+     "sh": 15,
+     "fin": true
+    },
+    "w4g12": {
+     "o": 11,
+     "away": "Broncos",
+     "home": "49ers",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 47.5,
+     "sa": 14,
+     "sh": 24,
+     "fin": true
+    },
+    "w4g13": {
+     "o": 12,
+     "away": "Chiefs",
+     "home": "Raiders",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 5,
+     "tot": 47.5,
+     "sa": 30,
+     "sh": 27,
+     "fin": true
+    },
+    "w4g14": {
+     "o": 13,
+     "away": "Chargers",
+     "home": "Seahawks",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -7,
+     "tot": 43,
+     "sa": 23,
+     "sh": 30,
+     "fin": true
+    },
+    "w4g15": {
+     "o": 14,
+     "away": "Lions",
+     "home": "Panthers",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": 4,
+     "tot": 51,
+     "sa": 26,
+     "sh": 32,
+     "fin": true
+    },
+    "w4g16": {
+     "o": 15,
+     "away": "Falcons",
+     "home": "Saints",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 47.5,
+     "sa": 45,
+     "sh": 24,
+     "fin": true
+    }
+   }
+  },
+  "5": {
+   "n": 5,
+   "label": "Oct 8, 11, 12 | 2026",
+   "open": false,
+   "games": {
+    "w5g1": {
+     "o": 0,
+     "away": "Buccaneers",
+     "home": "Cowboys",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": -9,
+     "tot": 48,
+     "sa": 24,
+     "sh": 16,
+     "fin": true
+    },
+    "w5g2": {
+     "o": 1,
+     "away": "Eagles",
+     "home": "Jaguars",
+     "tag": "8:30 AM",
+     "kick": "",
+     "sp": -7,
+     "tot": 41.5,
+     "sa": 17,
+     "sh": 19,
+     "fin": true
+    },
+    "w5g3": {
+     "o": 2,
+     "away": "Bears",
+     "home": "Packers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2,
+     "tot": 45.5,
+     "sa": 7,
+     "sh": 31,
+     "fin": true
+    },
+    "w5g4": {
+     "o": 3,
+     "away": "Bengals",
+     "home": "Dolphins",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 6.5,
+     "tot": 42.5,
+     "sa": 31,
+     "sh": 24,
+     "fin": true
+    },
+    "w5g5": {
+     "o": 4,
+     "away": "Browns",
+     "home": "Jets",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2,
+     "tot": 40,
+     "sa": 12,
+     "sh": 17,
+     "fin": true
+    },
+    "w5g6": {
+     "o": 5,
+     "away": "Texans",
+     "home": "Titans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 7.5,
+     "tot": 37,
+     "sa": 26,
+     "sh": 3,
+     "fin": true
+    },
+    "w5g7": {
+     "o": 6,
+     "away": "Colts",
+     "home": "Steelers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 44.5,
+     "sa": 22,
+     "sh": 34,
+     "fin": true
+    },
+    "w5g8": {
+     "o": 7,
+     "away": "Raiders",
+     "home": "Patriots",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 45,
+     "sa": 17,
+     "sh": 45,
+     "fin": true
+    },
+    "w5g9": {
+     "o": 8,
+     "away": "Vikings",
+     "home": "Saints",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2,
+     "tot": 42,
+     "sa": 23,
+     "sh": 13,
+     "fin": true
+    },
+    "w5g10": {
+     "o": 9,
+     "away": "Giants",
+     "home": "Commanders",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -4,
+     "tot": 42,
+     "sa": 27,
+     "sh": 27,
+     "fin": true
+    },
+    "w5g11": {
+     "o": 10,
+     "away": "Broncos",
+     "home": "Chargers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 3,
+     "tot": 42,
+     "sa": 23,
+     "sh": 17,
+     "fin": true
+    },
+    "w5g12": {
+     "o": 11,
+     "away": "Lions",
+     "home": "Cardinals",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 5.5,
+     "tot": 54,
+     "sa": 45,
+     "sh": 21,
+     "fin": true
+    },
+    "w5g13": {
+     "o": 12,
+     "away": "49ers",
+     "home": "Seahawks",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 46,
+     "sa": 32,
+     "sh": 29,
+     "fin": true
+    },
+    "w5g14": {
+     "o": 13,
+     "away": "Ravens",
+     "home": "Falcons",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 43.5,
+     "sa": 30,
+     "sh": 23,
+     "fin": true
+    },
+    "w5g15": {
+     "o": 14,
+     "away": "Bills",
+     "home": "Rams",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 54.5,
+     "sa": 37,
+     "sh": 34,
+     "fin": true
+    }
+   }
+  },
+  "6": {
+   "n": 6,
+   "label": "Oct 15, 18, 19 | 2026",
+   "open": false,
+   "games": {
+    "w6g1": {
+     "o": 0,
+     "away": "Seahawks",
+     "home": "Broncos",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 40.5,
+     "sa": 14,
+     "sh": 17,
+     "fin": true
+    },
+    "w6g2": {
+     "o": 1,
+     "away": "Texans",
+     "home": "Jaguars",
+     "tag": "8:30 AM INT",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 42.5,
+     "sa": 34,
+     "sh": 31,
+     "fin": true
+    },
+    "w6g3": {
+     "o": 2,
+     "away": "Bears",
+     "home": "Falcons",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 1.5,
+     "tot": 51.5,
+     "sa": 31,
+     "sh": 23,
+     "fin": true
+    },
+    "w6g4": {
+     "o": 3,
+     "away": "Ravens",
+     "home": "Browns",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 4.5,
+     "tot": 41.5,
+     "sa": 10,
+     "sh": 13,
+     "fin": true
+    },
+    "w6g5": {
+     "o": 4,
+     "away": "Panthers",
+     "home": "Eagles",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 38.5,
+     "sa": 25,
+     "sh": 14,
+     "fin": true
+    },
+    "w6g6": {
+     "o": 5,
+     "away": "Titans",
+     "home": "Colts",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -7,
+     "tot": 44.5,
+     "sa": 26,
+     "sh": 20,
+     "fin": true
+    },
+    "w6g7": {
+     "o": 6,
+     "away": "Jets",
+     "home": "Patriots",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -7.5,
+     "tot": 43.5,
+     "sa": 19,
+     "sh": 26,
+     "fin": true
+    },
+    "w6g8": {
+     "o": 7,
+     "away": "Saints",
+     "home": "Giants",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 1.5,
+     "tot": 45.5,
+     "sa": 34,
+     "sh": 27,
+     "fin": true
+    },
+    "w6g9": {
+     "o": 8,
+     "away": "Steelers",
+     "home": "Buccaneers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 39.5,
+     "sa": 26,
+     "sh": 19,
+     "fin": true
+    },
+    "w6g10": {
+     "o": 9,
+     "away": "Cardinals",
+     "home": "Rams",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -12.5,
+     "tot": 51.5,
+     "sa": 18,
+     "sh": 16,
+     "fin": true
+    },
+    "w6g11": {
+     "o": 10,
+     "away": "Bills",
+     "home": "Raiders",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 5.5,
+     "tot": 53.5,
+     "sa": 33,
+     "sh": 30,
+     "fin": true
+    },
+    "w6g12": {
+     "o": 11,
+     "away": "Chargers",
+     "home": "Chiefs",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -8.5,
+     "tot": 42.5,
+     "sa": 6,
+     "sh": 22,
+     "fin": true
+    },
+    "w6g13": {
+     "o": 12,
+     "away": "Cowboys",
+     "home": "Packers",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -1.5,
+     "tot": 53.5,
+     "sa": 13,
+     "sh": 23,
+     "fin": true
+    },
+    "w6g14": {
+     "o": 13,
+     "away": "Commanders",
+     "home": "49ers",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": -7.5,
+     "tot": 51.5,
+     "sa": 17,
+     "sh": 23,
+     "fin": true
+    }
+   }
+  },
+  "7": {
+   "n": 7,
+   "label": "Oct 22, 25, 26 | 2026",
+   "open": false,
+   "games": {
+    "w7g1": {
+     "o": 0,
+     "away": "Patriots",
+     "home": "Bears",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": -3,
+     "tot": 50.5,
+     "sa": 24,
+     "sh": 30,
+     "fin": true
+    },
+    "w7g2": {
+     "o": 1,
+     "away": "Steelers",
+     "home": "Saints",
+     "tag": "8:30 AM INT",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 44.5,
+     "sa": 16,
+     "sh": 10,
+     "fin": true
+    },
+    "w7g3": {
+     "o": 2,
+     "away": "49ers",
+     "home": "Falcons",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 49.5,
+     "sa": 20,
+     "sh": 29,
+     "fin": true
+    },
+    "w7g4": {
+     "o": 3,
+     "away": "Bengals",
+     "home": "Ravens",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -1.5,
+     "tot": 48.5,
+     "sa": 35,
+     "sh": 13,
+     "fin": true
+    },
+    "w7g5": {
+     "o": 4,
+     "away": "Buccaneers",
+     "home": "Panthers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 44.5,
+     "sa": 43,
+     "sh": 13,
+     "fin": true
+    },
+    "w7g6": {
+     "o": 5,
+     "away": "Browns",
+     "home": "Titans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 1.5,
+     "tot": 37.5,
+     "sa": 27,
+     "sh": 24,
+     "fin": true
+    },
+    "w7g7": {
+     "o": 6,
+     "away": "Giants",
+     "home": "Texans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -10.5,
+     "tot": 42.5,
+     "sa": 27,
+     "sh": 21,
+     "fin": true
+    },
+    "w7g8": {
+     "o": 7,
+     "away": "Colts",
+     "home": "Vikings",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -6.5,
+     "tot": 41.5,
+     "sa": 10,
+     "sh": 16,
+     "fin": true
+    },
+    "w7g9": {
+     "o": 8,
+     "away": "Dolphins",
+     "home": "Jets",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -4.5,
+     "tot": 39.5,
+     "sa": 28,
+     "sh": 25,
+     "fin": true
+    },
+    "w7g10": {
+     "o": 9,
+     "away": "Broncos",
+     "home": "Cardinals",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 4.5,
+     "tot": 43.5,
+     "sa": 30,
+     "sh": 16,
+     "fin": true
+    },
+    "w7g11": {
+     "o": 10,
+     "away": "Packers",
+     "home": "Lions",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 53.5,
+     "sa": 17,
+     "sh": 20,
+     "fin": true
+    },
+    "w7g12": {
+     "o": 11,
+     "away": "Rams",
+     "home": "Raiders",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 48.5,
+     "sa": 35,
+     "sh": 21,
+     "fin": true
+    },
+    "w7g13": {
+     "o": 12,
+     "away": "Chiefs",
+     "home": "Seahawks",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -3,
+     "tot": 42.5,
+     "sa": 3,
+     "sh": 20,
+     "fin": true
+    },
+    "w7g14": {
+     "o": 13,
+     "away": "Cowboys",
+     "home": "Eagles",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": 4.5,
+     "tot": 44.5,
+     "sa": 38,
+     "sh": 21,
+     "fin": true
+    }
+   }
+  },
+  "8": {
+   "n": 8,
+   "label": "Oct/Nov 29, 1, 2 | 2026",
+   "open": false,
+   "games": {
+    "w8g1": {
+     "o": 0,
+     "away": "Panthers",
+     "home": "Packers",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 46.5,
+     "sa": 19,
+     "sh": 27,
+     "fin": true
+    },
+    "w8g2": {
+     "o": 1,
+     "away": "Cardinals",
+     "home": "Cowboys",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -7,
+     "tot": 54.5,
+     "sa": 33,
+     "sh": 30,
+     "fin": true
+    },
+    "w8g3": {
+     "o": 2,
+     "away": "Falcons",
+     "home": "Buccaneers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 44.5,
+     "sa": 0,
+     "sh": 16,
+     "fin": true
+    },
+    "w8g4": {
+     "o": 3,
+     "away": "Ravens",
+     "home": "Bills",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 54.5,
+     "sa": 10,
+     "sh": 36,
+     "fin": true
+    },
+    "w8g5": {
+     "o": 4,
+     "away": "Titans",
+     "home": "Bengals",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -11.5,
+     "tot": 46.5,
+     "sa": 36,
+     "sh": 43,
+     "fin": true
+    },
+    "w8g6": {
+     "o": 5,
+     "away": "Browns",
+     "home": "Steelers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 39.5,
+     "sa": 6,
+     "sh": 27,
+     "fin": true
+    },
+    "w8g7": {
+     "o": 6,
+     "away": "Vikings",
+     "home": "Lions",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 46.5,
+     "sa": 15,
+     "sh": 19,
+     "fin": true
+    },
+    "w8g8": {
+     "o": 7,
+     "away": "Colts",
+     "home": "Jaguars",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -10,
+     "tot": 46.5,
+     "sa": 7,
+     "sh": 42,
+     "fin": true
+    },
+    "w8g9": {
+     "o": 8,
+     "away": "Raiders",
+     "home": "Jets",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -1.5,
+     "tot": 45.5,
+     "sa": 38,
+     "sh": 33,
+     "fin": true
+    },
+    "w8g10": {
+     "o": 9,
+     "away": "Chargers",
+     "home": "Rams",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -6.5,
+     "tot": 45.5,
+     "sa": 9,
+     "sh": 24,
+     "fin": true
+    },
+    "w8g11": {
+     "o": 10,
+     "away": "Chiefs",
+     "home": "Broncos",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 1.5,
+     "tot": 40.5,
+     "sa": 24,
+     "sh": 28,
+     "fin": true
+    },
+    "w8g12": {
+     "o": 11,
+     "away": "Patriots",
+     "home": "Dolphins",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 7,
+     "tot": 43.5,
+     "sa": 24,
+     "sh": 19,
+     "fin": true
+    },
+    "w8g13": {
+     "o": 12,
+     "away": "Eagles",
+     "home": "Commanders",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -6,
+     "tot": 40.5,
+     "sa": 10,
+     "sh": 27,
+     "fin": true
+    },
+    "w8g14": {
+     "o": 13,
+     "away": "Bears",
+     "home": "Seahawks",
+     "tag": "7:20 PM MNF",
+     "kick": "",
+     "sp": -3,
+     "tot": 46.5,
+     "sa": 34,
+     "sh": 17,
+     "fin": true
+    }
+   }
+  },
+  "9": {
+   "n": 9,
+   "label": "Nov 5, 8, 9 | 2026",
+   "open": false,
+   "games": {
+    "w9g1": {
+     "o": 0,
+     "away": "Jaguars",
+     "home": "Ravens",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": 10,
+     "tot": 39.5,
+     "sa": 33,
+     "sh": 10,
+     "fin": true
+    },
+    "w9g2": {
+     "o": 1,
+     "away": "Bengals",
+     "home": "Falcons",
+     "tag": "8:30 AM INT",
+     "kick": "",
+     "sp": 3,
+     "tot": 52.5,
+     "sa": 34,
+     "sh": 17,
+     "fin": true
+    },
+    "w9g3": {
+     "o": 2,
+     "away": "Broncos",
+     "home": "Panthers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 2.5,
+     "tot": 44.5,
+     "sa": 26,
+     "sh": 21,
+     "fin": true
+    },
+    "w9g4": {
+     "o": 3,
+     "away": "Browns",
+     "home": "Saints",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 42.5,
+     "sa": 22,
+     "sh": 23,
+     "fin": true
+    },
+    "w9g5": {
+     "o": 4,
+     "away": "Cowboys",
+     "home": "Colts",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 5.5,
+     "tot": 51.5,
+     "sa": 27,
+     "sh": 23,
+     "fin": true
+    },
+    "w9g6": {
+     "o": 5,
+     "away": "Lions",
+     "home": "Dolphins",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 7,
+     "tot": 50.5,
+     "sa": 19,
+     "sh": 9,
+     "fin": true
+    },
+    "w9g7": {
+     "o": 6,
+     "away": "Jets",
+     "home": "Chiefs",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -10,
+     "tot": 47.5,
+     "sa": 12,
+     "sh": 35,
+     "fin": true
+    },
+    "w9g8": {
+     "o": 7,
+     "away": "Rams",
+     "home": "Commanders",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 4.5,
+     "tot": 48.5,
+     "sa": 20,
+     "sh": 13,
+     "fin": true
+    },
+    "w9g9": {
+     "o": 8,
+     "away": "Giants",
+     "home": "Eagles",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 38.5,
+     "sa": 19,
+     "sh": 11,
+     "fin": true
+    },
+    "w9g10": {
+     "o": 9,
+     "away": "Texans",
+     "home": "Chargers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 5.5,
+     "tot": 40.5,
+     "sa": 44,
+     "sh": 22,
+     "fin": true
+    },
+    "w9g11": {
+     "o": 10,
+     "away": "Raiders",
+     "home": "49ers",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": -10,
+     "tot": 51.5,
+     "sa": 17,
+     "sh": 38,
+     "fin": true
+    },
+    "w9g12": {
+     "o": 11,
+     "away": "Cardinals",
+     "home": "Seahawks",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -8.5,
+     "tot": 39.5,
+     "sa": 3,
+     "sh": 17,
+     "fin": true
+    },
+    "w9g13": {
+     "o": 12,
+     "away": "Packers",
+     "home": "Patriots",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 44.5,
+     "sa": 45,
+     "sh": 27,
+     "fin": true
+    },
+    "w9g14": {
+     "o": 13,
+     "away": "Buccaneers",
+     "home": "Bears",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -6,
+     "tot": 47.5,
+     "sa": 24,
+     "sh": 27,
+     "fin": true
+    },
+    "w9g15": {
+     "o": 14,
+     "away": "Bills",
+     "home": "Vikings",
+     "tag": "7:15 PM MNF",
+     "kick": "",
+     "sp": 3,
+     "tot": 44.5,
+     "sa": 23,
+     "sh": 6,
+     "fin": true
+    }
+   }
+  },
+  "10": {
+   "n": 10,
+   "label": "Nov 12, 15, 16 | 2026",
+   "open": false,
+   "games": {
+    "w10g1": {
+     "o": 0,
+     "away": "Commanders",
+     "home": "Giants",
+     "tag": "7:15 PM TNF",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 40.5,
+     "sa": 24,
+     "sh": 21,
+     "fin": true
+    },
+    "w10g2": {
+     "o": 1,
+     "away": "Patriots",
+     "home": "Lions",
+     "tag": "8:30 AM INT",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 51.5,
+     "sa": 10,
+     "sh": 35,
+     "fin": true
+    },
+    "w10g3": {
+     "o": 2,
+     "away": "Chiefs",
+     "home": "Falcons",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 3,
+     "tot": 46.5,
+     "sa": 35,
+     "sh": 13,
+     "fin": true
+    },
+    "w10g4": {
+     "o": 3,
+     "away": "Bills",
+     "home": "Jets",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 8.5,
+     "tot": 50.5,
+     "sa": 31,
+     "sh": 12,
+     "fin": true
+    },
+    "w10g5": {
+     "o": 4,
+     "away": "Panthers",
+     "home": "Saints",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -2.5,
+     "tot": 48.5,
+     "sa": 20,
+     "sh": 17,
+     "fin": true
+    },
+    "w10g6": {
+     "o": 5,
+     "away": "Texans",
+     "home": "Browns",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 4.5,
+     "tot": 40.5,
+     "sa": 24,
+     "sh": 27,
+     "fin": true
+    },
+    "w10g7": {
+     "o": 6,
+     "away": "Vikings",
+     "home": "Packers",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3,
+     "tot": 41.5,
+     "sa": 30,
+     "sh": 10,
+     "fin": true
+    },
+    "w10g8": {
+     "o": 7,
+     "away": "Dolphins",
+     "home": "Colts",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 38.5,
+     "sa": 22,
+     "sh": 24,
+     "fin": true
+    },
+    "w10g9": {
+     "o": 8,
+     "away": "Jaguars",
+     "home": "Titans",
+     "tag": "12:00 PM",
+     "kick": "",
+     "sp": 10.5,
+     "tot": 46.5,
+     "sa": 40,
+     "sh": 23,
+     "fin": true
+    },
+    "w10g10": {
+     "o": 9,
+     "away": "Rams",
+     "home": "Cardinals",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 9.5,
+     "tot": 39.5,
+     "sa": 34,
+     "sh": 6,
+     "fin": true
+    },
+    "w10g11": {
+     "o": 10,
+     "away": "Seahawks",
+     "home": "Raiders",
+     "tag": "3:05 PM",
+     "kick": "",
+     "sp": 6.5,
+     "tot": 40.5,
+     "sa": 21,
+     "sh": 13,
+     "fin": true
+    },
+    "w10g12": {
+     "o": 11,
+     "away": "49ers",
+     "home": "Cowboys",
+     "tag": "3:25 PM",
+     "kick": "",
+     "sp": 3.5,
+     "tot": 55.5,
+     "sa": 46,
+     "sh": 40,
+     "fin": true
+    },
+    "w10g13": {
+     "o": 12,
+     "away": "Steelers",
+     "home": "Bengals",
+     "tag": "7:20 PM SNF",
+     "kick": "",
+     "sp": -3.5,
+     "tot": 49.5,
+     "sa": 18,
+     "sh": 38,
+     "fin": true
+    },
+    "w10g14": {
+     "o": 13,
+     "away": "Chargers",
+     "home": "Ravens",
+     "tag": "7:15 PM MNF",
+     "kick": "2026-11-17T01:15:00.000Z",
+     "sp": -4.5,
+     "tot": 38.5,
+     "sa": 23,
+     "sh": 20,
+     "fin": true
+    }
+   }
+  }
+ },
+ "entries": {
+  "tyler": {
+   "weeks": {
+    "1": {
+     "p": {
+      "w1g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w1g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g3",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w1g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w1g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w1g12",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g5",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w2g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g16",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g15": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g8",
+       "m": "o",
+       "v": "under",
+       "l": 46.5
+      },
+      {
+       "g": "w3g10",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g15",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g1",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w4g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g11",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w4g15",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g15": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w5g1",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w5g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g12",
+       "m": "o",
+       "v": "under",
+       "l": 54.5
+      },
+      {
+       "g": "w5g5",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g4",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w6g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g9",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g13",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g1",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w8g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g9",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w8g11",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g7",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w9g12",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g7",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w10g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g13",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Bills",
+    "nfc": "Rams",
+    "sb": "Bills",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  },
+  "steve": {
+   "weeks": {
+    "1": {
+     "p": {
+      "w1g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g14": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g9",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w2g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g13",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w2g16",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g15": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g16",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g7",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g15": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g16": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g6",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w4g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g15",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g15": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g9",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w6g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g5",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w6g4",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g3",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w7g6",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w7g14",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g14",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g10",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g12",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g15": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w9g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g14",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g3",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w10g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g4",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w10g8",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Bills",
+    "nfc": "Rams",
+    "sb": "Rams",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  },
+  "ron": {
+   "weeks": {
+    "1": {
+     "p": {
+      "w1g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w1g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w1g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g2",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g16": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g8",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g7",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g15",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g15": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g9",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g12",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w5g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g13",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g14": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g10",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g13",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w7g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g13",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g14": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g5",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g10",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g14": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g11",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w9g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g7",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w9g15",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g14": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g12",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g10",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g2",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Bills",
+    "nfc": "Seahawks",
+    "sb": "Rams",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  },
+  "thomas": {
+   "weeks": {
+    "1": {
+     "p": {
+      "w1g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w1g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g16": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w1g1",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w1g9",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w1g15",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g14": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g7",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g8",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w2g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g16",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g7",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w3g13",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g10",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g14",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g4",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w5g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w5g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g12",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w5g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g9",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g14": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g13",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g14",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g12",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w7g14",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w7g11",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g10",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g12",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g14",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g9",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w9g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w9g13",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g1",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g2",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g7",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g14",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Bills",
+    "nfc": "Rams",
+    "sb": "Rams",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  },
+  "josh": {
+   "weeks": {
+    "1": {
+     "p": {
+      "w1g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w1g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w1g15": {
+       "s": "home",
+       "o": "over"
+      },
+      "w1g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w1g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g9",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g15",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w1g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w1g8",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g15",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g14",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w2g1",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g15": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g14",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g2",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g15": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g16": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g16",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w5g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w5g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w5g14": {
+       "s": "away",
+       "o": "under"
+      },
+      "w5g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w5g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g1",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w5g14",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w5g13",
+       "m": "o",
+       "v": "over"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g14": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g13",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g5",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w6g6",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "w6g3",
+       "m": "o",
+       "v": "under"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g7",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w7g11",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w7g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g5",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w7g13",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g6",
+       "m": "o",
+       "v": "over"
+      },
+      {
+       "g": "w8g2",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g14": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g15": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g15",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g2",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g4": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g13": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g3",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g13",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g6",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g7",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w10g12",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Broncos",
+    "nfc": "Rams",
+    "sb": "Rams",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  },
+  "charlie": {
+   "weeks": {
+    "1": {
+     "p": {},
+     "parlay": [],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true,
+     "manual": {
+      "total": 22,
+      "pct": 56.25,
+      "note": "No picks on file for this week. The total and percentage are the ones recorded on the Google Sheet."
+     }
+    },
+    "2": {
+     "p": {
+      "w2g1": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w2g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g9": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g11": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w2g14": {
+       "s": "home",
+       "o": "under"
+      },
+      "w2g15": {
+       "s": "home",
+       "o": "over"
+      },
+      "w2g16": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w2g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w2g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g8",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w2g16",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "3": {
+     "p": {
+      "w3g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g5": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g9": {
+       "s": "home",
+       "o": "over"
+      },
+      "w3g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w3g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w3g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w3g16": {
+       "s": "home",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w3g1",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w3g11",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w3g12",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "4": {
+     "p": {
+      "w4g2": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g10": {
+       "s": "home",
+       "o": "over"
+      },
+      "w4g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w4g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w4g15": {
+       "s": "home",
+       "o": "under"
+      },
+      "w4g16": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w4g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g5",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w4g15",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w4g12",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true,
+     "manual": {
+      "pct": 40.63,
+      "note": "Four picks were left blank. The Google Sheet counted them as misses in the percentage."
+     }
+    },
+    "5": {
+     "p": {
+      "w5g1": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true,
+     "manual": {
+      "total": 20,
+      "pct": 50,
+      "note": "Only one game was picked this week. The total (20) and percentage (50%) are the ones recorded on the Google Sheet."
+     }
+    },
+    "6": {
+     "p": {
+      "w6g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g2": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g5": {
+       "s": "home",
+       "o": "over"
+      },
+      "w6g6": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g7": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g10": {
+       "s": "away",
+       "o": "under"
+      },
+      "w6g11": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g12": {
+       "s": "away",
+       "o": "over"
+      },
+      "w6g13": {
+       "s": "home",
+       "o": "under"
+      },
+      "w6g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w6g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g8",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g14",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w6g13",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w6g5",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "7": {
+     "p": {
+      "w7g1": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g3": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g6": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g7": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g8": {
+       "s": "away",
+       "o": "under"
+      },
+      "w7g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w7g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w7g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w7g14": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w7g9",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w7g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w7g12",
+       "m": "s",
+       "v": "home"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "8": {
+     "p": {
+      "w8g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g3": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g4": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g6": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g8": {
+       "s": "home",
+       "o": "over"
+      },
+      "w8g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w8g12": {
+       "s": "home",
+       "o": "under"
+      },
+      "w8g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w8g14": {
+       "s": "away",
+       "o": "over"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w8g10",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g4",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w8g6",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w8g14",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "9": {
+     "p": {
+      "w9g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g2": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g3": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g4": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g5": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g7": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g8": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g9": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g10": {
+       "s": "home",
+       "o": "under"
+      },
+      "w9g11": {
+       "s": "away",
+       "o": "under"
+      },
+      "w9g12": {
+       "s": "home",
+       "o": "over"
+      },
+      "w9g13": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g14": {
+       "s": "away",
+       "o": "over"
+      },
+      "w9g15": {
+       "s": "home",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w9g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g11",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "w9g2",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w9g8",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    },
+    "10": {
+     "p": {
+      "w10g1": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g2": {
+       "s": "home",
+       "o": "over"
+      },
+      "w10g3": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g4": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g5": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g6": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g7": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g8": {
+       "s": "home",
+       "o": "under"
+      },
+      "w10g9": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g10": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g11": {
+       "s": "away",
+       "o": "over"
+      },
+      "w10g12": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g13": {
+       "s": "away",
+       "o": "under"
+      },
+      "w10g14": {
+       "s": "away",
+       "o": "under"
+      }
+     },
+     "parlay": [
+      {
+       "g": "w10g7",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g9",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g13",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g4",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "w10g10",
+       "m": "s",
+       "v": "away"
+      }
+     ],
+     "at": "2026-09-01T12:00:00Z",
+     "imp": true
+    }
+   },
+   "futures": {
+    "afc": "Bills",
+    "nfc": "Eagles",
+    "sb": "Bills",
+    "at": "2026-09-01T12:00:00Z",
+    "imp": true
+   }
+  }
+ }
+}

@@ -305,6 +305,9 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const clone=o=>JSON.parse(JSON.stringify(o==null?{}:o));
 const ls={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 const players=()=>(S.cfg&&S.cfg.players)||[];
+// Initials shown on each pick. Kept in the page, so they apply even if data.json was saved before they existed.
+const ABBR={ron:'RQ',josh:'JW',thomas:'TVZ',steve:'SV',charlie:'CVZ',tyler:'TE'};
+const abbr=p=>p.abbr||ABBR[p.key]||p.name.slice(0,2);
 const pname=k=>{const p=players().find(x=>x.key===k);return p?p.name:k;};
 const wname=n=>(S.weeks[n]&&S.weeks[n].round)||('Week '+n);
 const sortedGames=w=>Object.entries((w&&w.games)||{}).sort((a,b)=>(a[1].o||0)-(b[1].o||0));
@@ -470,7 +473,7 @@ function claimCard(){
 }
 function whoChips(gid,m,v,n,sel,g,visible){
   const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
-  return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(p.name.slice(0,2))+'</span>').join('')+'</span>':'';
+  return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(abbr(p))+'</span>').join('')+'</span>':'';
 }
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const lock=(sub&&sub.p&&sub.p[gid])||{},dp=(draft&&draft.p[gid])||{},sp=(sent&&sent[gid])||{},canTap=open&&!started(g),show=visible(g);

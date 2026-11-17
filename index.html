@@ -70,10 +70,13 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .matchup .vs{font-family:var(--body);font-size:.8rem;font-weight:600;color:var(--muted)}
 .opt .logo{width:1.15em;height:1.15em}
 .opt .team{gap:.3em}
+/* Logo and line always sit side by side on one line; a line too long for its cell is shrunk to fit (see fitLabels). */
+.opt .tw{display:inline-flex;flex-wrap:nowrap;align-items:center;white-space:nowrap;max-width:none}
+.opt .nw{white-space:nowrap}
 
 .score{background:var(--board);color:var(--board-ink);font-weight:700;text-align:center;padding:6px 10px}
 .score.pre{font-weight:500;opacity:.85}
-.rows{display:grid;grid-template-columns:1fr 1fr 3.2rem;grid-template-rows:auto auto}
+.rows{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 2.8rem;grid-template-rows:auto auto}
 .opt{border:0;border-top:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);padding:9px 6px 7px;text-align:center;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 button.opt{cursor:pointer}
 button.opt:hover{background:var(--sunk)}
@@ -410,6 +413,14 @@ function typing(){const a=document.activeElement;return a&&$('#view').contains(a
 function requestRender(force){if(!force&&typing()){S.stale=true;return;}S.stale=false;render();}
 document.addEventListener('focusout',()=>setTimeout(()=>{if(S.stale&&!typing())requestRender();},60));
 
+function fitLabels(){
+  document.querySelectorAll('#view .opt .tw').forEach(t=>{
+    t.style.fontSize='';const max=t.closest('.opt').clientWidth-10;let f=100;
+    while(t.getBoundingClientRect().width>max&&f>60){f-=4;t.style.fontSize=f+'%';}
+  });
+}
+let fitT;window.addEventListener('resize',()=>{clearTimeout(fitT);fitT=setTimeout(fitLabels,120);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitLabels());
 function render(){
   const act=document.activeElement&&document.activeElement.id;
   buildDeadlines();
@@ -426,6 +437,7 @@ function render(){
   $('#view').innerHTML=h;
   document.querySelectorAll('#view [data-f]').forEach(el=>{if(el.id in S.form){if(el.type==='checkbox')el.checked=!!S.form[el.id];else el.value=S.form[el.id];}});
   if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el))el.focus();}
+  fitLabels();
 }
 
 /* ---------- Picks ---------- */
@@ -494,7 +506,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   let hiddenLock=false;
   const opt=(m,v,label,ok,team)=>{
     if(!ok)return '<div class="opt muted">N/A</div>';
-    const inner=(team?'<span class="team">'+logo(team)+esc(label)+'</span>':esc(label))+whoChips(gid,m,v,n,sel,g,visible);
+    const inner=(team?'<span class="team tw">'+logo(team)+'<span class="nw">'+esc(label)+'</span></span>':esc(label))+whoChips(gid,m,v,n,sel,g,visible);
     if(lock[m]){ // already locked in
       if(!show)hiddenLock=true;
       const picked=show?lock[m]===v:sp[m]===v;

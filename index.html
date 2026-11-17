@@ -11,6 +11,7 @@
 :root{
   --bg:#eef3f3; --surface:#ffffff; --sunk:#e3eaea; --ink:#0f2022; --muted:#586b6d; --line:#cdd8d8;
   --accent:#0d7f8a; --accent-ink:#ffffff; --board:#10282b; --board-ink:#f1f7f7;
+  --gold:#b8860b; --silver:#6f777e; --bronze:#a0592a;
   --pick:#f7bd0a; --pick-ink:#1d1600; --win:#1b9550; --combo:#9447dc; --miss:#d7372b; --res-ink:#ffffff;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif;
   color-scheme:light;
@@ -20,6 +21,7 @@
     --bg:#0c1516; --surface:#152123; --sunk:#1c2b2d; --ink:#e7f0f0; --muted:#93a7a9; --line:#2b3d40;
     --accent:#3fc1cc; --accent-ink:#04191b; --board:#050b0c; --board-ink:#e7f0f0;
     --pick:#f2b705; --pick-ink:#1d1600; --win:#27a862; --combo:#a763ea; --miss:#e0483c; --res-ink:#ffffff;
+    --gold:#f2c94c; --silver:#c9d0d6; --bronze:#e0995e;
     color-scheme:dark;
   }
 }
@@ -27,6 +29,7 @@
   --bg:#0c1516; --surface:#152123; --sunk:#1c2b2d; --ink:#e7f0f0; --muted:#93a7a9; --line:#2b3d40;
   --accent:#3fc1cc; --accent-ink:#04191b; --board:#050b0c; --board-ink:#e7f0f0;
   --pick:#f2b705; --pick-ink:#1d1600; --win:#27a862; --combo:#a763ea; --miss:#e0483c; --res-ink:#ffffff;
+  --gold:#f2c94c; --silver:#c9d0d6; --bronze:#e0995e;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -107,9 +110,9 @@ th:first-child,td:first-child,th.l,td.l{text-align:left}
 th{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 tr.lead td{font-weight:700}
 td.winner{background:var(--pick);color:var(--pick-ink);font-weight:700}
-.rank{font-family:var(--display);font-size:1.3rem;color:var(--muted)}
-.meter{height:8px;background:var(--sunk);border-radius:4px;min-width:90px;overflow:hidden}
-.meter i{display:block;height:100%;background:var(--accent)}
+.rank{font-family:var(--display);font-size:1.3rem;color:var(--muted);white-space:nowrap}
+.rank.r1{color:var(--gold)}.rank.r2{color:var(--silver)}.rank.r3{color:var(--bronze)}
+.pb{color:var(--muted);font-weight:600}
 .btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:6px;font-weight:700;cursor:pointer}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.danger{color:var(--miss)}
@@ -568,26 +571,27 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
 function totalsCard(n,sel,sc,sub){
   return '<section class="card"><h3>Total Points ('+esc(wname(n))+') · '+esc(pname(sel))+'</h3><div class="totals"><span>Spread Points: '+sc.spread+' | O/U Points: '+sc.ou+'</span><span>Same Game Combo Points: '+sc.combo+'</span><span>5 Game Parlay Points: '+sc.parlay+'</span><span class="big">Total Points: '+sc.total+(sc.manualTotal?' *':'')+'</span><span>Correct Pick Percentage: '+(sc.pct==null?'N/A':sc.pct.toFixed(2)+'%')+'</span></div></section>';
 }
+function rankTag(pos){return '<span class="rank'+(pos<=3?' r'+pos:'')+'">'+ordinal(pos)+'</span>';}
 function weekTable(week,n){
   const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false)};}).sort((a,b)=>b.sc.total-a.sc.total);
-  return '<section class="card"><h3>'+esc(wname(n))+' scoreboard'+(weekComplete(week)?'':' <span class="when">includes games in progress</span>')+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th>Spread</th><th>O/U</th><th>Combo</th><th>Parlay</th><th>Total</th><th>Correct</th></tr></thead><tbody>'+
-    rows.map(r=>'<tr><td>'+esc(r.p.name)+'</td><td class="l">'+(r.w?'<span class="badge win">'+countPicks(r.w)+' in</span>':'<span class="badge">Waiting</span>')+'</td><td>'+r.sc.spread+'</td><td>'+r.sc.ou+'</td><td>'+r.sc.combo+'</td><td>'+r.sc.parlay+'</td><td><strong>'+r.sc.total+'</strong></td><td>'+(r.sc.pct==null?'':r.sc.pct.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
+  return '<section class="card"><h3>'+esc(wname(n))+' scoreboard'+(weekComplete(week)?'':' <span class="when">includes games in progress</span>')+'</h3><div class="tw"><table><thead><tr><th class="l">#</th><th class="l">Player</th><th>Spread</th><th>O/U</th><th>Combo</th><th>Parlay</th><th>Total</th><th>Correct</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td class="l">'+rankTag(1+rows.filter(x=>x.sc.total>r.sc.total).length)+'</td><td class="l">'+esc(r.p.name)+'</td><td>'+r.sc.spread+'</td><td>'+r.sc.ou+'</td><td>'+r.sc.combo+'</td><td>'+r.sc.parlay+'</td><td><strong>'+r.sc.total+'</strong></td><td>'+(r.sc.pct==null?'':r.sc.pct.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
 
 /* ---------- Standings ---------- */
 function viewStandings(){
   const hasBase=players().some(p=>p.base&&p.base.points);
-  const s=computeSeason(S.cfg,S.weeks,S.entries),max=Math.max(1,...s.list.map(r=>r.points));
+  const s=computeSeason(S.cfg,S.weeks,S.entries),max=Math.max(...s.list.map(r=>r.points));
   let h='<h2 class="weekhead">Current Point Standings</h2>';
-  h+='<section class="card"><div class="tw"><table><thead><tr><th>#</th><th class="l">Player</th><th>Points</th><th class="l"></th><th>Weeks won</th><th>Correct pick %</th></tr></thead><tbody>'+
-    s.list.map((r,i)=>'<tr class="'+(i===0?'lead':'')+'"><td><span class="rank">'+(i+1)+'</span></td><td class="l">'+esc(r.name)+(r.key===S.me?' (you)':'')+'</td><td><strong>'+r.points+'</strong></td><td class="l"><div class="meter"><i style="width:'+(r.points/max*100).toFixed(1)+'%"></i></div></td><td>'+r.won+'</td><td>'+(r.cpp==null?'':r.cpp.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
+  h+='<section class="card"><div class="tw"><table><thead><tr><th class="l">#</th><th class="l">Player</th><th>Points</th><th title="Points behind the leader">PB</th><th>Weeks won</th><th>Correct pick %</th></tr></thead><tbody>'+
+    s.list.map((r,i)=>'<tr class="'+(i===0?'lead':'')+'"><td class="l">'+rankTag(i+1)+'</td><td class="l">'+esc(r.name)+(r.key===S.me?' (you)':'')+'</td><td><strong>'+r.points+'</strong></td><td class="pb">'+(max-r.points===0?'<span class="muted">—</span>':'-'+(max-r.points))+'</td><td>'+r.won+'</td><td>'+(r.cpp==null?'':r.cpp.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
   if(S.cfg.baseLabel)h+='<p class="muted small">'+esc(S.cfg.baseLabel)+'</p>';
   h+='<section class="card"><h3>Points by week</h3>';
   if(!s.nums.length)h+='<div class="pad muted">Weekly results will appear here once the first week is played on this site.</div>';
   else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">'+esc(S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n)+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
     s.list.map(r=>{const p=players().find(x=>x.key===r.key);return '<tr><td>'+esc(r.name)+'</td>'+(hasBase?'<td>'+((p.base&&p.base.points)||0)+'</td>':'')+s.nums.map(n=>'<td class="'+((s.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td>'+r.fut+'</td><td><strong>'+r.points+'</strong></td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">Only final games count here. A gold cell marks the week winner. Tap a week to see every pick.</p>';
   h+='</section>';
-  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over; if it wins, the remaining legs can still be added before their games kick off.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>All picks are due by Sunday 5:00 AM Central, including the Sunday night and Monday night games. Games played before that Sunday lock at their own kickoff.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></div></section>';
+  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over; if it wins, the remaining legs can still be added before their games kick off.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>All picks are due by Sunday 5:00 AM Central, including the Sunday night and Monday night games. Games played before that Sunday lock at their own kickoff.</li><li>The highest total in a finished week wins the week. Ties share the win.</li><li>PB is how many points a player is behind the leader.</li></ul></div></section>';
   return h;
 }
 

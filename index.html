@@ -72,6 +72,7 @@ button.opt:hover{background:var(--sunk)}
 .who{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
 .who span{font-size:.68rem;font-weight:700;background:var(--sunk);color:var(--ink);border-radius:4px;padding:0 4px;line-height:1.4}
 .opt.picked .who span{background:rgba(0,0,0,.16);color:var(--pick-ink)}
+.who span.sel,.opt.picked .who span.sel{background:var(--board);color:var(--board-ink)}
 .res{border-top:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--res-ink)}
 .res.none{color:transparent}
 .res.win{background:var(--win)}.res.miss{background:var(--miss)}.res.combo{background:var(--combo);grid-row:1 / span 2;grid-column:3}
@@ -468,8 +469,8 @@ function claimCard(){
   return '<div class="note warn"><p><strong>Which player are you?</strong> Choose once and this page remembers you.</p><div class="pills">'+free.map(p=>'<button class="pill" data-act="claim" data-k="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div></div>';
 }
 function whoChips(gid,m,v,n,sel,g,visible){
-  const out=players().filter(p=>p.key!==sel&&visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
-  return out.length?'<span class="who">'+out.map(p=>'<span title="'+esc(p.name)+'">'+esc(p.name.slice(0,2))+'</span>').join('')+'</span>':'';
+  const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
+  return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(p.name.slice(0,2))+'</span>').join('')+'</span>':'';
 }
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const lock=(sub&&sub.p&&sub.p[gid])||{},dp=(draft&&draft.p[gid])||{},sp=(sent&&sent[gid])||{},canTap=open&&!started(g),show=visible(g);

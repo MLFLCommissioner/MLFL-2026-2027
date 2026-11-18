@@ -30,6 +30,8 @@ body.hof-on main{padding-top:28px}
 .hof-plaque .pts{font-style:italic;color:var(--hof-dim)}
 .hof-plaque.live{border-style:dashed;background:rgba(11,10,18,.7)}
 .hof-plaque svg{width:34px;height:auto}
+.hof-group{display:flex;flex-direction:column;gap:12px}
+.hof-sub{font-family:var(--hof-display);font-weight:700;font-size:1.25rem;letter-spacing:.1em;text-align:center;margin:0}
 .hof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
 .hof-rec{border-top:2px solid var(--hof-gold);background:rgba(244,234,211,.04);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
 .hof-rec .k{font-family:var(--hof-display);letter-spacing:.14em;font-size:.74rem;text-transform:uppercase;color:var(--hof-gold)}
@@ -42,6 +44,8 @@ body.hof-on main{padding-top:28px}
 .hof .tw{border:1px solid var(--hof-gold-lo);border-radius:6px;background:rgba(11,10,18,.6)}
 .hof .crowns{color:var(--hof-gold);letter-spacing:.1em;white-space:nowrap}
 .hof .dim{color:var(--hof-dim)}
+.hof-link{color:var(--hof-gold-hi);text-decoration:underline;text-decoration-color:rgba(217,180,90,.5);text-underline-offset:3px}
+.hof-link:hover{text-decoration-color:var(--hof-gold-hi)}
 .hof .foot{text-align:center;font-style:italic;color:var(--hof-dim);font-size:1rem}
 @media (prefers-reduced-motion:no-preference){.hof-plaque{transition:transform .2s ease}.hof-plaque:hover{transform:translateY(-3px)}}
 /* Layout idea: a scoreboard. Teal masthead, a wall of game cards that read like the sheet's blocks, results in a right-hand column. */
@@ -484,11 +488,12 @@ function render(){
   if(!(S.got.cfg&&S.got.weeks&&S.got.entries))h='<p class="muted">Loading the league…</p>';
   else if(!S.cfg)h='<div class="note warn"><p>The league has not been set up yet.</p></div>';
   else h=({picks:viewPicks,standings:viewStandings,futures:viewFutures,hof:viewHof,commish:viewCommish}[S.view])();
-  document.body.classList.toggle('hof-on',S.view==='hof');hofMusicSync();
+  document.body.classList.toggle('hof-on',S.view==='hof');
   $('#view').innerHTML=h;
   document.querySelectorAll('#view [data-f]').forEach(el=>{if(el.id in S.form){if(el.type==='checkbox')el.checked=!!S.form[el.id];else el.value=S.form[el.id];}});
   if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el)&&el.tagName!=='SELECT'&&el.tagName!=='BUTTON')el.focus({preventScroll:true});}
   fitLabels();
+  hofMusicSync();
 }
 
 /* ---------- Picks ---------- */
@@ -764,20 +769,22 @@ function archFutures(A){
 const CROWN='<svg viewBox="0 0 64 44" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e3a1"/><stop offset=".5" stop-color="#d9b45a"/><stop offset="1" stop-color="#8a6a24"/></linearGradient></defs><path d="M4 14l14 11L32 4l14 21 14-11-5 24H9z" fill="url(#cg)" stroke="#5a4316" stroke-width="1.2" stroke-linejoin="round"/><rect x="9" y="38" width="46" height="5" rx="1.5" fill="url(#cg)"/><circle cx="4" cy="13" r="3" fill="#f6e3a1"/><circle cx="32" cy="4" r="3.2" fill="#f6e3a1"/><circle cx="60" cy="13" r="3" fill="#f6e3a1"/><circle cx="32" cy="29" r="3" fill="#7a1b2c" stroke="#f6e3a1" stroke-width="1"/></svg>';
 // Everything the Hall of Fame shows, worked out from the past seasons and this season so far.
 function hofData(){
-  const people={},add=(k,name)=>people[k]=people[k]||{key:k,name,titles:[],points:0,won:0,seasons:0,parlays:0};
-  const champs=[],recs={week:null,seasonWon:null,seasonPts:null,margin:null,side:null};
+  const people={},add=(k,name)=>people[k]=people[k]||{key:k,name,titles:[],points:0,won:0,seasons:0,parlays:0,c:0,n:0};
+  const lows=[],pcts=[],champs=[],recs={week:null,seasonWon:null,seasonPts:null,margin:null,side:null};
   const better=(cur,val)=>!cur||val>cur.val;
   SEASONS.slice().sort((a,b)=>a.id.localeCompare(b.id)).forEach(A=>{
     const st=aStandings(A),g=new Set(A.guests||[]);
-    st.list.forEach(r=>{const p=add(r.key,r.name);p.points+=r.points;p.won+=r.won;p.seasons++;
-      if(better(recs.seasonWon,r.won))recs.seasonWon={val:r.won,who:r.name,when:A.id};
-      if(better(recs.seasonPts,r.points))recs.seasonPts={val:r.points,who:r.name,when:A.id};});
+    st.list.forEach(r=>{const p=add(r.key,r.name);p.points+=r.points;p.won+=r.won;p.seasons++;p.c+=r.c;p.n+=r.n;
+      if(better(recs.seasonWon,r.won))recs.seasonWon={val:r.won,who:r.name,when:A.id,sid:A.id};
+      if(better(recs.seasonPts,r.points))recs.seasonPts={val:r.points,who:r.name,when:A.id,sid:A.id};});
     const top=st.list[0],second=st.list[1];
     if(top){people[top.key].titles.push(A.id);champs.push({yr:A.id,name:top.name,pts:top.points,by:second?top.points-second.points:null});
-      if(second&&better(recs.margin,top.points-second.points))recs.margin={val:top.points-second.points,who:top.name,when:A.id};}
+      if(second&&better(recs.margin,top.points-second.points))recs.margin={val:top.points-second.points,who:top.name,when:A.id,sid:A.id};}
     aNums(A).forEach(n=>A.players.forEach(p=>{
       if(g.has(p.key))return;const e=(A.entries[p.key]||{})[n];if(!e)return;
-      if(e.t!=null&&better(recs.week,e.t))recs.week={val:e.t,who:p.name,when:A.id+', '+aWname(A.weeks[n],n)};
+      if(e.t!=null&&better(recs.week,e.t))recs.week={val:e.t,who:p.name,when:A.id+', '+aWname(A.weeks[n],n),sid:A.id,n,key:p.key};
+      if(e.t!=null&&!A.weeks[n].round&&A.weeks[n].done!==false&&!(e.note))lows.push({val:e.t,who:p.name,when:A.id+', '+aWname(A.weeks[n],n),ord:A.id+String(n).padStart(2,'0'),sid:A.id,n,key:p.key});
+      if(!A.weeks[n].round&&A.weeks[n].done!==false&&!e.note&&e.n&&e.n[1])pcts.push({val:e.n[0]/e.n[1]*100,who:p.name,when:A.id+', '+aWname(A.weeks[n],n),ord:A.id+String(n).padStart(2,'0'),sid:A.id,n,key:p.key});
       if(e.par&&aPos(e.par.r))add(p.key,p.name).parlays++;
       (e.x||[]).forEach(x=>{const v=parseInt(x.r,10);if(v>0&&better(recs.side,v))recs.side={val:v,who:p.name,when:A.id+', '+aWname(A.weeks[n],n),what:x.h.replace(/\s*\(.*$/,'')};});
     }));
@@ -787,17 +794,28 @@ function hofData(){
     const cs=computeSeason(S.cfg,S.weeks,S.entries);
     cs.list.forEach(r=>{const p=add(r.key,r.name);p.points+=r.points;p.won+=r.won;p.seasons++;});
     cs.nums.forEach(n=>players().forEach(p=>{
-      const w=subWeek(p.key,n);if(!w)return;const sc=scoreWeek(S.weeks[n],w,true);
-      if(better(recs.week,sc.total))recs.week={val:sc.total,who:p.name,when:curSeasonLabel()+', '+wname(n)};
+      const w=subWeek(p.key,n);if(!w)return;const sc=scoreWeek(S.weeks[n],w,true),pp=add(p.key,p.name);
+      if(!(w.manual&&w.manual.total!=null)){pp.c+=sc.correct;pp.n+=2*Object.values(S.weeks[n].games||{}).filter(g=>g.fin&&g.sa!=null&&g.sh!=null).length;}
+      if(better(recs.week,sc.total))recs.week={val:sc.total,who:p.name,when:curSeasonLabel()+', '+wname(n),sid:'cur',n,key:p.key};
+      if(!S.weeks[n].round&&weekComplete(S.weeks[n])&&!w.manual)lows.push({val:sc.total,who:p.name,when:curSeasonLabel()+', '+wname(n),ord:curSeasonLabel()+String(n).padStart(2,'0'),sid:'cur',n,key:p.key});
+      if(!S.weeks[n].round&&weekComplete(S.weeks[n])&&!w.manual){const poss=2*Object.keys(S.weeks[n].games||{}).length;if(poss)pcts.push({val:sc.correct/poss*100,who:p.name,when:curSeasonLabel()+', '+wname(n),ord:curSeasonLabel()+String(n).padStart(2,'0'),sid:'cur',n,key:p.key});}
       if(sc.parlayState==='hit')add(p.key,p.name).parlays++;
     }));
     if(cs.list[0]&&cs.list[0].points>0)live={yr:curSeasonLabel(),name:cs.list[0].name,pts:cs.list[0].points};
   }
+  if(lows.length){const m=Math.min(...lows.map(x=>x.val)),all=lows.filter(x=>x.val===m).sort((a,b)=>a.ord.localeCompare(b.ord));
+    recs.low={val:m,who:[...new Set(all.map(x=>x.who))].join(', '),when:all.length===1?all[0].when:(all.length+' times, first in '+all[0].when),sid:all[0].sid,n:all[0].n,key:all[0].key};}
+  // Ties name everyone who shares the record and link to the first time it happened.
+  const pick=(arr,fn)=>{if(!arr.length)return null;const m=fn(...arr.map(x=>Math.round(x.val*100)/100)),all=arr.filter(x=>Math.round(x.val*100)/100===m).sort((a,b)=>a.ord.localeCompare(b.ord));
+    return {val:m,who:[...new Set(all.map(x=>x.who))].join(', '),when:all.length===1?all[0].when:(all.length+' times, first in '+all[0].when),sid:all[0].sid,n:all[0].n,key:all[0].key};};
+  recs.cppHi=pick(pcts,Math.max);recs.cppLo=pick(pcts,Math.min);
   return {people:Object.values(people),champs,recs,live};
 }
 function viewHof(){
   const D=hofData(),R=D.recs;
-  const rec=(k,r,fmt,extra)=>r?'<div class="hof-rec"><span class="k">'+k+'</span><span class="v gold">'+esc(fmt(r.val))+'</span><span class="w">'+esc(r.who)+'</span><span class="d">'+esc((extra?extra(r)+' · ':'')+r.when)+'</span></div>':'';
+  // A record tied to a season links to it: a week opens that week's picks (with the record holder selected), a season opens its standings.
+  const where=r=>!r.sid?esc(r.when):'<a class="hof-link" href="#'+(r.n!=null?'picks':'standings')+'" data-act="hofgo" data-s="'+esc(r.sid)+'"'+(r.n!=null?' data-n="'+r.n+'"':'')+(r.key?' data-k="'+esc(r.key)+'"':'')+'>'+esc(r.when)+'</a>';
+  const rec=(k,r,fmt,extra)=>r?'<div class="hof-rec"><span class="k">'+k+'</span><span class="v gold">'+esc(fmt(r.val))+'</span><span class="w">'+esc(r.who)+'</span><span class="d">'+(extra?esc(extra(r))+' · ':'')+where(r)+'</span></div>':'';
   const people=D.people.slice().sort((a,b)=>b.titles.length-a.titles.length||b.points-a.points);
   const topPar=people.slice().sort((a,b)=>b.parlays-a.parlays)[0];
   let h='<div class="hof">';
@@ -806,16 +824,23 @@ function viewHof(){
   h+='<div class="hof-rule">Champions</div><div class="hof-champs">'+
     (D.live?'<div class="hof-plaque live"><span class="yr">'+esc(D.live.yr)+'</span><span class="nm gold">'+esc(D.live.name)+'</span><span class="pts">leads with '+D.live.pts+' points · season in progress</span></div>':'')+
     D.champs.slice().reverse().map(c=>'<div class="hof-plaque">'+CROWN+'<span class="yr">'+esc(c.yr)+'</span><span class="nm gold">'+esc(c.name)+'</span><span class="pts">'+c.pts+' points'+(c.by!=null?', won by '+c.by:'')+'</span></div>').join('')+'</div>';
-  h+='<div class="hof-rule">Titles</div><div class="tw"><table><thead><tr><th class="l">Member</th><th class="l">Championships</th><th>Seasons</th><th>All-time points</th><th>Weeks won</th><th>Parlays hit</th></tr></thead><tbody>'+
-    people.map(p=>'<tr><td class="l"><strong>'+esc(p.name)+'</strong></td><td class="l">'+(p.titles.length?'<span class="crowns">'+'♛'.repeat(p.titles.length)+'</span> '+p.titles.length+' <span class="dim">('+esc(p.titles.join(', '))+')</span>':'<span class="dim">—</span>')+'</td><td>'+p.seasons+'</td><td>'+p.points+'</td><td>'+p.won+'</td><td>'+p.parlays+'</td></tr>').join('')+'</tbody></table></div>';
-  h+='<div class="hof-rule">Records</div><div class="hof-grid">'+
-    rec('Highest score in a week',R.week,v=>v+' pts')+
-    rec('Most weeks won in a season',R.seasonWon,v=>v+' weeks')+
-    rec('Most points in a season',R.seasonPts,v=>v+' pts')+
-    rec('Biggest title margin',R.margin,v=>'+'+v)+
-    rec('Biggest side bet payout',R.side,v=>'+'+v,r=>r.what)+
-    rec('Most parlays hit',topPar&&topPar.parlays?{val:topPar.parlays,who:topPar.name,when:'All seasons'}:null,v=>v+' hits')+
-  '</div>';
+  h+='<div class="hof-rule">Titles</div><div class="tw"><table><thead><tr><th class="l">Member</th><th class="l">Championships</th><th>Seasons</th><th>All-time points</th><th>Weeks won</th><th>Parlays hit</th><th>Correct pick %</th></tr></thead><tbody>'+
+    people.map(p=>'<tr><td class="l"><strong>'+esc(p.name)+'</strong></td><td class="l">'+(p.titles.length?'<span class="crowns">'+'♛'.repeat(p.titles.length)+'</span> '+p.titles.length+' <span class="dim">('+esc(p.titles.join(', '))+')</span>':'<span class="dim">—</span>')+'</td><td>'+p.seasons+'</td><td>'+p.points+'</td><td>'+p.won+'</td><td>'+p.parlays+'</td><td>'+(p.n?(p.c/p.n*100).toFixed(2)+'%':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  const topPts=people.slice().sort((a,b)=>b.points-a.points)[0],topWon=people.slice().sort((a,b)=>b.won-a.won)[0];
+  const group=(title,cards)=>'<div class="hof-group"><h3 class="hof-sub gold">'+title+'</h3><div class="hof-grid">'+cards+'</div></div>';
+  h+='<div class="hof-rule">Records</div>'+
+    group('Single Week',
+      rec('Highest score in a week',R.week,v=>v+' pts')+
+      rec('Highest correct pick % in a week',R.cppHi,v=>v.toFixed(2)+'%')+
+      rec('Lowest correct pick % in a week',R.cppLo,v=>v.toFixed(2)+'%'))+
+    group('Single Season',
+      rec('Most points in a season',R.seasonPts,v=>v+' pts')+
+      rec('Most weeks won in a season',R.seasonWon,v=>v+' weeks')+
+      rec('Biggest title margin',R.margin,v=>'+'+v))+
+    group('All-Time',
+      rec('Most all-time points',topPts?{val:topPts.points,who:topPts.name,when:'All seasons'}:null,v=>v+' pts')+
+      rec('Most weeks won',topWon?{val:topWon.won,who:topWon.name,when:'All seasons'}:null,v=>v+' weeks')+
+      rec('Most parlays hit',topPar&&topPar.parlays?{val:topPar.parlays,who:topPar.name,when:'All seasons'}:null,v=>v+' hits'));
   h+='<p class="foot">Records cover every season on this site, 2021-2022 to today. The scoring rules changed over the years, so totals from different seasons are not like for like.</p>';
   return h+'</div>';
 }
@@ -973,6 +998,11 @@ function collectDraft(n,k){
 function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until kickoff or the Sunday 5 AM deadline.':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
 function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
 const acts={
+  hofgo(el){
+    const sid=el.dataset.s,n=el.dataset.n!=null?Number(el.dataset.n):null,k=el.dataset.k;
+    S.season=sid;
+    if(n!=null){if(sid==='cur'){S.selWeek=n;if(k){S.selPlayer=k;ls.set('mlfl.sel',k);}}else{S.aWeek=n;if(k)S.aPlayer=k;}}
+  },
   npadd(){readNewPlayers();S.newPlayers.push({key:'',name:'',abbr:''});requestRender(true);},
   nprem(el){readNewPlayers();S.newPlayers.splice(Number(el.dataset.i),1);clearForm('np-');requestRender(true);},
   newseason(){

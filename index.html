@@ -421,6 +421,7 @@ async function loadData(){
   if(!data)data=clone(SEED);
   S.cfg=data.cfg||clone(SEED.cfg);S.weeks=data.weeks||{};S.entries=data.entries||{};
   S.got={cfg:true,weeks:true,entries:true};S.loadedAt=Date.now();
+  await loadArchived();
 }
 async function persist(){
   if(!GH.token){toast('Sign in on the Commissioner tab to save changes.');return false;}
@@ -486,7 +487,7 @@ function render(){
   document.body.classList.toggle('hof-on',S.view==='hof');hofMusicSync();
   $('#view').innerHTML=h;
   document.querySelectorAll('#view [data-f]').forEach(el=>{if(el.id in S.form){if(el.type==='checkbox')el.checked=!!S.form[el.id];else el.value=S.form[el.id];}});
-  if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el))el.focus();}
+  if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el)&&el.tagName!=='SELECT'&&el.tagName!=='BUTTON')el.focus({preventScroll:true});}
   fitLabels();
 }
 
@@ -659,9 +660,10 @@ function aStandings(A){
   A.players.filter(p=>!g.has(p.key)).forEach(p=>{rows[p.key]={key:p.key,name:p.name,points:0,won:0,c:0,n:0,byWeek:{}};});
   aNums(A).forEach(n=>{
     const tot={};Object.keys(rows).forEach(k=>{const e=A.entries[k]&&A.entries[k][n];if(e&&e.t!=null){tot[k]=e.t;rows[k].points+=e.t;rows[k].byWeek[n]=e.t;rows[k].c+=e.n[0];rows[k].n+=e.n[1];}});
-    const vals=Object.values(tot);if(!vals.length)return;const best=Math.max(...vals),w=Object.keys(tot).filter(k=>tot[k]===best);
+    const vals=Object.values(tot);if(!vals.length||A.weeks[n].done===false)return;const best=Math.max(...vals),w=Object.keys(tot).filter(k=>tot[k]===best);
     if(A.tie==='share'||w.length===1){winners[n]=w;w.forEach(k=>rows[k].won++);}else winners[n]=[];
   });
+  if(A.futAdd&&A.fut)Object.keys(rows).forEach(k=>{rows[k].points+=A.fut.pts[k]||0;});
   const list=Object.values(rows).map(r=>Object.assign(r,{cpp:A.cpp&&A.cpp[r.key]!=null?A.cpp[r.key]:(r.n?r.c/r.n*100:null)}));
   list.sort((a,b)=>b.points-a.points||b.won-a.won||(b.cpp||0)-(a.cpp||0));
   return {list,winners};
@@ -789,7 +791,7 @@ function hofData(){
       if(better(recs.week,sc.total))recs.week={val:sc.total,who:p.name,when:curSeasonLabel()+', '+wname(n)};
       if(sc.parlayState==='hit')add(p.key,p.name).parlays++;
     }));
-    if(cs.list[0])live={yr:curSeasonLabel(),name:cs.list[0].name,pts:cs.list[0].points};
+    if(cs.list[0]&&cs.list[0].points>0)live={yr:curSeasonLabel(),name:cs.list[0].name,pts:cs.list[0].points};
   }
   return {people:Object.values(people),champs,recs,live};
 }
@@ -827,10 +829,75 @@ function hofMusicSync(){const a=hofAudio();if(a&&S.view!=='hof'&&!a.paused)a.pau
 (function(){const a=document.getElementById('hof-audio');if(!a)return;
   ['play','pause'].forEach(ev=>a.addEventListener(ev,hofMusicSync));
   a.addEventListener('error',()=>{S.hofNoMusic=true;const b=document.getElementById('hof-toggle');if(b)b.remove();});})();
+/* ---------- Starting a new season ---------- */
+// Turns the season being played into the same read-only form as the past seasons, so it can be browsed, ranked and counted in the Hall of Fame.
+function snapshotSeason(){
+  const cfg=S.cfg,id=curSeasonLabel(),nums=Object.keys(S.weeks).map(Number).sort((a,b)=>a-b),cs=computeSeason(cfg,S.weeks,S.entries);
+  const weeks={},entries={};
+  cfg.players.forEach(p=>{entries[p.key]={};});
+  nums.forEach(n=>{
+    const w=S.weeks[n],games=sortedGames(w),mult=weekMult(w);
+    weeks[n]={round:w.round||'',label:w.label||weekLabel(w),done:weekComplete(w),games:games.map(([gid,g])=>{
+      const fin=g.sa!=null&&g.sh!=null?(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+(g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie')+')':'';
+      return [g.away,g.home,kickText(g),fin,g.sp==null?'':spreadLabel(g,'away'),g.sp==null?'':spreadLabel(g,'home'),g.tot==null?'':ouLabel(g,'over'),g.tot==null?'':ouLabel(g,'under')];
+    })};
+    cfg.players.forEach(p=>{
+      const sub=subWeek(p.key,n);if(!sub)return;
+      const sc=scoreWeek(w,sub,true),cell=(x,picked)=>x===true?'+'+mult:(x===false||x==='push')?'0':(picked?'0':'');
+      const pstr=games.map(([gid])=>{const x=(sub.p&&sub.p[gid])||{};return (x.s==='away'?'a':x.s==='home'?'h':'-')+(x.o==='over'?'o':x.o==='under'?'u':'-');}).join('');
+      const cells=games.map(([gid])=>{const r=sc.per[gid]||{},x=(sub.p&&sub.p[gid])||{};return r.combo?'*+'+3*mult:cell(r.sw,!!x.s)+','+cell(r.ow,!!x.o);});
+      const e={p:pstr,c:cells,t:sc.total,th:'Total Points ('+wname(n)+')',
+        tl:['Spread Points: '+sc.spread+' | O/U Points: '+sc.ou,'Same Game Combo Points: '+sc.combo,'5 Game Parlay Points: '+sc.parlay,'Total Points: '+sc.total].concat(sc.pct!=null?['Correct Pick Percentage: '+sc.pct.toFixed(2)+'%']:[]),
+        pct:sc.pct==null?null:Number(sc.pct.toFixed(2)),n:[sc.correct,2*games.length]};
+      if(sub.manual&&sub.manual.note)e.note=sub.manual.note;
+      if(sub.parlay&&sub.parlay.length)e.par={h:'5 Game Parlay Bonus (+20 Points)',l:sub.parlay.map(l=>legLabel(w,l.g+'|'+l.m+'|'+l.v,l.l)),r:sc.parlayState==='hit'?'+20':sc.parlayState==='miss'?'0':''};
+      entries[p.key][n]=e;
+    });
+  });
+  const fr=cfg.futuresResult||{},picks={},pts={};
+  cfg.players.forEach(p=>{const f=S.entries[p.key]&&S.entries[p.key].futures;if(f&&f.at){picks[p.key]=[f.afc,f.nfc,f.sb];pts[p.key]=(fr.afc&&f.afc===fr.afc?10:0)+(fr.nfc&&f.nfc===fr.nfc?10:0)+(fr.sb&&f.sb===fr.sb?20:0);}});
+  const cpp={};cs.list.forEach(r=>{if(r.cpp!=null)cpp[r.key]=Number(r.cpp.toFixed(2));});
+  return {id,players:cfg.players.map(p=>({key:p.key,name:p.name,abbr:abbr(p)})),tie:'share',weeks,entries,cpp,notes:[],guests:[],futAdd:true,
+    fut:Object.keys(picks).length?{h:'Future Picks (AFC +10 | NFC +10 | SB +20)',picks,pts,res:{afc:fr.afc||'',nfc:fr.nfc||'',sb:fr.sb||''}}:null};
+}
+async function ghPutFile(path,text,message){
+  const url='https://api.github.com/repos/'+encodeURIComponent(GH.owner)+'/'+encodeURIComponent(GH.repo)+'/contents/'+path;
+  let sha=null;try{const g=await fetch(url+'?t='+Date.now(),{headers:ghHdr(),cache:'no-store'});if(g.ok)sha=(await g.json()).sha;}catch(e){}
+  const body={message,content:b64enc(text)};if(sha)body.sha=sha;
+  const r=await fetch(url,{method:'PUT',headers:ghHdr(),body:JSON.stringify(body)});return r.ok;
+}
+// Seasons archived from this site live in seasons/<id>.json next to the page; data.json lists them.
+async function loadArchived(){
+  const ids=((S.cfg&&S.cfg.past)||[]).filter(id=>!SEASONS.some(x=>x.id===id));
+  for(const id of ids){
+    let A=null;
+    try{const r=await fetch('seasons/'+encodeURIComponent(id)+'.json?t='+Date.now(),{cache:'no-store'});if(r.ok)A=await r.json();}catch(e){}
+    if(!A&&GH.owner){try{const r=await fetch('https://api.github.com/repos/'+encodeURIComponent(GH.owner)+'/'+encodeURIComponent(GH.repo)+'/contents/seasons/'+encodeURIComponent(id)+'.json?t='+Date.now(),{headers:ghHdr(),cache:'no-store'});if(r.ok)A=JSON.parse(b64dec((await r.json()).content));}catch(e){}}
+    if(A&&A.id&&!SEASONS.some(x=>x.id===A.id))SEASONS.push(A);
+  }
+  SEASONS.sort((a,b)=>b.id.localeCompare(a.id));
+}
+function slugKey(name,taken){let k=String(name).toLowerCase().replace(/[^a-z0-9]+/g,'')||'player';let base=k,i=2;while(taken.includes(k))k=base+(i++);return k;}
+function adminSeason(){
+  const y=Number(S.cfg.season)||2026,next=(y+1)+'-'+(y+2),nums=Object.keys(S.weeks).map(Number),done=nums.filter(n=>weekComplete(S.weeks[n])).length;
+  const hasSB=Object.values(S.weeks).some(w=>w.round==='Super Bowl'&&weekComplete(w));
+  if(!S.newPlayers)S.newPlayers=S.cfg.players.map(p=>({key:p.key,name:p.name,abbr:abbr(p)}));
+  let h='<section class="card"><h3>Start a new season</h3><div class="pad stack">';
+  h+='<p>When '+esc(curSeasonLabel())+' is over, start '+esc(next)+' here. '+esc(curSeasonLabel())+' moves into the Season dropdown with the past seasons, exactly as it finished, and counts in the Hall of Fame. The new season starts at Week 1 with everyone on 0 points.</p>';
+  h+='<p class="muted small">'+done+' of '+nums.length+' weeks have every game final. '+(hasSB?'The Super Bowl is final.':'<strong>The Super Bowl has not been played on this site yet.</strong>')+(S.cfg.futuresResult&&S.cfg.futuresResult.sb?'':' Enter the futures results above first so those points count.')+'</p>';
+  h+='<div class="tw"><table><thead><tr><th class="l">Players for '+esc(next)+'</th><th class="l">Initials</th><th></th></tr></thead><tbody>'+
+    S.newPlayers.map((p,i)=>'<tr><td class="l"><input type="text" id="np-'+i+'-name" data-f data-np="'+i+'" data-k="name" value="'+esc(p.name)+'" aria-label="Player name"></td><td class="l"><input type="text" id="np-'+i+'-abbr" data-f data-np="'+i+'" data-k="abbr" value="'+esc(p.abbr||'')+'" size="5" maxlength="4" aria-label="Initials"></td><td><button class="btn danger" data-act="nprem" data-i="'+i+'" aria-label="Remove player">✕</button></td></tr>').join('')+
+    '</tbody></table></div><div class="bar"><button class="btn" data-act="npadd">Add a player</button><button class="btn primary" data-act="newseason">Start the '+esc(next)+' season</button></div>';
+  h+='<p class="muted small">Players who stay keep their history in the Hall of Fame. A player you remove still shows in the past seasons they played.</p></div></section>';
+  return h;
+}
+function readNewPlayers(){
+  document.querySelectorAll('#view input[data-np]').forEach(el=>{const p=S.newPlayers[Number(el.dataset.np)];if(p)p[el.dataset.k]=el.value.trim();});
+}
 function viewFutures(){
   if(archSeason())return archFutures(archSeason());
   const fr=S.cfg.futuresResult||{},me=S.me,mine=me&&S.entries[me]&&S.entries[me].futures,open=S.cfg.futuresOpen!==false;
-  let h='<div class="bar"><h2 class="weekhead">Future Picks</h2>'+seasonPicker()+'</div><p class="muted">AFC winner +10 | NFC winner +10 | Super Bowl winner +20</p>';
+  let h='<div class="bar"><h2 class="weekhead">'+esc(curSeasonLabel())+' Future Picks</h2>'+seasonPicker()+'</div><p class="muted">AFC winner +10 | NFC winner +10 | Super Bowl winner +20</p>';
   const pending=players().filter(p=>!(S.entries[p.key]&&S.entries[p.key].futures&&S.entries[p.key].futures.at));
   if(S.isOwner&&open&&pending.length){
     const sel=(id,label,list)=>'<label for="'+id+'">'+label+' <select id="'+id+'" data-f><option value="">Choose</option>'+list.map(t=>'<option>'+t+'</option>').join('')+'</select></label>';
@@ -858,14 +925,14 @@ function viewCommish(){
   let h='<h2 class="weekhead">Commissioner</h2>';
   h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make Week '+n+' the current week</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="18" value="'+Math.min(18,(nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><p class="muted small">Regular-season weeks run 1 to 18. For a playoff round, choose it under Type and the number is ignored.</p><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
   h+='<section class="card"><h3>Enter a pick code</h3><div class="pad stack"><label for="pcode">Paste the code a player sent you <input type="text" id="pcode" data-f autocomplete="off" size="34"></label><div><button class="btn primary" data-act="loadcode">Load picks</button></div><p class="muted small">The code already says which player and week it is for. You confirm before anything is saved.</p></div></section>';
-  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminBase()+adminFutures();}
+  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminBase()+adminFutures()+adminSeason();}
   h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
   const rows=sortedGames(week).filter(([gid])=>!S.delRows[gid]).concat(S.newRows.filter(id=>!S.delRows[id]).map(id=>[id,{}]));
   const inp=(gid,k,type,val,extra)=>'<input type="'+type+'" id="g-'+esc(gid)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(val==null?'':val)+'" '+(extra||'')+' aria-label="'+k+'">';
   h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th></th></tr></thead><tbody>'+
     rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
     '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
-  return h+adminPlayers(n)+adminBase()+adminFutures();
+  return h+adminPlayers(n)+adminBase()+adminFutures()+adminSeason();
 }
 function adminPlayers(n){
   const week=S.weeks[n];
@@ -906,6 +973,27 @@ function collectDraft(n,k){
 function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until kickoff or the Sunday 5 AM deadline.':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
 function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
 const acts={
+  npadd(){readNewPlayers();S.newPlayers.push({key:'',name:'',abbr:''});requestRender(true);},
+  nprem(el){readNewPlayers();S.newPlayers.splice(Number(el.dataset.i),1);clearForm('np-');requestRender(true);},
+  newseason(){
+    readNewPlayers();
+    const list=S.newPlayers.filter(p=>p.name);if(list.length<2){toast('Add at least two players.');return;}
+    const names=list.map(p=>p.name.toLowerCase());if(new Set(names).size!==names.length){toast('Two players have the same name.');return;}
+    const y=Number(S.cfg.season)||2026,cur=curSeasonLabel(),next=(y+1)+'-'+(y+2);
+    confirmBox('Start the '+next+' season?','<ul><li>'+esc(cur)+' is saved as a past season, exactly as it stands now.</li><li>'+esc(next)+' starts at Week 1 with these players on 0 points: '+esc(list.map(p=>p.name).join(', '))+'.</li><li>You cannot add picks or scores to '+esc(cur)+' afterwards.</li></ul><label for="dlg-check"><input type="checkbox" id="dlg-check"> '+esc(cur)+' is finished</label>','Start '+next,async ok=>{
+      if(!ok){toast('Tick the box to confirm '+cur+' is finished.');return;}
+      const snap=snapshotSeason();
+      if(!(await ghPutFile('seasons/'+cur+'.json',JSON.stringify(snap),'Archive '+cur+' season'))){toast('Could not save '+cur+' to GitHub. Nothing was changed. Try again.');return;}
+      const old={cfg:S.cfg,weeks:S.weeks,entries:S.entries},keys=[];
+      const players=list.map(p=>{const k=p.key&&!keys.includes(p.key)?p.key:slugKey(p.name,keys);keys.push(k);return {key:k,name:p.name,abbr:p.abbr||'',base:{points:0,won:0,cpp:0,weeks:0}};});
+      S.cfg={name:old.cfg.name||'MLFL',season:y+1,currentWeek:1,futuresOpen:true,futuresResult:{afc:'',nfc:'',sb:''},baseLabel:'',players,past:((old.cfg.past)||[]).concat([cur])};
+      S.weeks={};S.entries={};players.forEach(p=>{S.entries[p.key]={weeks:{}};});
+      if(!(await persist())){S.cfg=old.cfg;S.weeks=old.weeks;S.entries=old.entries;toast('Could not start the new season. '+cur+' is unchanged.');return;}
+      if(!SEASONS.some(x=>x.id===snap.id))SEASONS.push(snap);SEASONS.sort((a,b)=>b.id.localeCompare(a.id));
+      S.newPlayers=null;S.adminWeek=1;S.selWeek=1;S.season='cur';clearForm('np-');
+      toast(next+' has started. '+cur+' is in the Season dropdown.');requestRender(true);
+    });
+  },
   hofmusic(){const a=hofAudio();if(!a)return;if(a.paused){ls.del('mlfl.hofmute');hofPlay(true);}else{a.pause();ls.set('mlfl.hofmute','1');}setTimeout(hofMusicSync,60);},
   async signin(){
     const owner=$('#gh-owner').value.trim(),repo=$('#gh-repo').value.trim(),token=$('#gh-token').value.trim();

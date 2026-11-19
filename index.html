@@ -98,7 +98,9 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .note p{margin:0 0 8px}.note p:last-child{margin:0}
 .pills{display:flex;flex-wrap:wrap;gap:6px}
 .pill{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:999px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-.pill[aria-pressed="true"]{background:var(--board);color:var(--board-ink);border-color:var(--board)}
+.pill[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.pill[aria-pressed="true"]::after{content:"✓";font-weight:700;margin-left:2px}
+.pill[aria-pressed="true"] .dot{box-shadow:0 0 0 2px var(--accent-ink)}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
 .dot.in{background:var(--win)}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
@@ -530,8 +532,8 @@ function viewPicks(){
   else if(!open)h+='<p class="muted small">'+esc(pname(sel))+' has no picks for this week. Picks are closed.</p>';
   const dl=weekDeadline(week);
   if(canAdd){
-    const how='Tap one side of the spread and one side of the total. You do not have to do every game at once: send Thursday\'s game now and the rest later. Each pick locks once it is in. Anything you have not picked stays open until that game kicks off or the deadline, whichever comes first.'+(dl?' <strong>All picks are due by '+esc(chi(new Date(dl).toISOString(),{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT</strong>, including the Sunday night and Monday night games.':'')+(hasParlay(week)&&!lockedParlay?' Parlay legs lock the same way: send a Thursday leg now and add the others later. If a locked leg loses, the parlay is over.':'');
-    h+='<div class="note"><p>'+(S.isOwner?'<strong>Entering '+esc(wname(n))+' picks for '+esc(pname(sel))+'.</strong> '+how+' Or paste a player\'s pick code on the Commissioner tab.':'<strong>Making '+esc(wname(n))+' picks for '+esc(pname(sel))+'.</strong> Check that your own name is selected above. '+how+' When you are ready, press Get my pick code and text the code to the commissioner. Picks count once the commissioner enters the code.')+'</p></div>';
+    const due=dl?' Picks are due by <strong>'+esc(chi(new Date(dl).toISOString(),{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT</strong>.':'';
+    h+='<div class="note"><p>'+(S.isOwner?'<strong>Entering picks for '+esc(pname(sel))+'.</strong>'+due:'<strong>Picking as '+esc(pname(sel))+'.</strong> Not you? Tap your name above.'+due+' When you are done, tap <strong>Get my pick code</strong> and text it to the commissioner.')+'</p></div>';
   }
   if(sub&&sub.manual&&sub.manual.note)h+='<div class="note warn"><p>'+esc(sub.manual.note)+'</p></div>';
   if(week.round)h+='<p class="muted small"><strong>Postseason: double points.</strong> +2 per correct pick, +6 for both in a game.'+(hasParlay(week)?' The parlay is still worth +20.':' No parlay this round.')+'</p>';
@@ -540,7 +542,7 @@ function viewPicks(){
   const visible=g=>!!S.isOwner||!open||started(g);
   if(!games.length)h+='<div class="note"><p>No games on the board yet.</p></div>';
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible)).join('')+'</div>';
-  h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+totalsCard(n,sel,sc,sub)+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Get my pick code</button>'):'')+'</div></div>';
+  h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Get my pick code</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
   h+=weekTable(week,n);
   h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+'+weekMult(week)+'</i> Correct pick</span><span><i class="badge combo">+'+3*weekMult(week)+'</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
   return h;
@@ -561,6 +563,9 @@ function claimCard(){
   return '<div class="note warn"><p><strong>Which player are you?</strong> Choose once and this page remembers you.</p><div class="pills">'+free.map(p=>'<button class="pill" data-act="claim" data-k="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div></div>';
 }
 function whoChips(gid,m,v,n,sel,g,visible){
+  // Everyone's initials on a game stay hidden on a player's card until that player has a pick locked in for it, or picks for the game have closed.
+  const mine=subWeek(sel,n),has=mine&&mine.p&&mine.p[gid]&&(mine.p[gid].s||mine.p[gid].o);
+  if(!has&&!(kicked(g)||pastDeadline(g)||S.weeks[n].open===false))return '';
   const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
   return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(abbr(p))+'</span>').join('')+'</span>':'';
 }

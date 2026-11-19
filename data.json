@@ -2,7 +2,7 @@
  "cfg": {
   "name": "MLFL",
   "season": 2026,
-  "currentWeek": 12,
+  "currentWeek": 11,
   "futuresOpen": false,
   "futuresResult": {
    "afc": "",
@@ -1946,12 +1946,6 @@
   },
   "11": {
    "n": 11,
-   "open": true,
-   "round": "",
-   "games": {}
-  },
-  "12": {
-   "n": 12,
    "open": true,
    "round": "",
    "games": {}

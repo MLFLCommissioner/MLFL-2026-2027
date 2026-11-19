@@ -539,7 +539,7 @@ function viewPicks(){
   if(week.round)h+='<p class="muted small"><strong>Postseason: double points.</strong> +2 per correct pick, +6 for both in a game.'+(hasParlay(week)?' The parlay is still worth +20.':' No parlay this round.')+'</p>';
   const draft=open?getDraft(n,sel):null,sent=getSent(n,sel);
   const sc=scoreWeek(week,sub,false);
-  const visible=g=>!!S.isOwner||!open||started(g);
+  const visible=g=>!!S.isOwner||!open||started(g)||allIn(n,g);
   if(!games.length)h+='<div class="note"><p>No games on the board yet.</p></div>';
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible)).join('')+'</div>';
   h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Get my pick code</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
@@ -562,10 +562,15 @@ function claimCard(){
   const free=players().filter(p=>{const u=S.entries[p.key]&&S.entries[p.key].uid;return !u||u===S.uid;});
   return '<div class="note warn"><p><strong>Which player are you?</strong> Choose once and this page remembers you.</p><div class="pills">'+free.map(p=>'<button class="pill" data-act="claim" data-k="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div></div>';
 }
+// A game's picks are shown to everyone early once every player has both their spread and over/under pick locked in for it.
+function allIn(n,g){
+  const w=S.weeks[n],gid=Object.keys((w&&w.games)||{}).find(k=>w.games[k]===g);if(!gid)return false;
+  return players().every(p=>{const e=subWeek(p.key,n),y=e&&e.p&&e.p[gid];return !!y&&(g.sp==null||!!y.s)&&(g.tot==null||!!y.o);});
+}
 function whoChips(gid,m,v,n,sel,g,visible){
   // Everyone's initials on a game stay hidden on a player's card until that player has a pick locked in for it, or picks for the game have closed.
   const mine=subWeek(sel,n),has=mine&&mine.p&&mine.p[gid]&&(mine.p[gid].s||mine.p[gid].o);
-  if(!has&&!(kicked(g)||pastDeadline(g)||S.weeks[n].open===false))return '';
+  if(!has&&!(kicked(g)||pastDeadline(g)||S.weeks[n].open===false||allIn(n,g)))return '';
   const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
   return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(abbr(p))+'</span>').join('')+'</span>':'';
 }

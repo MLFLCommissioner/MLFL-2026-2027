@@ -115,6 +115,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .sb-legs{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:3px}
 .sb-legs li{padding:1px 6px}
 .sb-legs li.chosen{background:var(--pick);color:var(--pick-ink);font-weight:600;border-radius:4px}
+.pend-tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--board);color:var(--board-ink);border-radius:4px;padding:1px 5px;margin-top:2px}
 .parlay-res{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .matchup{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;min-width:0}
 .matchup .team{white-space:nowrap}
@@ -524,13 +525,13 @@ async function persist(){
 }
 async function saveEntry(key,mut){
   const prev=S.entries[key],cur=clone(prev);mut(cur);S.entries[key]=cur;
-  if(await persist())return true;
+  if(await persist()){requestRender(true);return true;}
   S.entries[key]=prev;return false;
 }
 async function saveDoc(path,data){
   const parts=path.split('/'),isCfg=parts[0]==='league',prev=isCfg?S.cfg:S.weeks[parts[1]];
   if(isCfg)S.cfg=data;else S.weeks[parts[1]]=data;
-  if(await persist())return true;
+  if(await persist()){requestRender(true);return true;}
   if(isCfg)S.cfg=prev;else if(prev)S.weeks[parts[1]]=prev;else delete S.weeks[parts[1]];
   return false;
 }
@@ -607,17 +608,20 @@ function viewPicks(){
   if(!S.selPlayer||!ps.some(p=>p.key===S.selPlayer)){const rem=ls.get('mlfl.sel');S.selPlayer=ps.some(p=>p.key===rem)?rem:(ps[0]&&ps[0].key);}
   const sel=S.selPlayer,open=week.open!==false,sub=subWeek(sel,n);
   h+='<div class="pills" role="group" aria-label="Whose picks to show">'+ps.map(p=>'<button class="pill" data-act="selp" data-k="'+esc(p.key)+'" aria-pressed="'+(p.key===sel)+'"><span class="dot'+(subWeek(p.key,n)?' in':'')+'" title="'+(subWeek(p.key,n)?'Has picks in':'No picks in yet')+'"></span>'+esc(p.name)+'</button>').join('')+'</div>';
-  const games=sortedGames(week),nLegs=(sub&&sub.parlay&&sub.parlay.length)||0,parlayDead=scoreWeek(week,sub,false).parlayState==='miss',lockedParlay=nLegs===5||parlayDead,nLocked=countPicks(sub);
+  const pend=S.curPend=pendingFor(n,sel);
+  const games=sortedGames(week),nLegs=((sub&&sub.parlay&&sub.parlay.length)||0)+pend.legs.length,parlayDead=scoreWeek(week,sub,false).parlayState==='miss',lockedParlay=nLegs===5||parlayDead,nLocked=countPicks(sub);
   // Picks lock one by one. Anything not yet picked stays open until that game kicks off.
-  let openMarkets=0;games.forEach(([gid,g])=>{if(started(g))return;const l=(sub&&sub.p&&sub.p[gid])||{};if(g.sp!=null&&!l.s)openMarkets++;if(g.tot!=null&&!l.o)openMarkets++;});
+  let openMarkets=0;games.forEach(([gid,g])=>{if(started(g))return;const l=Object.assign({},(sub&&sub.p&&sub.p[gid])||{},pend.p[gid]||{});if(g.sp!=null&&!l.s)openMarkets++;if(g.tot!=null&&!l.o)openMarkets++;});
   const canAdd=open&&(openMarkets>0||(hasParlay(week)&&!lockedParlay&&games.filter(x=>!started(x[1])).length>0));
   if(sub)h+='<p class="muted small">'+(sub.imp?esc(pname(sel))+"'s picks were imported from the Google Sheet. Picks are locked.":esc(pname(sel))+' has '+nLocked+' pick'+(nLocked===1?'':'s')+' locked in'+(nLegs?' and '+nLegs+' parlay leg'+(nLegs===1?'':'s'):'')+', last updated '+esc(chi(sub.upd||sub.at,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT.')+'</p>';
   else if(!open)h+='<p class="muted small">'+esc(pname(sel))+' has no picks for this week. Picks are closed.</p>';
   const dl=weekDeadline(week);
   if(canAdd){
     const due=dl?' Picks are due by <strong>'+esc(chi(new Date(dl).toISOString(),{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT</strong>.':'';
-    h+='<div class="note"><p>'+(S.isOwner?'<strong>Entering picks for '+esc(pname(sel))+'.</strong>'+due:'<strong>Picking as '+esc(pname(sel))+'.</strong> Not you? Tap your name above.'+due+' When you are done, tap <strong>Get my pick code</strong> and text it to the commissioner.')+'</p></div>';
+    h+='<div class="note"><p>'+(S.isOwner?'<strong>Entering picks for '+esc(pname(sel))+'.</strong>'+due:'<strong>Picking as '+esc(pname(sel))+'.</strong> Not you? Tap your name above.'+due+' When you are done, tap <strong>Confirm picks</strong>.')+'</p></div>';
   }
+  if(pend.count){const pp=pend.count-pend.legs.length,what=[pp?pp+' pick'+(pp===1?'':'s'):'',pend.legs.length?pend.legs.length+' parlay leg'+(pend.legs.length===1?'':'s'):''].filter(Boolean).join(' and ');
+  h+='<div class="note warn pending"><p><strong>Verification Pending.</strong> '+what+' confirmed'+(pend.at?' '+esc(chi(pend.at,{weekday:'short',hour:'numeric',minute:'2-digit'}))+' CT':'')+' and waiting for the commissioner to approve. They are locked until then.</p><p><button class="btn" data-act="withdraw">Withdraw and change my picks</button></p></div>';}
   if(sub&&sub.manual&&sub.manual.note)h+='<div class="note warn"><p>'+esc(sub.manual.note)+'</p></div>';
   if(week.round)h+='<p class="muted small"><strong>Postseason: double points.</strong> +2 per correct pick, +6 for both in a game.'+(hasParlay(week)?' The parlay is still worth +20.':' No parlay this round.')+'</p>';
   const draft=open?getDraft(n,sel):null,sent=getSent(n,sel);
@@ -625,7 +629,7 @@ function viewPicks(){
   const visible=g=>!!S.isOwner||!open||started(g)||allIn(n,g);
   if(!games.length)h+='<div class="note"><p>No games on the board yet.</p></div>';
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible)).join('')+'</div>';
-  h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Get my pick code</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
+  h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Confirm picks</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
   h+=weekTable(week,n);
   h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+'+weekMult(week)+'</i> Correct pick</span><span><i class="badge combo">+'+3*weekMult(week)+'</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
   return h;
@@ -633,7 +637,22 @@ function viewPicks(){
 function countPicks(w){let c=0;Object.values((w&&w.p)||{}).forEach(x=>{if(x.s)c++;if(x.o)c++;});return c;}
 // What this device last put into a pick code, so a player can still see their own locked picks before kickoff.
 function getSent(n,k){try{return JSON.parse(ls.get('mlfl.sent.'+draftKey(n,k))||'{}')||{};}catch(e){return {};}}
-function addSent(n,k,p){const cur=getSent(n,k);Object.keys(p).forEach(g=>{cur[g]=Object.assign(cur[g]||{},p[g]);});ls.set('mlfl.sent.'+draftKey(n,k),JSON.stringify(cur));}
+function addSent(n,k,p,legs){
+  const cur=getSent(n,k);Object.keys(p).forEach(g=>{cur[g]=Object.assign(cur[g]||{},p[g]);});ls.set('mlfl.sent.'+draftKey(n,k),JSON.stringify(cur));
+  const m=sentMeta(n,k);m.at=new Date().toISOString();m.legs=(m.legs||[]).concat((legs||[]).filter(l=>!(m.legs||[]).some(x=>x.g===l.g&&x.m===l.m)));ls.set('mlfl.sentm.'+draftKey(n,k),JSON.stringify(m));
+}
+function sentMeta(n,k){try{return JSON.parse(ls.get('mlfl.sentm.'+draftKey(n,k))||'{}')||{};}catch(e){return {};}}
+function clearSent(n,k){ls.del('mlfl.sent.'+draftKey(n,k));ls.del('mlfl.sentm.'+draftKey(n,k));}
+// Picks this phone confirmed that the commissioner has not approved yet. They stay locked on this phone ("Verification Pending") until approved or withdrawn.
+function pendingFor(n,k){
+  const out={p:{},legs:[],count:0,at:null};if(S.isOwner)return out;
+  const w=S.weeks[n],sub=subWeek(k,n),sent=getSent(n,k),meta=sentMeta(n,k);if(!w)return out;
+  const gone=g=>!g||kicked(g)||pastDeadline(g)||w.open===false;
+  Object.keys(sent).forEach(gid=>{const g=w.games[gid];if(gone(g))return;['s','o'].forEach(m=>{const v=sent[gid][m];if(!v||(sub&&sub.p&&sub.p[gid]&&sub.p[gid][m]))return;(out.p[gid]=out.p[gid]||{})[m]=v;out.count++;});});
+  const lockedL=(sub&&sub.parlay)||[];
+  out.legs=(meta.legs||[]).filter(l=>!gone(w.games[l.g])&&!lockedL.some(x=>x.g===l.g&&x.m===l.m));out.count+=out.legs.length;
+  out.at=meta.at||null;return out;
+}
 function mergeWeek(e,n,p,legs){
   e.weeks=e.weeks||{};const cur=e.weeks[n]&&e.weeks[n].at?e.weeks[n]:{p:{},parlay:[]};
   Object.keys(p).forEach(g=>{cur.p[g]=cur.p[g]||{};['s','o'].forEach(m=>{if(p[g][m]&&!cur.p[g][m])cur.p[g][m]=p[g][m];});});
@@ -678,6 +697,8 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
       const picked=show?lock[m]===v:sp[m]===v;
       return '<div class="opt'+(picked?' picked':'')+'">'+inner+'</div>';
     }
+    const pp=(S.curPend&&S.curPend.p[gid])||{};
+    if(pp[m]){const picked=pp[m]===v;return '<div class="opt'+(picked?' picked':'')+'">'+inner+(picked?'<span class="pend-tag">Pending</span>':'')+'</div>';}
     if(!canTap)return '<div class="opt">'+inner+'</div>';
     const picked=dp[m]===v;
     return '<button class="opt'+(picked?' picked':'')+'" data-act="pick" data-g="'+esc(gid)+'" data-m="'+m+'" data-v="'+v+'" aria-pressed="'+picked+'">'+inner+'</button>';
@@ -699,8 +720,8 @@ function legLabel(week,code,own){
   return m==='s'?spreadLabel(g,v):g.away+' vs '+g.home+' '+ouLabel(g,v);
 }
 // Drops draft legs that are already locked or whose game has started, and packs the rest to the front.
-function openLegs(week,sub,draft){
-  const locked=(sub&&sub.parlay)||[],keep=(draft?draft.parlay:[]).filter(c=>{if(!c)return false;const [g,m]=c.split('|');return week.games[g]&&!started(week.games[g])&&!locked.some(x=>x.g===g&&x.m===m);});
+function openLegs(week,sub,draft,extra){
+  const locked=((sub&&sub.parlay)||[]).concat(extra||[]),keep=(draft?draft.parlay:[]).filter(c=>{if(!c)return false;const [g,m]=c.split('|');return week.games[g]&&!started(week.games[g])&&!locked.some(x=>x.g===g&&x.m===m);});
   return keep.slice(0,5-locked.length);
 }
 function ordinal(k){const t=k%100,u=k%10;return k+(t>=11&&t<=13?'th':u===1?'st':u===2?'nd':u===3?'rd':'th');}
@@ -711,16 +732,17 @@ function parlayHitNumber(key,n){
 }
 function parlayCard(week,n,sel,sub,draft,sc,open,visible){
   if(!hasParlay(week))return '<section class="card"><h3>5 Game Parlay Bonus</h3><div class="pad"><p class="muted">No parlay this week. It needs at least five games on the board.</p></div></section>';
-  const locked=(sub&&sub.parlay)||[],dead=sc.parlayState==='miss',slots=5-locked.length;
+  const pendL=(S.curPend&&S.curPend.legs)||[],realLocked=(sub&&sub.parlay)||[],locked=realLocked.concat(pendL),dead=sc.parlayState==='miss',slots=5-locked.length;
   let h='<section class="card"><h3>5 Game Parlay Bonus (+20 Points)</h3><div class="pad stack"><ol class="legs">';
   locked.forEach((l,i)=>{
+    if(i>=realLocked.length){h+='<li><span class="mark"></span>'+(i+1)+'. '+esc(legLabel(week,l.g+'|'+l.m+'|'+l.v,l.l))+' <span class="pend-tag">Pending</span></li>';return;}
     const g=week.games[l.g],r=sc.legs[i],show=!g||visible(g);
     h+='<li><span class="mark'+(r===true?' win':(r===false||r==='push')?' miss':'')+'">'+(r===true?'✓':(r===false||r==='push')?'✕':'')+'</span>'+(i+1)+'. '+(show?esc(legLabel(week,l.g+'|'+l.m+'|'+l.v,l.l)):'<span class="muted">Locked in. Hidden until picks lock.</span>')+'</li>';
   });
   const canEdit=open&&!!draft&&!dead&&slots>0;
   if(canEdit){
     const opts=[];sortedGames(week).forEach(([gid,g])=>{if(started(g))return;if(g.sp!=null&&!locked.some(x=>x.g===gid&&x.m==='s')){opts.push(gid+'|s|away',gid+'|s|home');}if(g.tot!=null&&!locked.some(x=>x.g===gid&&x.m==='o')){opts.push(gid+'|o|over',gid+'|o|under');}});
-    const cur=openLegs(week,sub,draft);
+    const cur=openLegs(week,sub,draft,pendL);
     for(let j=0;j<slots;j++){
       const mine=cur[j]||'',used=cur.filter((x,k)=>k!==j&&x).map(x=>x.split('|').slice(0,2).join('|'));
       h+='<li><span>'+(locked.length+j+1)+'.</span><select id="leg'+j+'" data-act="leg" data-i="'+j+'" aria-label="Parlay leg '+(locked.length+j+1)+'"><option value="">Choose a pick</option>'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===mine?' selected':'')+(used.includes(o.split('|').slice(0,2).join('|'))?' disabled':'')+'>'+esc(legLabel(week,o))+'</option>').join('')+'</select></li>';
@@ -1055,14 +1077,14 @@ function viewCommish(){
   let h='<h2 class="weekhead">Commissioner</h2>';
   h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make '+esc(wname(n))+' the current week</button>':'')+(week?'<button class="btn danger" data-act="delweek">Delete '+esc(wname(n))+'</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="18" value="'+Math.min(18,(nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><p class="muted small">Regular-season weeks run 1 to 18. For a playoff round, choose it under Type and the number is ignored.</p><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
   h+='<section class="card"><h3>Enter a pick code</h3><div class="pad stack"><label for="pcode">Paste the code a player sent you <input type="text" id="pcode" data-f autocomplete="off" size="34"></label><div><button class="btn primary" data-act="loadcode">Load picks</button></div><p class="muted small">The code already says which player and week it is for. You confirm before anything is saved.</p></div></section>';
-  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminFutures()+adminSeason();}
+  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminMail()+adminFutures()+adminSeason();}
   h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
   const rows=sortedGames(week).filter(([gid])=>!S.delRows[gid]).concat(S.newRows.filter(id=>!S.delRows[id]).map(id=>[id,{}]));
   const inp=(gid,k,type,val,extra)=>'<input type="'+type+'" id="g-'+esc(gid)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(val==null?'':val)+'" '+(extra||'')+' aria-label="'+k+'">';
   h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th></th></tr></thead><tbody>'+
     rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
     '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
-  return h+adminPlayers(n)+adminFutures()+adminSeason();
+  return h+adminPlayers(n)+adminMail()+adminFutures()+adminSeason();
 }
 function adminPlayers(n){
   const week=S.weeks[n];
@@ -1088,19 +1110,40 @@ async function oddsData(urlFn){
   catch(e){toast('This page could not reach the odds service. Use the links below and paste the result instead.');return null;}
 }
 function collectDraft(n,k){
-  const week=S.weeks[n],d=getDraft(n,k),sub=subWeek(k,n),p={};let made=0,avail=0;
+  const week=S.weeks[n],d=getDraft(n,k),sub=subWeek(k,n),pend=pendingFor(n,k),p={};let made=0,avail=0;
   sortedGames(week).forEach(([gid,g])=>{
     if(started(g))return;
-    const l=(sub&&sub.p&&sub.p[gid])||{},x=d.p[gid]||{},y={};
+    const l=Object.assign({},(sub&&sub.p&&sub.p[gid])||{},pend.p[gid]||{}),x=d.p[gid]||{},y={};
     if(g.sp!=null&&!l.s){avail++;if(x.s){y.s=x.s;made++;}}
     if(g.tot!=null&&!l.o){avail++;if(x.o){y.o=x.o;made++;}}
     if(y.s||y.o)p[gid]=y;
   });
-  const nl=(sub&&sub.parlay&&sub.parlay.length)||0,par=hasParlay(week)&&nl<5&&scoreWeek(week,sub,false).parlayState!=='miss';
-  const legs=par?openLegs(week,sub,d).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}):[];
+  const nl=((sub&&sub.parlay&&sub.parlay.length)||0)+pend.legs.length,par=hasParlay(week)&&nl<5&&scoreWeek(week,sub,false).parlayState!=='miss';
+  const legs=par?openLegs(week,sub,d,pend.legs).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}):[];
   return {p,legs,made,avail,par,nl};
 }
 function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until kickoff or the Sunday 5 AM deadline.':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
+// Pick codes by email, through Web3Forms (free: 250 emails a month). Its access key only lets people send email to you, so it is safe to keep in the league data.
+function mailKey(){return (S.cfg&&S.cfg.mail&&S.cfg.mail.key)||'';}
+async function sendMail(subject,message){
+  try{
+    const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({access_key:mailKey(),subject,from_name:'MLFL Pick\'em',message})});
+    const j=await r.json().catch(()=>({}));return !!(r.ok&&j.success!==false);
+  }catch(e){return false;}
+}
+function emailCode(k,n,code,c){
+  const link=location.origin+location.pathname+'?code='+encodeURIComponent(code)+'#commish';
+  return sendMail('MLFL picks: '+pname(k)+', '+wname(n),
+    pname(k)+' sent picks for '+wname(n)+'.\n\nPick code: '+code+'\n\n'+c.made+' pick'+(c.made===1?'':'s')+(c.legs.length?' and '+c.legs.length+' parlay leg'+(c.legs.length===1?'':'s'):'')+'.\n\nOpen this link to load the code on the Commissioner tab:\n'+link);
+}
+function adminMail(){
+  const on=!!mailKey();
+  return '<section class="card"><h3>Email me pick codes</h3><div class="pad stack"><p>'+(on?'<strong>On.</strong> When a player gets their pick code, it is also emailed to you with a link that opens it here.':'When a player gets their pick code, the site can email it to you too, so they do not have to text it.')+'</p>'+
+    '<ol class="steps"><li>Go to <strong>web3forms.com</strong>, enter your email address and create an access key. It arrives by email.</li><li>Paste the key here and save.</li></ol>'+
+    '<label for="mail-key">Web3Forms access key <input type="text" id="mail-key" data-f value="'+esc(mailKey())+'" autocomplete="off" size="40"></label>'+
+    '<div class="bar"><button class="btn primary" data-act="mailsave">Save</button><button class="btn" data-act="mailtest"'+(on?'':' disabled')+'>Send a test email</button></div>'+
+    '<p class="muted small">Free for up to 250 emails a month. To turn it off, clear the box and save.</p></div></section>';
+}
 function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
 const acts={
   hofgo(el){
@@ -1169,11 +1212,29 @@ const acts={
     const n=S.selWeek,k=S.selPlayer,c=collectDraft(n,k),legs=c.legs;
     if(!c.made&&!legs.length){toast('Make at least one new pick first.');return;}
     const code=encodePicks(S.cfg,S.weeks[n],n,k,c.p,legs);
-    addSent(n,k,c.p);
-    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Pick code for '+esc(pname(k))+', '+esc(wname(n))+'</h2>'+draftSummary(c)+'<label for="codeout">Your code</label><textarea id="codeout" readonly rows="2" style="font-size:1.05rem;font-weight:700;text-align:center;min-height:0">'+esc(code)+'</textarea><p>Text this code to the commissioner. Your picks are not in until the commissioner enters it. If you change a pick before then, get a new code.</p><div class="bar"><button class="btn primary" id="dlg-copy">Copy code</button><button class="btn" id="dlg-no">Done</button></div></div></div>';
+    addSent(n,k,c.p,legs);requestRender(true);
+    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Picks confirmed for '+esc(pname(k))+', '+esc(wname(n))+'</h2>'+draftSummary(c)+'<label for="codeout">Your code</label><textarea id="codeout" readonly rows="2" style="font-size:1.05rem;font-weight:700;text-align:center;min-height:0">'+esc(code)+'</textarea><p id="code-note">'+(mailKey()?'<strong>Sending your picks to the commissioner…</strong>':'Text this code to the commissioner.')+' Your picks show as Verification Pending until the commissioner approves them.</p><div class="bar"><button class="btn primary" id="dlg-copy">Copy code</button><button class="btn" id="dlg-no">Done</button></div></div></div>';
     $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};
     $('#dlg-copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Code copied. Paste it into a text to the commissioner.');}catch(e){$('#codeout').focus();$('#codeout').select();toast('Press and hold the code to copy it.');}};
     $('#dlg-copy').focus();
+    if(mailKey())emailCode(k,n,code,c).then(ok=>{const el=$('#code-note');if(el)el.innerHTML=ok?'<strong>Sent to the commissioner.</strong> You do not need to text anything. Your picks show as Verification Pending until the commissioner approves them.':'<strong>The picks could not be sent automatically.</strong> Copy the code and text it to the commissioner instead.';});
+  },
+  withdraw(){
+    const n=S.selWeek,k=S.selPlayer,pend=pendingFor(n,k);
+    confirmBox('Withdraw your pending picks?','<p>Your '+pend.count+' pending pick'+(pend.count===1?'':'s')+' will be unlocked on this phone so you can change them and confirm again. '+(mailKey()?'The commissioner will get an email saying you withdrew them.':'Tell the commissioner to ignore the code you sent.')+'</p>','Withdraw',async()=>{
+      if(mailKey())await sendMail('MLFL picks withdrawn: '+pname(k)+', '+wname(n),pname(k)+' withdrew the picks confirmed '+(pend.at?chi(pend.at,{weekday:'short',hour:'numeric',minute:'2-digit'})+' CT':'earlier')+' for '+wname(n)+'. Do not load that code. A new one will follow.');
+      clearSent(n,k);toast('Withdrawn. Change your picks and tap Confirm picks again.');requestRender(true);
+    });
+  },
+  async mailsave(){
+    const key=$('#mail-key').value.trim();
+    if(key&&!/^[0-9a-f-]{20,}$/i.test(key)){toast('That does not look like a Web3Forms access key. Copy it again from their email.');return;}
+    if(await saveDoc('league/config',Object.assign(clone(S.cfg),{mail:{key}}))){clearForm('mail-');toast(key?'Saved. Pick codes will now be emailed to you.':'Pick code emails turned off.');}
+  },
+  async mailtest(){
+    if(!mailKey()){toast('Save your access key first.');return;}
+    const ok=await sendMail('MLFL Pick\'em: test email','This is a test from your MLFL Pick\'em site. Pick codes from players will arrive like this.');
+    toast(ok?'Test email sent. Check your inbox (and spam folder).':'The test email did not go through. Check the access key.');
   },
   loadcode(){
     let d;try{d=decodePicks(S.cfg,S.weeks,$('#pcode').value);}catch(e){toast(e.message);return;}
@@ -1296,7 +1357,7 @@ document.addEventListener('change',ev=>{
   if(el.id==='aweeksel'){S.aWeek=Number(el.value);requestRender(true);return;}
   if(el.id==='weektype'){const w=clone(S.weeks[S.adminWeek]);w.round=el.value;saveDoc('weeks/'+S.adminWeek,w).then(ok=>{if(ok)toast(el.value?'Set to '+el.value+': double points.':'Set to regular season.');requestRender(true);});return;}
   if(el.id==='adminweek'){S.adminWeek=Number(el.value);clearForm('g-');S.newRows=[];S.delRows={};requestRender(true);return;}
-  if(el.dataset&&el.dataset.act==='leg'){const n=S.selWeek,k=S.selPlayer,d=getDraft(n,k),cur=openLegs(S.weeks[n],subWeek(k,n),d);while(cur.length<5)cur.push('');cur[Number(el.dataset.i)]=el.value;d.parlay=cur;keepDraft(n,k);requestRender(true);}
+  if(el.dataset&&el.dataset.act==='leg'){const n=S.selWeek,k=S.selPlayer,d=getDraft(n,k),cur=openLegs(S.weeks[n],subWeek(k,n),d,pendingFor(n,k).legs);while(cur.length<5)cur.push('');cur[Number(el.dataset.i)]=el.value;d.parlay=cur;keepDraft(n,k);requestRender(true);}
 });
 document.addEventListener('input',ev=>{
   const el=ev.target;
@@ -1315,6 +1376,7 @@ document.addEventListener('click',ev=>{
 
 async function init(){
   S.view=['picks','standings','futures','hof','commish'].includes(location.hash.replace('#',''))?location.hash.replace('#',''):'picks';
+  try{const qc=new URLSearchParams(location.search).get('code');if(qc){S.form.pcode=qc;S.view='commish';}}catch(e){}
   render();
   Object.assign(GH,detectRepo());GH.token=ls.get('mlfl.token')||'';S.isOwner=!!GH.token;
   await loadData();requestRender(true);setTimeout(liveTick,800);

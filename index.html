@@ -143,7 +143,8 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 @media (prefers-reduced-motion:no-preference){.live-dot{animation:livepulse 1.4s ease-in-out infinite}}
 @keyframes livepulse{50%{opacity:.25}}
 .score.pre{font-weight:500;opacity:.85}
-.rows{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 2.8rem;grid-template-rows:auto auto}
+.card.game{display:flex;flex-direction:column}
+.rows{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 2.8rem;grid-template-rows:1fr 1fr;flex:1}
 .opt{border:0;border-top:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);padding:9px 6px 7px;text-align:center;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 button.opt{cursor:pointer}
 button.opt:hover{background:var(--sunk)}

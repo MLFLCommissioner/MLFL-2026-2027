@@ -90,6 +90,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pkshow.sm{font-size:1rem;padding:4px 10px}
 .byes{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:4px 0 10px}
 .bye{display:inline-flex;align-items:center;gap:5px;font-weight:600;font-size:.92rem}.bye .logo{width:22px;height:22px}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}
+h2.grp{font-size:1.5rem;margin:18px 0 0;padding-top:10px;border-top:2px solid var(--line);scroll-margin-top:12px}
+h4.sub{font-size:1rem;margin:6px 0 -4px;padding-top:10px;border-top:1px solid var(--line)}
+details.fold>summary{background:var(--sunk);padding:8px 12px;font-size:1.2rem;font-weight:700;cursor:pointer;list-style:revert}
+details.fold:not([open])>summary{border-bottom:0}
 .pkbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .err{color:#b3261e;font-weight:600}.pkshow{font:700 1.5rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;padding:10px 14px;background:rgba(0,0,0,.06);border-radius:8px;display:inline-block;user-select:all}
 a{color:var(--accent)}
@@ -1146,17 +1152,29 @@ function viewCommish(){
   if(S.adminWeek==null)S.adminWeek=cur;
   const n=S.adminWeek,week=S.weeks[n],key=ls.get('mlfl.oddskey')||'';
   const opts=[...new Set(nums.concat([cur,n]))].sort((a,b)=>a-b);
-  let h='<h2 class="weekhead">Commissioner</h2>';
-  h+='<section class="card"><h3>Week</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make '+esc(wname(n))+' the current week</button>':'')+(week?'<button class="btn danger" data-act="delweek">Delete '+esc(wname(n))+'</button>':'')+'</div><div class="bar"><label for="newweek">Start a new week, number <input type="number" id="newweek" data-f min="1" max="18" value="'+Math.min(18,(nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><p class="muted small">Regular-season weeks run 1 to 18. For a playoff round, choose it under Type and the number is ignored.</p><div><button class="btn" data-act="signout">Sign out of commissioner tools</button></div></div></section>';
+  let h='<div class="chead"><h2 class="weekhead">Commissioner</h2><button class="btn" data-act="signout">Sign out</button></div>';
+  h+='<div class="jump" role="group" aria-label="Jump to">'+[['grp-week',wname(n)],['grp-players','Passkeys'],['grp-settings','League settings']].map(x=>'<button class="pill" data-act="jump" data-to="'+x[0]+'">'+esc(x[1])+'</button>').join('')+'</div>';
+  h+='<h2 class="grp" id="grp-week">'+esc(wname(n))+(n===cur?' <span class="muted small">(current week)</span>':'')+'</h2>';
+  h+='<section class="card"><h3>Week settings</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make '+esc(wname(n))+' the current week</button>':'')+'</div>'+(week?'<div class="bar"><span>Picks are <strong>'+(week.open!==false?'open':'closed')+'</strong>.</span><button class="btn" data-act="toggleopen">'+(week.open!==false?'Close picks':'Reopen picks')+'</button></div>':'')+'<h4 class="sub">Start a new week</h4><div class="bar"><label for="newweek">Number <input type="number" id="newweek" data-f min="1" max="18" value="'+Math.min(18,(nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><p class="muted small">Regular-season weeks run 1 to 18. For a playoff round, choose it under Type and the number is ignored.</p>'+(week?'<h4 class="sub">Remove this week</h4><div><button class="btn danger" data-act="delweek">Delete '+esc(wname(n))+'</button></div>':'')+'</div></section>';
+  h+=adminPicks(n);
   h+='<section class="card"><h3>Enter a pick code</h3><div class="pad stack"><label for="pcode">Paste the code a player sent you <input type="text" id="pcode" data-f autocomplete="off" size="34"></label><div><button class="btn primary" data-act="loadcode">Load picks</button></div><p class="muted small">The code already says which player and week it is for. You confirm before anything is saved.</p></div></section>';
-  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminPlayers(n)+adminMail()+adminFutures()+adminSeason();}
+  if(!week){h+='<div class="note"><p>Week '+esc(n)+' has no board yet. <button class="btn primary" data-act="createweek">Create the Week '+esc(n)+' board</button></p></div>';return h+adminRest();}
   h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
   const rows=sortedGames(week).filter(([gid])=>!S.delRows[gid]).concat(S.newRows.filter(id=>!S.delRows[id]).map(id=>[id,{}]));
   const inp=(gid,k,type,val,extra)=>'<input type="'+type+'" id="g-'+esc(gid)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(val==null?'':val)+'" '+(extra||'')+' aria-label="'+k+'">';
   h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th></th></tr></thead><tbody>'+
     rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
     '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
-  return h+adminPlayers(n)+adminMail()+adminFutures()+adminSeason();
+  return h+adminRest();
+}
+function adminRest(){
+  return '<h2 class="grp" id="grp-players">Passkeys</h2>'+adminPasskeys()+
+    '<h2 class="grp" id="grp-settings">League settings</h2><p class="muted small">Tap a section to open it.</p>'+fold('f-mail',adminMail())+fold('f-fut',adminFutures())+fold('f-season',adminSeason());
+}
+// Settings you rarely touch fold away. Open ones stay open when the page redraws.
+function fold(id,html){
+  const open=S.folds&&S.folds[id];
+  return html.replace('<section class="card"><h3>','<details class="card fold" id="'+id+'"'+(open?' open':'')+'><summary>').replace('</h3>','</summary>').replace(/<\/section>$/,'</details>');
 }
 // The commissioner's browser keeps a copy of each passkey it sets, so Reveal works on that device. It is never put in the league file.
 function pkLocal(p){try{const v=JSON.parse(ls.get('mlfl.pkv.'+p.key)||'null');return v&&v.pin===p.pin?v.pw:null;}catch(e){return null;}}
@@ -1165,12 +1183,12 @@ function pkCell(p){
   if(on&&pw)return '<span class="pkshow sm">'+esc(pw)+'</span><button class="btn" data-act="pkhide" data-k="'+esc(p.key)+'">Hide</button><button class="btn" data-act="pkcopy" data-k="'+esc(p.key)+'">Copy</button>';
   return '<span class="muted">••••••••</span><button class="btn" data-act="pkreveal" data-k="'+esc(p.key)+'">Reveal</button>';
 }
-function adminPlayers(n){
-  const week=S.weeks[n];
-  let h='<section class="card"><h3>Players · Week '+esc(n)+'</h3><div class="pad stack">';
-  if(week)h+='<div class="bar"><span>Picks are <strong>'+(week.open!==false?'open':'closed')+'</strong> for Week '+esc(n)+'.</span><button class="btn" data-act="toggleopen">'+(week.open!==false?'Close picks':'Reopen picks')+'</button></div>';
-  h+='</div><div class="tw"><table><thead><tr><th>Player</th><th class="l">Week '+esc(n)+' picks</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
-  return h;
+function adminPicks(n){
+  const week=S.weeks[n];if(!week)return '';
+  return '<section class="card"><h3>Who has picked · '+esc(wname(n))+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p></section>';
+}
+function adminPasskeys(){
+  return '<section class="card"><h3>Player passkeys</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>'<tr><td>'+esc(p.name)+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>').join('')+'</tbody></table></div><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
 }
 function adminBase(){
   return '<section class="card"><h3>Starting totals carried over from the sheet</h3><div class="tw"><table><thead><tr><th>Player</th><th>Points</th><th>Weeks won</th><th>Correct pick %</th><th>Weeks counted</th></tr></thead><tbody>'+players().map(p=>{const b=p.base||{};const i=(k,v,st)=>'<input type="number" id="b-'+esc(p.key)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(v==null?0:v)+'" step="'+st+'" aria-label="'+k+'">';return '<tr data-bk="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td>'+i('points',b.points,'1')+'</td><td>'+i('won',b.won,'1')+'</td><td>'+i('cpp',b.cpp,'0.01')+'</td><td>'+i('weeks',b.weeks,'1')+'</td></tr>';}).join('')+'</tbody></table></div><div class="pad bar"><button class="btn primary" data-act="savebase">Save starting totals</button><span class="muted small">The season percentage is the average of each week\'s percentage.</span></div></section>';
@@ -1451,6 +1469,7 @@ const acts={
     if(!pkLocal(p)){confirmBox('Can\'t reveal '+p.name+'\'s passkey here','<p>Passkeys can only be revealed on the device they were set on, and this one was set somewhere else (or before Reveal existed). Tap <strong>Reset</strong> to make a new one. You\'ll be able to reveal it on this device after that.</p>','OK',()=>{});return;}
     S.pkShow=S.pkShow||{};S.pkShow[p.key]=true;requestRender(true);
   },
+  jump(el){const t=document.getElementById(el.dataset.to);if(!t)return;if(el.dataset.to==='grp-settings'){S.folds=S.folds||{};}t.scrollIntoView({behavior:'smooth',block:'start'});},
   pkhide(el){if(S.pkShow)delete S.pkShow[el.dataset.k];requestRender(true);},
   async pkcopy(el){const pw=pkLocal(players().find(x=>x.key===el.dataset.k));try{await navigator.clipboard.writeText(pw);toast('Copied.');}catch(e){toast('Press and hold the passkey to copy it.');}},
   clearpk(el){
@@ -1481,6 +1500,7 @@ document.addEventListener('click',async ev=>{
   const el=ev.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||!acts[el.dataset.act])return;
   if(S.busy)return;S.busy=true;try{await acts[el.dataset.act](el);}finally{S.busy=false;}
 });
+document.addEventListener('toggle',ev=>{const d=ev.target;if(d&&d.classList&&d.classList.contains('fold')){S.folds=S.folds||{};S.folds[d.id]=d.open;}},true);
 document.addEventListener('change',ev=>{
   const el=ev.target;
   if(el.id==='weeksel'){S.selWeek=Number(el.value);requestRender(true);setTimeout(liveTick,300);return;}

@@ -707,7 +707,6 @@ function viewPicks(){
   }
   if(!may&&open&&!S.isOwner){
     if(isVisitor())h+='<div class="note"><p>You\'re browsing as a <strong>visitor</strong>. You can see everything, but you can\'t make picks. <button class="btn" data-act="switchuser">Sign in</button></p></div>';
-    else if(S.me)h+='<div class="note"><p>You\'re looking at '+esc(pname(sel))+'\'s picks. <button class="btn" data-act="selp" data-k="'+esc(S.me)+'">Back to my picks</button></p></div>';
   }
   if(may&&open&&!S.isOwner&&lateAllowed(n,sel)&&games.some(([,g])=>pastDeadline(g)&&!kicked(g)))h+='<div class="note"><p><strong>Late picks allowed.</strong> The commissioner is letting '+esc(pname(sel))+' pick games that have passed the lock. Each game still closes at kickoff.</p></div>';
   if(pend.count){const pp=pend.count-pend.legs.length,what=[pp?pp+' pick'+(pp===1?'':'s'):'',pend.legs.length?pend.legs.length+' parlay leg'+(pend.legs.length===1?'':'s'):''].filter(Boolean).join(' and ');

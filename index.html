@@ -405,12 +405,14 @@ async function liveTick(){
   liveBusy=true;
   try{
     const r=await fetch(ESPN+'?limit=100&dates='+ymdUTC(Math.min(...ks)-86400000)+'-'+ymdUTC(Math.max(...ks)+86400000),{cache:'no-store'});
-    if(!r.ok)return;
+    if(!r.ok){S.liveStatus='The scoreboard answered with error '+r.status+'.';S.liveAt=Date.now();requestRender();return;}
     const list=espnGames(await r.json());let changed=false,doneNotSaved=false;
+    const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
+    S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
     need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
     if(doneNotSaved&&!S.isOwner&&Date.now()-(S.loadedAt||0)>5*60000){const keep=Object.values(w.games).map(g=>[g,g.live]);await loadData();keep.forEach(([g,l])=>{const ng=Object.values((S.weeks[n]||{}).games||{}).find(x=>x.away===g.away&&x.home===g.home);if(ng&&!ng.fin&&l)ng.live=l;});changed=true;}
     if(changed)requestRender();
-  }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */}
+  }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}
   finally{liveBusy=false;}
 }
 setInterval(liveTick,60000);
@@ -570,6 +572,7 @@ function viewPicks(){
     h+='<div class="note"><p><strong>The Week '+esc(n)+' board has not been built yet.</strong></p><p>'+(S.isOwner?'Open the <a href="#commish">Commissioner</a> tab to load this week\'s lines.':'The commissioner will post the lines here. The standings are up to date in the meantime.')+'</p></div>';
     return h;
   }
+  if(S.isOwner&&S.liveStatus)h+='<p class="muted small">Live scores (only you see this), checked '+esc(chi(new Date(S.liveAt).toISOString(),{hour:'numeric',minute:'2-digit'}))+': '+esc(S.liveStatus)+'</p>';
   const ps=players();
   if(!S.selPlayer||!ps.some(p=>p.key===S.selPlayer)){const rem=ls.get('mlfl.sel');S.selPlayer=ps.some(p=>p.key===rem)?rem:(ps[0]&&ps[0].key);}
   const sel=S.selPlayer,open=week.open!==false,sub=subWeek(sel,n);

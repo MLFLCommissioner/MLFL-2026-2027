@@ -10,7 +10,6 @@ const DAY = 86400000;
 const now = Date.now();
 
 const key = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-const ymd = (t) => { const d = new Date(t); return d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0'); };
 
 const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 
@@ -25,19 +24,28 @@ for (const [n, w] of Object.entries(data.weeks || {})) {
 }
 if (!targets.length) { console.log('No games waiting for a final score.'); process.exit(0); }
 
-const from = ymd(Math.min(...targets.map((t) => t.k)) - DAY), to = ymd(Math.max(...targets.map((t) => t.k)) + DAY);
-const res = await fetch(`${ESPN}?limit=100&dates=${from}-${to}`, { headers: { 'User-Agent': 'MLFL-score-robot' } });
-if (!res.ok) { console.log(`ESPN answered ${res.status}; trying again next run.`); process.exit(0); }
-const json = await res.json();
-
-const events = (json.events || []).map((ev) => {
+const has = (arr, k) => arr.some((x) => x === k || x.endsWith(k));
+const etDay = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso)).replace(/-/g, '');
+const parse = (json) => (json.events || []).map((ev) => {
   const c = (ev.competitions || [])[0] || {}, st = ((c.status || ev.status || {}).type) || {}, cs = c.competitors || [];
   const side = (h) => cs.find((x) => x.homeAway === h) || {};
   const names = (x) => { const t = x.team || {}; return [t.name, t.shortDisplayName, t.displayName].filter(Boolean).map(key); };
   const a = side('away'), h = side('home');
   return { away: names(a), home: names(h), sa: parseInt(a.score, 10), sh: parseInt(h.score, 10), completed: !!st.completed };
 });
-const has = (arr, k) => arr.some((x) => x === k || x.endsWith(k));
+let events = [];
+async function grab(q) {
+  try {
+    const res = await fetch(ESPN + q, { headers: { 'User-Agent': 'MLFL-score-robot' } });
+    if (!res.ok) { console.log(`ESPN answered ${res.status} for "${q || 'this week'}".`); return; }
+    events = events.concat(parse(await res.json()));
+  } catch (e) { console.log(`Could not reach ESPN for "${q || 'this week'}": ${e.message}`); }
+}
+const found = (g) => { const A = key(g.away), H = key(g.home); return events.some((e) => (has(e.away, A) && has(e.home, H)) || (has(e.away, H) && has(e.home, A))); };
+// This week's scoreboard first; then single game days for anything not on it.
+await grab('');
+for (const d of [...new Set(targets.filter((t) => !found(t.g)).map((t) => etDay(t.g.kick)))]) await grab(`?dates=${d}`);
+if (!events.length) { console.log('No scoreboard data; trying again next run.'); process.exit(0); }
 
 let saved = 0;
 for (const { n, g } of targets) {

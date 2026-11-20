@@ -87,6 +87,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .me{margin-left:auto;font-weight:600;background:rgba(0,0,0,.18);padding:4px 12px;border-radius:999px}
 .linkbtn{background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}
 .gate{max-width:560px;margin:8px auto}.gate input[type=password],.gate input#gate-pw{font-size:1.1rem;letter-spacing:.06em}
+.pkshow.sm{font-size:1rem;padding:4px 10px}
 .pkbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .err{color:#b3261e;font-weight:600}.pkshow{font:700 1.5rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;padding:10px 14px;background:rgba(0,0,0,.06);border-radius:8px;display:inline-block;user-select:all}
 a{color:var(--accent)}
@@ -1142,11 +1143,18 @@ function viewCommish(){
     '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
   return h+adminPlayers(n)+adminMail()+adminFutures()+adminSeason();
 }
+// The commissioner's browser keeps a copy of each passkey it sets, so Reveal works on that device. It is never put in the league file.
+function pkLocal(p){try{const v=JSON.parse(ls.get('mlfl.pkv.'+p.key)||'null');return v&&v.pin===p.pin?v.pw:null;}catch(e){return null;}}
+function pkCell(p){
+  const pw=pkLocal(p),on=S.pkShow&&S.pkShow[p.key];
+  if(on&&pw)return '<span class="pkshow sm">'+esc(pw)+'</span><button class="btn" data-act="pkhide" data-k="'+esc(p.key)+'">Hide</button><button class="btn" data-act="pkcopy" data-k="'+esc(p.key)+'">Copy</button>';
+  return '<span class="muted">••••••••</span><button class="btn" data-act="pkreveal" data-k="'+esc(p.key)+'">Reveal</button>';
+}
 function adminPlayers(n){
   const week=S.weeks[n];
   let h='<section class="card"><h3>Players · Week '+esc(n)+'</h3><div class="pad stack">';
   if(week)h+='<div class="bar"><span>Picks are <strong>'+(week.open!==false?'open':'closed')+'</strong> for Week '+esc(n)+'.</span><button class="btn" data-act="toggleopen">'+(week.open!==false?'Close picks':'Reopen picks')+'</button></div>';
-  h+='</div><div class="tw"><table><thead><tr><th>Player</th><th class="l">Week '+esc(n)+' picks</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(p.pin?'<span class="pkbtns"><span>Set</span><button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere.</p></section>';
+  h+='</div><div class="tw"><table><thead><tr><th>Player</th><th class="l">Week '+esc(n)+' picks</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
   return h;
 }
 function adminBase(){
@@ -1415,18 +1423,26 @@ const acts={
       const pl=cfg.players.find(p=>p.key===k);pl.pin=await pkPub(x);
       $('#modal').innerHTML='';
       if(await saveDoc('league/config',cfg)){
-        $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>'+esc(pname(k))+'\'s passkey</h2><p><span class="pkshow" id="pk-val">'+esc(pw)+'</span></p><p>Send this to '+esc(pname(k))+' privately (a text works). It will not be shown again. If it gets lost, just set a new one.</p><div class="bar"><button class="btn primary" id="pk-copy">Copy</button><button class="btn" id="pk-done">Done</button></div></div></div>';
+        ls.set('mlfl.pkv.'+k,JSON.stringify({pw,pin:pl.pin}));
+        $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>'+esc(pname(k))+'\'s passkey</h2><p><span class="pkshow" id="pk-val">'+esc(pw)+'</span></p><p>Send this to '+esc(pname(k))+' privately (a text works). You can see it again later with <strong>Reveal</strong> on this device.</p><div class="bar"><button class="btn primary" id="pk-copy">Copy</button><button class="btn" id="pk-done">Done</button></div></div></div>';
         $('#pk-copy').onclick=async()=>{try{await navigator.clipboard.writeText(pw);toast('Copied.');}catch(e){toast('Press and hold the passkey to copy it.');}};
         $('#pk-done').onclick=()=>{$('#modal').innerHTML='';};
       }
     };
     setTimeout(()=>{const i=$('#pk-new');if(i)i.select();},30);
   },
+  pkreveal(el){
+    const p=players().find(x=>x.key===el.dataset.k);
+    if(!pkLocal(p)){confirmBox('Can\'t reveal '+p.name+'\'s passkey here','<p>Passkeys can only be revealed on the device they were set on, and this one was set somewhere else (or before Reveal existed). Tap <strong>Reset</strong> to make a new one. You\'ll be able to reveal it on this device after that.</p>','OK',()=>{});return;}
+    S.pkShow=S.pkShow||{};S.pkShow[p.key]=true;requestRender(true);
+  },
+  pkhide(el){if(S.pkShow)delete S.pkShow[el.dataset.k];requestRender(true);},
+  async pkcopy(el){const pw=pkLocal(players().find(x=>x.key===el.dataset.k));try{await navigator.clipboard.writeText(pw);toast('Copied.');}catch(e){toast('Press and hold the passkey to copy it.');}},
   clearpk(el){
     const k=el.dataset.k;
     confirmBox('Remove '+pname(k)+'\'s passkey?','<p>'+(players().filter(p=>p.pin).length===1?'This is the last passkey, so the sign-in screen will turn off and anyone can pick for anyone again.':'Without a passkey, '+esc(pname(k))+' won\'t appear on the sign-in screen and can\'t make picks.')+'</p>','Remove',async()=>{
       const cfg=clone(S.cfg);cfg.players=cfg.players.map(p=>{if(p.key!==k)return p;const q=Object.assign({},p);delete q.pin;return q;});
-      if(await saveDoc('league/config',cfg))toast('Passkey removed.');
+      if(await saveDoc('league/config',cfg)){ls.del('mlfl.pkv.'+k);toast('Passkey removed.');}
     });
   },
   unlock(el){

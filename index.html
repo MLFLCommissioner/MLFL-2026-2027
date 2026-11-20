@@ -711,7 +711,8 @@ function viewPicks(){
   if(week.round)h+='<p class="muted small"><strong>Postseason: double points.</strong> +2 per correct pick, +6 for both in a game.'+(hasParlay(week)?' The parlay is still worth +20.':' No parlay this round.')+'</p>';
   const draft=open&&may?getDraft(n,sel):null,sent=getSent(n,sel);
   const sc=scoreWeek(week,sub,false);
-  const visible=g=>!!S.isOwner||!open||kicked(g)||pastDeadline(g)||allIn(n,g);
+  // A signed-in player sees everyone's locked picks for a game once their own picks for it are locked in (approved).
+  const visible=g=>!!S.isOwner||!open||kicked(g)||pastDeadline(g)||allIn(n,g)||meLocked(n,g);
   if(!games.length)h+='<div class="note"><p>No games on the board yet.</p></div>';
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible)).join('')+'</div>';
   h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.isOwner?'<button class="btn primary" data-act="submit">Submit '+esc(pname(sel))+"'s picks</button>":'<button class="btn primary" data-act="getcode">Confirm picks</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
@@ -762,6 +763,11 @@ function claimCard(){
   return '<div class="note warn"><p><strong>Which player are you?</strong> Choose once and this page remembers you.</p><div class="pills">'+free.map(p=>'<button class="pill" data-act="claim" data-k="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div></div>';
 }
 // A game's picks are shown to everyone early once every player has both their spread and over/under pick locked in for it.
+function meLocked(n,g){
+  if(!S.me)return false;
+  const w=S.weeks[n],gid=Object.keys((w&&w.games)||{}).find(k=>w.games[k]===g);if(!gid)return false;
+  const e=subWeek(S.me,n),y=e&&e.p&&e.p[gid];return !!y&&(g.sp==null||!!y.s)&&(g.tot==null||!!y.o);
+}
 function allIn(n,g){
   const w=S.weeks[n],gid=Object.keys((w&&w.games)||{}).find(k=>w.games[k]===g);if(!gid)return false;
   return players().every(p=>{const e=subWeek(p.key,n),y=e&&e.p&&e.p[gid];return !!y&&(g.sp==null||!!y.s)&&(g.tot==null||!!y.o);});
@@ -769,7 +775,7 @@ function allIn(n,g){
 function whoChips(gid,m,v,n,sel,g,visible){
   // Everyone's initials on a game stay hidden on a player's card until that player has a pick locked in for it, or picks for the game have closed.
   const mine=subWeek(sel,n),has=mine&&mine.p&&mine.p[gid]&&(mine.p[gid].s||mine.p[gid].o);
-  if(!has&&!(kicked(g)||pastDeadline(g)||S.weeks[n].open===false||allIn(n,g)))return '';
+  if(!has&&!(kicked(g)||pastDeadline(g)||S.weeks[n].open===false||allIn(n,g)||meLocked(n,g)))return '';
   const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
   return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(abbr(p))+'</span>').join('')+'</span>':'';
 }
@@ -808,7 +814,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+'+sc.mult+'</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
   const cells=[opt('s','away',g.sp==null?'':spreadLabel(g,'away'),g.sp!=null,g.away),opt('s','home',g.sp==null?'':spreadLabel(g,'home'),g.sp!=null,g.home),opt('o','over',g.tot==null?'':ouLabel(g,'over'),g.tot!=null),opt('o','under',g.tot==null?'':ouLabel(g,'under'),g.tot!=null)];
   const nl=(lock.s?1:0)+(lock.o?1:0);
-  const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. Hidden from everyone else until picks lock.</div>':'';
+  const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. '+(S.me&&S.me!==sel?'Lock in your own picks for this game to see '+(nl===1?'it':'them')+'.':'Hidden until picks lock.')+'</div>':'';
   return '<article class="card game"><header><h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
     cells[0]+cells[1]+(r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw))+cells[2]+cells[3]+(r.combo?'':cell(r.ow))+hidden+'</div></article>';
 }

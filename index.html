@@ -527,8 +527,8 @@ function pkGenerate(){
   return out.join('');
 }
 const gateOn=()=>players().some(p=>p.pin);
-const isVisitor=()=>gateOn()&&!S.isOwner&&!S.meOk&&!pmKey()&&ls.get('mlfl.visitor')==='1';
-const needGate=()=>gateOn()&&!S.isOwner&&!S.meOk&&!pmKey()&&ls.get('mlfl.visitor')!=='1';
+const isVisitor=()=>gateOn()&&!S.isOwner&&!S.meOk&&ls.get('mlfl.visitor')==='1';
+const needGate=()=>gateOn()&&!S.isOwner&&!S.meOk&&ls.get('mlfl.visitor')!=='1';
 const mayEdit=k=>!!S.isOwner||!gateOn()||S.me===k;
 async function verifyMe(){
   let m=null;try{m=JSON.parse(ls.get('mlfl.me')||'null');}catch(e){}
@@ -537,9 +537,10 @@ async function verifyMe(){
   if(m&&!S.meOk&&S.cfg)ls.del('mlfl.me');
   S.meChecked=true;
 }
-// Player view: the commissioner sees the site exactly as a signed-in player would (outside the Commissioner tab).
-function pmKey(){if(!S.owner)return null;const k=ls.get('mlfl.pmode');return k&&players().some(p=>p.key===k)?k:null;}
-function whoAmI(){return pmKey()||(S.meOk?S.meOk.k:null);}
+// The commissioner uses the site like every other player (passkey and all) unless Commissioner view is switched on.
+// The Commissioner tab itself always works with the GitHub sign-in.
+const cmodeOn=()=>!!S.owner&&ls.get('mlfl.cmode')==='1';
+function whoAmI(){return S.meOk?S.meOk.k:null;}
 function viewGate(){
   const ps=players().filter(p=>p.pin);
   let h='<section class="card gate"><h3>Who\'s here?</h3><div class="pad stack"><p>Tap your name and enter your passkey. This phone will remember you after that.</p>';
@@ -639,15 +640,15 @@ let fitT;window.addEventListener('resize',()=>{clearTimeout(fitT);fitT=setTimeou
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitLabels());
 function render(){
   const act=document.activeElement&&document.activeElement.id;
-  S.isOwner=!!S.owner&&!(S.cfg&&pmKey()&&S.view!=='commish');
+  S.isOwner=!!S.owner&&(S.view==='commish'||cmodeOn()||!(S.cfg&&gateOn()));
   buildDeadlines();
   S.me=whoAmI();
   const tabs=[['picks','Picks'],['standings','Standings'],['futures','Futures'],['hof','Hall of Fame'],['commish','Commissioner']];
   if(!tabs.some(t=>t[0]===S.view))S.view='picks';
   $('#nav').innerHTML=tabs.map(t=>'<a href="#'+t[0]+'"'+(S.view===t[0]?' aria-current="page"':'')+'>'+t[1]+'</a>').join('');
   $('#season').textContent=((S.view==='picks'||S.view==='standings'||S.view==='futures')&&archSeason()?archSeason().id:curSeasonLabel())+' Season';
-  const pm=S.cfg&&pmKey(),me=$('#me'),showMe=S.cfg&&(pm||(gateOn()&&!S.isOwner&&(S.me||isVisitor())));me.hidden=!showMe;
-  if(pm)me.innerHTML=esc(pname(pm))+' (player view) · <button class="linkbtn" data-act="pmode">Exit</button>';
+  const cm=S.cfg&&gateOn()&&cmodeOn()&&S.view!=='commish',me=$('#me'),showMe=S.cfg&&(cm||(gateOn()&&!S.isOwner&&(S.me||isVisitor())));me.hidden=!showMe;
+  if(cm)me.innerHTML='Commissioner view · <button class="linkbtn" data-act="cmode">Turn off</button>';
   else if(showMe)me.innerHTML=(S.me?esc(pname(S.me)):'Visitor')+' · <button class="linkbtn" data-act="switchuser">'+(S.me?'Switch':'Sign in')+'</button>';
   let h;
   if(!(S.got.cfg&&S.got.weeks&&S.got.entries))h='<p class="muted">Loading the league…</p>';
@@ -1181,7 +1182,7 @@ function viewCommish(){
   if(S.adminWeek==null)S.adminWeek=cur;
   const n=S.adminWeek,week=S.weeks[n],key=ls.get('mlfl.oddskey')||'';
   const opts=[...new Set(nums.concat([cur,n]))].sort((a,b)=>a-b);
-  let h='<div class="chead"><h2 class="weekhead">Commissioner</h2><span class="pkbtns"><button class="btn" data-act="pmode" aria-pressed="'+!!pmKey()+'">Player view: <strong>'+(pmKey()?'On ('+esc(pname(pmKey()))+')':'Off')+'</strong></button><button class="btn" data-act="signout">Sign out</button></span></div><p class="muted small">Player view shows Picks, Standings and the other tabs exactly as a signed-in player sees them: deadlines apply, other players\' picks stay hidden until the normal rules show them, and you can only pick for yourself. This tab keeps working as usual.</p>';
+  let h='<div class="chead"><h2 class="weekhead">Commissioner</h2><span class="pkbtns"><button class="btn" data-act="cmode" aria-pressed="'+cmodeOn()+'">Commissioner view: <strong>'+(cmodeOn()?'On':'Off')+'</strong></button><button class="btn" data-act="signout">Sign out</button></span></div><p class="muted small"><strong>Commissioner view</strong> lets you see everyone\'s picks and enter or fix picks for anyone, with no lock times. Leave it off to use the site like every other player: sign in with your own passkey, and you see what they see. This tab works either way.</p>';
   h+='<div class="jump" role="group" aria-label="Jump to">'+[['grp-week',wname(n)],['grp-players','Passkeys'],['grp-settings','League settings']].map(x=>'<button class="pill" data-act="jump" data-to="'+x[0]+'">'+esc(x[1])+'</button>').join('')+'</div>';
   h+='<h2 class="grp" id="grp-week">'+esc(wname(n))+(n===cur?' <span class="muted small">(current week)</span>':'')+'</h2>';
   h+='<section class="card"><h3>Week settings</h3><div class="pad stack"><div class="bar"><label for="adminweek">Working on <select id="adminweek">'+opts.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>'+(week?'<label for="weektype">Type <select id="weektype"><option value="">Regular season</option>'+ROUNDS.map(r=>'<option'+(week.round===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>':'')+(n!==cur?'<button class="btn" data-act="setcurrent">Make '+esc(wname(n))+' the current week</button>':'')+'</div>'+(week?'<div class="bar"><span>Picks are <strong>'+(week.open!==false?'open':'closed')+'</strong>.</span><button class="btn" data-act="toggleopen">'+(week.open!==false?'Close picks':'Reopen picks')+'</button></div>':'')+'<h4 class="sub">Start a new week</h4><div class="bar"><label for="newweek">Number <input type="number" id="newweek" data-f min="1" max="18" value="'+Math.min(18,(nums.length?Math.max(...nums):cur-1)+1)+'"></label><label for="newtype">Type <select id="newtype" data-f><option value="">Regular season</option>'+ROUNDS.map(r=>'<option>'+r+'</option>').join('')+'</select></label><button class="btn" data-act="newweek">Start week</button></div><p class="muted small">Regular-season weeks run 1 to 18. For a playoff round, choose it under Type and the number is ignored.</p>'+(week?'<h4 class="sub">Remove this week</h4><div><button class="btn danger" data-act="delweek">Delete '+esc(wname(n))+'</button></div>':'')+'</div></section>';
@@ -1309,7 +1310,7 @@ const acts={
     GH.owner=owner;GH.repo=repo;GH.token=token;ls.set('mlfl.gh',JSON.stringify({owner,repo}));ls.set('mlfl.token',token);
     S.owner=S.isOwner=true;clearForm('gh-');await loadData();toast('Signed in as commissioner.');requestRender(true);
   },
-  signout(){ls.del('mlfl.token');GH.token='';S.owner=S.isOwner=false;ls.del('mlfl.pmode');requestRender(true);},
+  signout(){ls.del('mlfl.token');GH.token='';S.owner=S.isOwner=false;ls.del('mlfl.cmode');requestRender(true);},
   selp(el){S.selPlayer=el.dataset.k;ls.set('mlfl.sel',S.selPlayer);requestRender(true);},
   goweek(el){S.selWeek=Number(el.dataset.n);},
   agoweek(el){S.aWeek=Number(el.dataset.n);},
@@ -1516,13 +1517,10 @@ const acts={
     if(!Object.keys(w.late).length)delete w.late;
     if(await saveDoc('weeks/'+n,w))toast(w.late&&w.late[k]?pname(k)+' can make late picks for '+wname(n)+'. Games still close at kickoff.':'Late picks turned off for '+pname(k)+'.');
   },
-  pmode(){
-    if(pmKey()){ls.del('mlfl.pmode');toast('Player view off. You see everything again.');requestRender(true);return;}
-    const on=k=>{ls.set('mlfl.pmode',k);S.selPlayer=k;S.view='picks';try{history.replaceState(null,'','#picks');}catch(e){}$('#modal').innerHTML='';toast('Player view on. You are seeing the site as '+pname(k)+'.');requestRender(true);window.scrollTo(0,0);};
-    if(S.meOk){on(S.meOk.k);return;}
-    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Which player are you?</h2><p>Player view shows the site the way this player sees it.</p><div class="pills">'+players().map(p=>'<button class="pill" data-pm="'+esc(p.key)+'">'+esc(p.name)+'</button>').join('')+'</div><div class="bar"><button class="btn" id="dlg-no">Go back</button></div></div></div>';
-    $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};
-    document.querySelectorAll('#modal [data-pm]').forEach(b=>b.onclick=()=>on(b.dataset.pm));
+  cmode(){
+    if(cmodeOn()){ls.del('mlfl.cmode');toast('Commissioner view off. You see what the players see.');}
+    else{ls.set('mlfl.cmode','1');toast('Commissioner view on. You can see and fix everyone\'s picks.');}
+    requestRender(true);
   },
   pkhide(el){if(S.pkShow)delete S.pkShow[el.dataset.k];requestRender(true);},
   async pkcopy(el){const pw=pkLocal(players().find(x=>x.key===el.dataset.k));try{await navigator.clipboard.writeText(pw);toast('Copied.');}catch(e){toast('Press and hold the passkey to copy it.');}},

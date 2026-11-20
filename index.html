@@ -88,6 +88,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .linkbtn{background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}
 .gate{max-width:560px;margin:8px auto}.gate input[type=password],.gate input#gate-pw{font-size:1.1rem;letter-spacing:.06em}
 .pkshow.sm{font-size:1rem;padding:4px 10px}
+.byes{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:4px 0 10px}
+.bye{display:inline-flex;align-items:center;gap:5px;font-weight:600;font-size:.92rem}.bye .logo{width:22px;height:22px}
 .pkbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .err{color:#b3261e;font-weight:600}.pkshow{font:700 1.5rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;padding:10px 14px;background:rgba(0,0,0,.06);border-radius:8px;display:inline-block;user-select:all}
 a{color:var(--accent)}
@@ -656,6 +658,7 @@ function viewPicks(){
     return h;
   }
   if(S.isOwner&&S.liveStatus)h+='<p class="muted small">Live scores (only you see this), checked '+esc(chi(new Date(S.liveAt).toISOString(),{hour:'numeric',minute:'2-digit'}))+': '+esc(S.liveStatus)+'</p>';
+  h+=byeLine(week);
   const ps=players();
   if(!S.selPlayer||!ps.some(p=>p.key===S.selPlayer)){const rem=S.me||ls.get('mlfl.sel');S.selPlayer=ps.some(p=>p.key===rem)?rem:(ps[0]&&ps[0].key);}
   const sel=S.selPlayer,open=week.open!==false,sub=subWeek(sel,n);
@@ -690,6 +693,18 @@ function viewPicks(){
   h+=weekTable(week,n);
   h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+'+weekMult(week)+'</i> Correct pick</span><span><i class="badge combo">+'+3*weekMult(week)+'</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
   return h;
+}
+// Teams on a bye: every NFL team not on this week's board. Regular season only, and only once the board looks complete.
+function byeTeams(week){
+  if(!week||week.round)return [];
+  const gs=Object.values(week.games||{});if(gs.length<12)return [];
+  const on=new Set();gs.forEach(g=>{on.add(String(g.away||'').trim());on.add(String(g.home||'').trim());});
+  const off=Object.keys(LOGOS).filter(t=>!on.has(t)).sort();
+  return off.length<=12?off:[];
+}
+function byeLine(week){
+  const t=byeTeams(week);if(!t.length)return '';
+  return '<p class="byes"><span class="muted small">On bye:</span> '+t.map(x=>'<span class="bye">'+logo(x)+esc(x)+'</span>').join('')+'</p>';
 }
 function countPicks(w){let c=0;Object.values((w&&w.p)||{}).forEach(x=>{if(x.s)c++;if(x.o)c++;});return c;}
 // What this device last put into a pick code, so a player can still see their own locked picks before kickoff.

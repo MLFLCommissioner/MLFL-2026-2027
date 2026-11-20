@@ -127,6 +127,17 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .opt .nw{white-space:nowrap}
 
 .score{background:var(--board);color:var(--board-ink);font-weight:700;text-align:center;padding:6px 10px}
+.ball{width:1.05em;height:.7em;flex:none;margin-left:.15em}
+.field{background:var(--board);color:var(--board-ink);padding:10px 16px 8px;display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.06)}
+.field .track{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.16);margin:8px 6px 0}
+.field .track i{position:absolute;top:-3px;width:2px;height:14px;margin-left:-1px;background:rgba(255,255,255,.22);border-radius:1px}
+.field .drive{position:absolute;top:0;bottom:0;background:var(--win);border-radius:4px}
+.field .drive.rz{background:var(--miss)}
+.field .spot{position:absolute;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--board);border:2px solid var(--board-ink);display:flex;align-items:center;justify-content:center;z-index:1}
+.field .spot .logo{width:20px;height:20px}
+.field .spot b{font-size:.6rem}
+.field .yd{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;opacity:.7;margin-top:6px}
+.field .dd{text-align:center;font-weight:700;font-size:.9rem}
 .score.is-live{display:flex;align-items:center;justify-content:center;gap:8px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--miss);flex:none}
 @media (prefers-reduced-motion:no-preference){.live-dot{animation:livepulse 1.4s ease-in-out infinite}}
@@ -202,8 +213,8 @@ function fmtLine(n){return n===0?'PK':(n>0?'+':'')+n;}
 function spreadLabel(g,side){const l=side==='away'?-g.sp:g.sp;return fmtLine(l)+' '+(side==='away'?g.away:g.home);}
 function ouLabel(g,v){return (v==='over'?'Over ':'Under ')+g.tot;}
 function hasScore(g,finalOnly){return g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin);}
-// The score to grade with: the saved one, or (on the picks page only) the live one from the scoreboard feed.
-function gscore(g,finalOnly){if(g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin))return [g.sa,g.sh];if(!finalOnly&&g.live&&g.live.sa!=null&&g.live.state!=='pre')return [g.live.sa,g.live.sh];return null;}
+// The score to grade with: the saved one, or (on the picks page only) a game the scoreboard feed says is over. Games still being played are not graded.
+function gscore(g,finalOnly){if(g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin))return [g.sa,g.sh];if(!finalOnly&&g.live&&g.live.sa!=null&&g.live.completed)return [g.live.sa,g.live.sh];return null;}
 function evalSpread(g,side,finalOnly){
   const sc=gscore(g,finalOnly);if(!side||g.sp==null||!sc)return null;
   const mine=side==='away'?sc[0]:sc[1],opp=side==='away'?sc[1]:sc[0],line=side==='away'?-g.sp:g.sp,adj=mine+line;
@@ -387,13 +398,26 @@ function espnGames(json){
   return ((json&&json.events)||[]).map(ev=>{
     const c=(ev.competitions||[])[0]||{},st=((c.status||ev.status||{}).type)||{},cs=c.competitors||[];
     const side=h=>cs.find(x=>x.homeAway===h)||{},a=side('away'),h=side('home'),nm=x=>{const t=x.team||{};return [t.name,t.shortDisplayName,t.displayName,t.location&&t.name?t.location+' '+t.name:''].filter(Boolean).map(teamKey);};
-    return {away:nm(a),home:nm(h),sa:a.score!=null&&a.score!==''?parseInt(a.score,10):null,sh:h.score!=null&&h.score!==''?parseInt(h.score,10):null,state:st.state||'pre',completed:!!st.completed,detail:st.shortDetail||st.detail||''};
+    const out={away:nm(a),home:nm(h),sa:a.score!=null&&a.score!==''?parseInt(a.score,10):null,sh:h.score!=null&&h.score!==''?parseInt(h.score,10):null,state:st.state||'pre',completed:!!st.completed,detail:st.shortDetail||st.detail||''};
+    // Who has the ball and where: "possessionText" reads like "HOU 35" (a team's own side of the field) or "50".
+    const sit=c.situation||{},idOf=x=>String(x.id||(x.team&&x.team.id)||''),ab=x=>String((x.team&&x.team.abbreviation)||'').toUpperCase();
+    if(out.state==='in'&&sit.possession!=null){
+      const pid=String(sit.possession),poss=pid===idOf(a)?'away':pid===idOf(h)?'home':null;
+      if(poss){
+        out.poss=poss;out.dd=sit.downDistanceText||sit.shortDownDistanceText||'';out.rz=!!sit.isRedZone;
+        const pt=String(sit.possessionText||'').toUpperCase(),m=pt.match(/([A-Z]{2,4})\s*(\d{1,2})/);
+        if(m){const yl=Number(m[2]);out.spot=m[1]===ab(a)?yl:m[1]===ab(h)?100-yl:null;}
+        else if(/\b50\b/.test(pt))out.spot=50;
+        if(out.spot==null&&typeof sit.yardLine==='number')out.spot=null;
+      }
+    }
+    return out;
   });
 }
 function liveMatch(list,g){
   const A=teamKey(g.away),H=teamKey(g.home),has=(arr,k)=>arr.some(x=>x===k||x.endsWith(k));
   const m=list.find(e=>has(e.away,A)&&has(e.home,H));if(m)return m;
-  const r=list.find(e=>has(e.away,H)&&has(e.home,A));return r?{sa:r.sh,sh:r.sa,state:r.state,completed:r.completed,detail:r.detail}:null;
+  const r=list.find(e=>has(e.away,H)&&has(e.home,A));return r?{sa:r.sh,sh:r.sa,state:r.state,completed:r.completed,detail:r.detail,poss:r.poss?(r.poss==='away'?'home':'away'):undefined,spot:r.spot!=null?100-r.spot:undefined,dd:r.dd,rz:r.rz}:null;
 }
 function liveNeeded(w){
   const now=Date.now();return Object.values((w&&w.games)||{}).filter(g=>!g.fin&&g.kick&&now>=new Date(g.kick).getTime()-10*60000&&now<=new Date(g.kick).getTime()+3*86400000);
@@ -632,6 +656,16 @@ function whoChips(gid,m,v,n,sel,g,visible){
   const out=players().filter(p=>visible(g,p.key)).filter(p=>{const w=subWeek(p.key,n);const pk=w&&w.p&&w.p[gid];return pk&&pk[m]===v;});
   return out.length?'<span class="who">'+out.map(p=>'<span'+(p.key===sel?' class="sel"':'')+' title="'+esc(p.name)+'">'+esc(abbr(p))+'</span>').join('')+'</span>':'';
 }
+const BALL='<svg class="ball" viewBox="0 0 24 16" aria-label="has the ball" role="img"><ellipse cx="12" cy="8" rx="11" ry="7" fill="#8a4b22" stroke="#5a2e12" stroke-width="1"/><path d="M7 8h10M9.5 6.5v3M12 6.5v3M14.5 6.5v3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg>';
+// Field bar: the away team's end zone on the left, the home team's on the right; the ball carrier's logo marks the spot, and the green runs toward the end zone they are attacking.
+function fieldBar(g,L){
+  if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
+  const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
+  const fill=toRight?'left:'+x+'%;right:0':'left:0;right:'+(100-x)+'%';
+  const ticks=[10,20,30,40,50,60,70,80,90].map(t=>'<i style="left:'+t+'%"></i>').join('');
+  return '<div class="field" aria-label="'+esc(team)+' ball'+(L.dd?', '+esc(L.dd):'')+'"><div class="track">'+ticks+'<span class="drive'+(L.rz?' rz':'')+'" style="'+fill+'"></span><span class="spot" style="left:'+x+'%">'+(logo(team)||'<b>'+esc(team.slice(0,3).toUpperCase())+'</b>')+'</span></div>'+
+    '<div class="yd"><span>'+esc(g.away)+'</span><span>20</span><span>50</span><span>20</span><span>'+esc(g.home)+'</span></div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+'</div>';
+}
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const lock=(sub&&sub.p&&sub.p[gid])||{},dp=(draft&&draft.p[gid])||{},sp=(sent&&sent[gid])||{},canTap=open&&!started(g),show=visible(g);
   let hiddenLock=false;
@@ -656,7 +690,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const cells=[opt('s','away',g.sp==null?'':spreadLabel(g,'away'),g.sp!=null,g.away),opt('s','home',g.sp==null?'':spreadLabel(g,'home'),g.sp!=null,g.home),opt('o','over',g.tot==null?'':ouLabel(g,'over'),g.tot!=null),opt('o','under',g.tot==null?'':ouLabel(g,'under'),g.tot!=null)];
   const nl=(lock.s?1:0)+(lock.o?1:0);
   const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. Hidden from everyone else until picks lock.</div>':'';
-  return '<article class="card game"><header><h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+'<div class="rows">'+
+  return '<article class="card game"><header><h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
     cells[0]+cells[1]+(r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw))+cells[2]+cells[3]+(r.combo?'':cell(r.ow))+hidden+'</div></article>';
 }
 function legLabel(week,code,own){

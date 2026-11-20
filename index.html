@@ -380,6 +380,7 @@ const SEASONS=[{"fut":{"h":"Future Picks (AFC +10 | NFC +10 | SB +20)","picks":{
 /* Live scores: while the Picks page shows this season, the scoreboard feed is checked every minute for games that are on.
    Live scores are only shown and graded on screen; final scores are saved by the score robot (or the commissioner). */
 const ESPN='https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+const etDay=iso=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso)).replace(/-/g,'');
 const ymdUTC=t=>{const d=new Date(t);return d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,'0')+String(d.getUTCDate()).padStart(2,'0');};
 const teamKey=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 function espnGames(json){
@@ -401,12 +402,16 @@ let liveBusy=false;
 async function liveTick(){
   if(liveBusy||document.hidden||S.view!=='picks'||S.season!=='cur'||!S.weeks)return;
   const n=S.selWeek,w=S.weeks[n],need=liveNeeded(w);if(!need.length)return;
-  const ks=need.map(g=>new Date(g.kick).getTime());
   liveBusy=true;
   try{
-    const r=await fetch(ESPN+'?limit=100&dates='+ymdUTC(Math.min(...ks)-86400000)+'-'+ymdUTC(Math.max(...ks)+86400000),{cache:'no-store'});
-    if(!r.ok){S.liveStatus='The scoreboard answered with error '+r.status+'.';S.liveAt=Date.now();requestRender();return;}
-    const list=espnGames(await r.json());let changed=false,doneNotSaved=false;
+    // ESPN refused a date range (error 400), so ask for this week's scoreboard first, then for single game days if anything is still missing.
+    let list=[],errs=[];
+    const grab=async q=>{try{const r=await fetch(ESPN+q,{cache:'no-store'});if(!r.ok){errs.push('error '+r.status);return;}list=list.concat(espnGames(await r.json()));}catch(e){errs.push((e&&e.message)||'blocked');}};
+    await grab('');
+    const days=[...new Set(need.filter(g=>!liveMatch(list,g)).map(g=>etDay(g.kick)))];
+    for(const d of days)await grab('?dates='+d);
+    if(!list.length){S.liveStatus='Could not get the scoreboard ('+(errs.join(', ')||'no games listed')+').';S.liveAt=Date.now();requestRender();return;}
+    let changed=false,doneNotSaved=false;
     const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
     S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
     need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});

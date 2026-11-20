@@ -218,7 +218,6 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 <nav><div class="wrap" id="nav"></div></nav>
 <div class="wrap"><main id="view"><p class="muted">Loading the league…</p></main></div>
 <div id="modal"></div><div id="toast"></div>
-<audio id="hof-audio" src="hall-of-fame.mp3" loop preload="none"></audio>
 <script>
 /*LOGIC-START*/
 const AFC=['Bills','Dolphins','Patriots','Jets','Ravens','Bengals','Browns','Steelers','Texans','Colts','Jaguars','Titans','Broncos','Chiefs','Raiders','Chargers'];
@@ -1079,15 +1078,43 @@ function viewHof(){
   return h+'</div>';
 }
 // The anthem starts when the tab is opened (that click counts as permission to play), stops when you leave, and remembers if you paused it.
-function hofAudio(){return document.getElementById('hof-audio');}
-function hofPlaying(){const a=hofAudio();return !!(a&&!a.paused);}
-function hofPlay(force){const a=hofAudio();if(!a||S.hofNoMusic)return;if(!force&&ls.get('mlfl.hofmute')==='1')return;try{a.volume=.65;const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+// Played through Web Audio with a "playback" audio session so it plays even with the phone on silent.
+// Everything is shut down when you leave the tab or the page is hidden, which also clears it from the lock screen.
+const HOF={ctx:null,buf:null,src:null,gain:null,loading:null,on:false};
+function hofPlaying(){return HOF.on;}
+function hofNoMusic(){S.hofNoMusic=true;hofStop();const t=document.getElementById('hof-toggle');if(t)t.remove();}
+function hofLoad(ctx){
+  if(HOF.buf)return Promise.resolve(HOF.buf);
+  if(!HOF.loading)HOF.loading=fetch('hall-of-fame.mp3').then(r=>{if(!r.ok)throw new Error('missing');return r.arrayBuffer();})
+    .then(ab=>new Promise((res,rej)=>ctx.decodeAudioData(ab,res,rej))).then(b=>(HOF.buf=b))
+    .catch(e=>{HOF.loading=null;hofNoMusic();throw e;});
+  return HOF.loading;
+}
+function hofPlay(force){
+  if(S.hofNoMusic||HOF.on)return;if(!force&&ls.get('mlfl.hofmute')==='1')return;
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+  let ctx;try{ctx=HOF.ctx=new AC();HOF.gain=ctx.createGain();HOF.gain.gain.value=.45;HOF.gain.connect(ctx.destination);if(ctx.resume)ctx.resume().catch(()=>{});}catch(e){return;}
+  HOF.on=true;
+  hofLoad(ctx).then(buf=>{
+    if(!HOF.on||HOF.ctx!==ctx||HOF.src)return;
+    const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;src.connect(HOF.gain);src.start();HOF.src=src;
+  }).catch(()=>{}).finally(()=>setTimeout(hofMusicSync,0));
+  setTimeout(hofMusicSync,0);
+}
+function hofStop(){
+  HOF.on=false;
+  if(HOF.src){try{HOF.src.stop();}catch(e){}HOF.src=null;}
+  if(HOF.ctx){const c=HOF.ctx;HOF.ctx=null;HOF.gain=null;try{c.close().catch(()=>{});}catch(e){}}
+  try{if(navigator.audioSession)navigator.audioSession.type='auto';}catch(e){}
+  try{if(navigator.mediaSession){navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none';}}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&HOF.on){hofStop();setTimeout(hofMusicSync,0);}});
+window.addEventListener('pagehide',()=>{if(HOF.on)hofStop();});
 const SND_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-function hofMusicSync(){const a=hofAudio();if(a&&S.view!=='hof'&&!a.paused)a.pause();const b=document.getElementById('hof-toggle');if(!b)return;const on=hofPlaying();b.innerHTML=on?SND_ON:SND_OFF;b.setAttribute('aria-label',on?'Pause music':'Play music');b.title=on?'Pause music':'Play music';b.setAttribute('aria-pressed',String(on));}
-(function(){const a=document.getElementById('hof-audio');if(!a)return;
-  ['play','pause'].forEach(ev=>a.addEventListener(ev,hofMusicSync));
-  a.addEventListener('error',()=>{S.hofNoMusic=true;const b=document.getElementById('hof-toggle');if(b)b.remove();});})();
+function hofMusicSync(){if(HOF.on&&S.view!=='hof')hofStop();const b=document.getElementById('hof-toggle');if(!b)return;const on=hofPlaying();b.innerHTML=on?SND_ON:SND_OFF;b.setAttribute('aria-label',on?'Pause music':'Play music');b.title=on?'Pause music':'Play music';b.setAttribute('aria-pressed',String(on));}
+
 /* ---------- Starting a new season ---------- */
 // Turns the season being played into the same read-only form as the past seasons, so it can be browsed, ranked and counted in the Hall of Fame.
 function snapshotSeason(){
@@ -1298,7 +1325,7 @@ const acts={
       toast(next+' has started. '+cur+' is in the Season dropdown.');requestRender(true);
     });
   },
-  hofmusic(){const a=hofAudio();if(!a)return;if(a.paused){ls.del('mlfl.hofmute');hofPlay(true);}else{a.pause();ls.set('mlfl.hofmute','1');}setTimeout(hofMusicSync,60);},
+  hofmusic(){if(HOF.on){hofStop();ls.set('mlfl.hofmute','1');}else{ls.del('mlfl.hofmute');hofPlay(true);}setTimeout(hofMusicSync,60);},
   async signin(){
     const owner=$('#gh-owner').value.trim(),repo=$('#gh-repo').value.trim(),token=$('#gh-token').value.trim();
     if(!owner||!repo||!token){toast('Fill in all three boxes.');return;}

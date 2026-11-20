@@ -475,20 +475,23 @@ const wname=n=>(S.weeks[n]&&S.weeks[n].round)||('Week '+n);
 const sortedGames=w=>Object.entries((w&&w.games)||{}).sort((a,b)=>(a[1].o||0)-(b[1].o||0));
 const kicked=g=>g.sa!=null||!!(g.live&&g.live.state&&g.live.state!=='pre')||!!(g.kick&&Date.now()>=new Date(g.kick).getTime());
 const pastDeadline=g=>{const d=S.dl&&S.dl.get(g);return d!=null&&Date.now()>=d;};
-// "Locked" for a game: it has kicked off, or the week's Sunday 5 AM deadline has passed. The signed-in commissioner is held only to kickoff, so picks that arrived on time can still be entered.
+// "Locked" for a game: it has kicked off, or its day's lock (30 minutes before that day's first kickoff) has passed. The signed-in commissioner is held only to kickoff, so picks that arrived on time can still be entered.
 // The commissioner can let one player keep picking after the lock for a week. Their games still close at kickoff.
 const lateAllowed=(n,k)=>!!(n!=null&&k&&S.weeks&&S.weeks[n]&&S.weeks[n].late&&S.weeks[n].late[k]);
 const lateOk=g=>!!(S.gweek&&S.selPlayer&&mayEdit(S.selPlayer)&&lateAllowed(S.gweek.get(g),S.selPlayer));
 const started=g=>kicked(g)||(!S.isOwner&&pastDeadline(g)&&!lateOk(g));
-// Each game locks at the earlier of: 30 minutes before the first kickoff on its day (Central time), or the Sunday 5 AM deadline.
+// Each game locks 30 minutes before the first kickoff on its day (Central time). Monday games lock with Sunday's.
 const DAY_LOCK_MIN=30;
 const ctDay=k=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(k));
 function buildDeadlines(){S.dl=new Map();S.gweek=new Map();Object.entries(S.weeks||{}).forEach(([wn,w])=>{
   Object.values(w.games||{}).forEach(g=>S.gweek.set(g,Number(wn)));
-  const d=weekDeadline(w),gs=Object.values(w.games||{}),first={};
+  const d=null,gs=Object.values(w.games||{}),first={};
   gs.forEach(g=>{if(!g.kick)return;const k=ctDay(g.kick),t=new Date(g.kick).getTime();if(!(k in first)||t<first[k])first[k]=t;});
+  const sunK=gs.filter(g=>g.kick&&chi(g.kick,{weekday:'short'})==='Sun').map(g=>new Date(g.kick).getTime()),sun=sunK.length?Math.min(...sunK):null;
   gs.forEach(g=>{
-    const day=g.kick?first[ctDay(g.kick)]-DAY_LOCK_MIN*60000:null;
+    let day=g.kick?first[ctDay(g.kick)]-DAY_LOCK_MIN*60000:null;
+    // Monday games lock with Sunday's games.
+    if(g.kick&&sun!=null&&chi(g.kick,{weekday:'short'})==='Mon')day=Math.min(day,sun-DAY_LOCK_MIN*60000);
     const lock=[d,day].filter(x=>x!=null);
     if(lock.length)S.dl.set(g,Math.min(...lock));
   });
@@ -692,9 +695,9 @@ function viewPicks(){
   const canAdd=may&&open&&(openMarkets>0||(hasParlay(week)&&!lockedParlay&&games.filter(x=>!started(x[1])).length>0));
   if(sub)h+='<p class="muted small">'+(sub.imp?esc(pname(sel))+"'s picks were imported from the Google Sheet. Picks are locked.":esc(pname(sel))+' has '+nLocked+' pick'+(nLocked===1?'':'s')+' locked in'+(nLegs?' and '+nLegs+' parlay leg'+(nLegs===1?'':'s'):'')+', last updated '+esc(chi(sub.upd||sub.at,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT.')+'</p>';
   else if(!open)h+='<p class="muted small">'+esc(pname(sel))+' has no picks for this week. Picks are closed.</p>';
-  const dl=weekDeadline(week);
+  const dl=games.map(([,g])=>S.dl&&S.dl.get(g)).filter(t=>t&&t>Date.now()).sort((a,b)=>a-b)[0];
   if(canAdd){
-    const due=dl?' Picks are due by <strong>'+esc(chi(new Date(dl).toISOString(),{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT</strong>.':'';
+    const due=dl?' Next picks lock <strong>'+esc(chi(new Date(dl).toISOString(),{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' CT</strong>.':'';
     h+='<div class="note"><p>'+(S.isOwner?'<strong>Entering picks for '+esc(pname(sel))+'.</strong>'+due:'<strong>Picking as '+esc(pname(sel))+'.</strong>'+(gateOn()?'':' Not you? Tap your name above.')+due+' When you are done, tap <strong>Confirm picks</strong>.')+'</p></div>';
   }
   if(!may&&open&&!S.isOwner){
@@ -801,7 +804,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const L=g.live;
   if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre')){const w=g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie';scoreLine='<div class="score">'+(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+esc(w)+')</div>';}
   else if(L&&L.state!=='pre'&&L.sa!=null){const w=L.sa>L.sh?g.away:L.sh>L.sa?g.home:'Tie';scoreLine=L.completed?'<div class="score">Final: '+L.sa+' - '+L.sh+' ('+esc(w)+')</div>':'<div class="score is-live"><span class="live-dot" aria-hidden="true"></span>'+esc(String(L.detail||'Live').replace(/^(\d{1,2}:\d{2})\s*-\s*(.+)$/,'$1 | $2'))+' | '+L.sa+' - '+L.sh+(w==='Tie'?' (Tied)':' ('+esc(w)+')')+'</div>';}
-  else scoreLine='<div class="score pre">'+(kicked(g)?(g.kick&&Date.now()-new Date(g.kick).getTime()>5*3600000?'Waiting for the final score':'In progress'):pastDeadline(g)?(lateOk(g)&&!S.isOwner?'Late pick allowed until kickoff':'Picks locked'):'Not started'+(S.dl&&S.dl.get(g)?' · Picks lock '+chi(new Date(S.dl.get(g)).toISOString(),{weekday:'short',hour:'numeric',minute:'2-digit'}):''))+'</div>';
+  else scoreLine='<div class="score pre">'+(kicked(g)?(g.kick&&Date.now()-new Date(g.kick).getTime()>5*3600000?'Waiting for the final score':'In progress'):pastDeadline(g)?(lateOk(g)&&!S.isOwner?'Late pick allowed until kickoff':'Picks locked'):'Not started')+'</div>';
   const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+'+sc.mult+'</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
   const cells=[opt('s','away',g.sp==null?'':spreadLabel(g,'away'),g.sp!=null,g.away),opt('s','home',g.sp==null?'':spreadLabel(g,'home'),g.sp!=null,g.home),opt('o','over',g.tot==null?'':ouLabel(g,'over'),g.tot!=null),opt('o','under',g.tot==null?'':ouLabel(g,'under'),g.tot!=null)];
   const nl=(lock.s?1:0)+(lock.o?1:0);
@@ -969,7 +972,7 @@ function viewStandings(){
   else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">'+esc(S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n)+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
     s.list.map(r=>{const p=players().find(x=>x.key===r.key);return '<tr><td>'+esc(r.name)+'</td>'+(hasBase?'<td>'+((p.base&&p.base.points)||0)+'</td>':'')+s.nums.map(n=>'<td class="'+((s.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td>'+r.fut+'</td><td><strong>'+r.points+'</strong></td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">Only final games count here. A gold cell marks the week winner. Tap a week to see every pick.</p>';
   h+='</section>';
-  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over; if it wins, the remaining legs can still be added before their games kick off.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>All picks are due by Sunday 5:00 AM Central, including the Sunday night and Monday night games. Games played before that Sunday lock at their own kickoff.</li><li>The highest total in a finished week wins the week. Ties share the win.</li><li>PB is how many points a player is behind the leader.</li></ul></div></section>';
+  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over; if it wins, the remaining legs can still be added before their games kick off.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>Picks lock 30 minutes before the first game of each day (Central time). Every game that day locks at the same time, including night games. Monday games lock with Sunday\'s games.</li><li>The highest total in a finished week wins the week. Ties share the win.</li><li>PB is how many points a player is behind the leader.</li></ul></div></section>';
   return h;
 }
 
@@ -1201,7 +1204,7 @@ function pkCell(p){
 }
 function adminPicks(n){
   const week=S.weeks[n];if(!week)return '';
-  return '<section class="card"><h3>Who has picked · '+esc(wname(n))+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th class="l">Late picks</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n),lt=lateAllowed(n,p.key);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(lt?'<span class="pkbtns"><strong>Allowed</strong><button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Turn off</button></span>':'<button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Allow</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small"><strong>Late picks</strong> let one player keep picking after the lock (30 minutes before each day\'s first game, or Sunday 5 AM). Games still close at kickoff. Others\' picks for locked games are already visible, so only allow it when you trust it\'s fair. It lasts for this week until you turn it off.</p></section>';
+  return '<section class="card"><h3>Who has picked · '+esc(wname(n))+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th class="l">Late picks</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n),lt=lateAllowed(n,p.key);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(lt?'<span class="pkbtns"><strong>Allowed</strong><button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Turn off</button></span>':'<button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Allow</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small"><strong>Late picks</strong> let one player keep picking after the lock (30 minutes before each day\'s first game). Games still close at kickoff. Others\' picks for locked games are already visible, so only allow it when you trust it\'s fair. It lasts for this week until you turn it off.</p></section>';
 }
 function adminPasskeys(){
   return '<section class="card"><h3>Player passkeys</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>'<tr><td>'+esc(p.name)+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>').join('')+'</tbody></table></div><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
@@ -1235,7 +1238,7 @@ function collectDraft(n,k){
   const legs=par?openLegs(week,sub,d,pend.legs).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}):[];
   return {p,legs,made,avail,par,nl};
 }
-function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until kickoff or the Sunday 5 AM deadline.':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
+function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until 30 minutes before the first game on their day (Monday games lock with Sunday).':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
 // Pick codes by email, through Web3Forms (free: 250 emails a month). Its access key only lets people send email to you, so it is safe to keep in the league data.
 function mailKey(){return (S.cfg&&S.cfg.mail&&S.cfg.mail.key)||'';}
 async function sendMail(subject,message){

@@ -1312,11 +1312,21 @@ const acts={
     if(!c.made&&!legs.length){toast('Make at least one new pick first.');return;}
     const code=encodePicks(S.cfg,S.weeks[n],n,k,c.p,legs);
     addSent(n,k,c.p,legs);requestRender(true);
-    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Picks confirmed for '+esc(pname(k))+', '+esc(wname(n))+'</h2>'+draftSummary(c)+'<label for="codeout">Your code</label><textarea id="codeout" readonly rows="2" style="font-size:1.05rem;font-weight:700;text-align:center;min-height:0">'+esc(code)+'</textarea><p id="code-note">'+(mailKey()?'<strong>Sending your picks to the commissioner…</strong>':'Text this code to the commissioner.')+' Your picks show as Verification Pending until the commissioner approves them.</p><div class="bar"><button class="btn primary" id="dlg-copy">Copy code</button><button class="btn" id="dlg-no">Done</button></div></div></div>';
-    $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};
-    $('#dlg-copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Code copied. Paste it into a text to the commissioner.');}catch(e){$('#codeout').focus();$('#codeout').select();toast('Press and hold the code to copy it.');}};
-    $('#dlg-copy').focus();
-    if(mailKey())emailCode(k,n,code,c).then(ok=>{const el=$('#code-note');if(el)el.innerHTML=ok?'<strong>Sent to the commissioner.</strong> You do not need to text anything. Your picks show as Verification Pending until the commissioner approves them.':'<strong>The picks could not be sent automatically.</strong> Copy the code and text it to the commissioner instead.';});
+    const mail=!!mailKey(),title=esc(pname(k))+', '+esc(wname(n));
+    // The code box only appears when there is no email set up, or the email fails.
+    const codeBox='<label for="codeout">Your code</label><textarea id="codeout" readonly rows="2" style="font-size:1.05rem;font-weight:700;text-align:center;min-height:0">'+esc(code)+'</textarea>';
+    const showCode=msg=>{const d=$('#dlg-body');if(!d)return;$('#dlg-title').textContent='Text this code to the commissioner';d.innerHTML='<p>'+msg+'</p>'+codeBox+'<p class="muted small">Your picks show as Verification Pending until the commissioner approves them.</p>';
+      $('#dlg-bar').innerHTML='<button class="btn primary" id="dlg-copy">Copy code</button><button class="btn" id="dlg-no">Done</button>';wire();};
+    const wire=()=>{const no=$('#dlg-no');if(no)no.onclick=()=>{$('#modal').innerHTML='';};const cp=$('#dlg-copy');if(cp){cp.onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Code copied. Paste it into a text to the commissioner.');}catch(e){$('#codeout').focus();$('#codeout').select();toast('Press and hold the code to copy it.');}};cp.focus();}};
+    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2 id="dlg-title">'+(mail?'Sending your picks…':'Picks confirmed')+'</h2><p class="muted">'+title+'</p>'+draftSummary(c)+'<div id="dlg-body">'+(mail?'<p class="sending">Sending to the commissioner. One moment.</p>':'')+'</div><div class="bar" id="dlg-bar"></div></div></div>';
+    if(!mail){showCode('Your picks are saved on this phone. Send this code to the commissioner so they can approve them.');return;}
+    emailCode(k,n,code,c).then(ok=>{
+      if(!$('#dlg-body'))return;
+      if(!ok){showCode('<strong>Your picks could not be sent automatically.</strong> Copy this code and text it to the commissioner instead.');return;}
+      $('#dlg-title').textContent='Picks sent ✓';
+      $('#dlg-body').innerHTML='<p>Your picks were sent to the commissioner and are <strong>waiting for verification</strong>. They\'ll show as Verification Pending until they\'re approved.</p>';
+      $('#dlg-bar').innerHTML='<button class="btn primary" id="dlg-no">OK</button>';wire();$('#dlg-no').focus();
+    });
   },
   withdraw(){
     if(!mayEdit(S.selPlayer))return;

@@ -136,7 +136,8 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field .spot{position:absolute;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--board);border:2px solid var(--board-ink);display:flex;align-items:center;justify-content:center;z-index:1}
 .field .spot .logo{width:20px;height:20px}
 .field .spot b{font-size:.6rem}
-.field .yd{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;opacity:.7;margin-top:6px}
+.field .yd{position:relative;height:1.1em;margin:6px 6px 0;font-size:.72rem;font-weight:700;opacity:.7}
+.field .yd span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
 .score.is-live{display:flex;align-items:center;justify-content:center;gap:8px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--miss);flex:none}
@@ -662,9 +663,9 @@ function fieldBar(g,L){
   if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
   const fill=toRight?'left:'+x+'%;right:0':'left:0;right:'+(100-x)+'%';
-  const ticks=[10,20,30,40,50,60,70,80,90].map(t=>'<i style="left:'+t+'%"></i>').join('');
+  const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
   return '<div class="field" aria-label="'+esc(team)+' ball'+(L.dd?', '+esc(L.dd):'')+'"><div class="track">'+ticks+'<span class="drive'+(L.rz?' rz':'')+'" style="'+fill+'"></span><span class="spot" style="left:'+x+'%">'+(logo(team)||'<b>'+esc(team.slice(0,3).toUpperCase())+'</b>')+'</span></div>'+
-    '<div class="yd"><span>'+esc(g.away)+'</span><span>20</span><span>50</span><span>20</span><span>'+esc(g.home)+'</span></div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+'</div>';
+    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+'</div>';
 }
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const lock=(sub&&sub.p&&sub.p[gid])||{},dp=(draft&&draft.p[gid])||{},sp=(sent&&sent[gid])||{},canTap=open&&!started(g),show=visible(g);

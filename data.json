@@ -4058,11 +4058,85 @@
       "66f9e83cf025d58acee12bce18661fb3": {
        "s": "away",
        "o": "under"
+      },
+      "403a88701352da05b0710a9e883b803e": {
+       "s": "home",
+       "o": "under"
+      },
+      "4527f57f5bc32742d8194af1ccf7da7e": {
+       "s": "home",
+       "o": "under"
+      },
+      "4c5b1c0843a260278e95eb93e7787576": {
+       "s": "home",
+       "o": "under"
+      },
+      "3ea90704fb576633bd1e2fa5aafd9ea3": {
+       "s": "home",
+       "o": "over"
+      },
+      "5e63079b678f8c13419adc169fff02d3": {
+       "s": "away",
+       "o": "over"
+      },
+      "41e2dd69bddd65d7e823d9ed61cc2afc": {
+       "s": "home",
+       "o": "over"
+      },
+      "cbe45bafcc2615fc1d96cbc12840377a": {
+       "s": "away",
+       "o": "under"
+      },
+      "4b20b742b6168aaca4f25d87f11b1526": {
+       "s": "home",
+       "o": "over"
+      },
+      "1940706a79cbcbafacdcbf231069716b": {
+       "s": "home",
+       "o": "under"
+      },
+      "8ba112fabf4e87639338a5f437c5abfe": {
+       "s": "away",
+       "o": "over"
+      },
+      "60e1d27b083a335b722c2c852ea85612": {
+       "s": "home",
+       "o": "under"
+      },
+      "3a60ed1d20004aa4d4772b2c1a2272e7": {
+       "s": "away",
+       "o": "under"
       }
      },
-     "parlay": [],
+     "parlay": [
+      {
+       "g": "60e1d27b083a335b722c2c852ea85612",
+       "m": "o",
+       "v": "under"
+      },
+      {
+       "g": "8ba112fabf4e87639338a5f437c5abfe",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "3ea90704fb576633bd1e2fa5aafd9ea3",
+       "m": "s",
+       "v": "home"
+      },
+      {
+       "g": "cbe45bafcc2615fc1d96cbc12840377a",
+       "m": "s",
+       "v": "away"
+      },
+      {
+       "g": "3a60ed1d20004aa4d4772b2c1a2272e7",
+       "m": "s",
+       "v": "away"
+      }
+     ],
      "at": "2026-11-19T19:50:27.896Z",
-     "upd": "2026-11-19T19:50:27.896Z"
+     "upd": "2026-11-20T20:38:55.758Z"
     }
    },
    "futures": {

@@ -19,7 +19,8 @@
      "won": 0,
      "cpp": 0,
      "weeks": 0
-    }
+    },
+    "pin": "29ecf0e1df5d5740041de47a105f73a1b3576ff0183e0ef5693bb16161e1e74d"
    },
    {
     "key": "josh",
@@ -74,7 +75,8 @@
   ],
   "mail": {
    "key": "4e56ae2d-95e0-476b-8bbb-d982755ee602"
-  }
+  },
+  "pkSalt": "41da875d4c2b955387d88143"
  },
  "weeks": {
   "1": {

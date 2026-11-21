@@ -648,7 +648,7 @@ function render(){
   $('#season').textContent=((S.view==='picks'||S.view==='standings'||S.view==='futures')&&archSeason()?archSeason().id:curSeasonLabel())+' Season';
   const cm=S.cfg&&gateOn()&&cmodeOn()&&S.view!=='commish',me=$('#me'),showMe=S.cfg&&(cm||(gateOn()&&!S.isOwner&&(S.me||isVisitor())));me.hidden=!showMe;
   if(cm)me.innerHTML='Commissioner view · <button class="linkbtn" data-act="cmode">Turn off</button>';
-  else if(showMe)me.innerHTML=(S.me?esc(pname(S.me)):'Visitor')+' · <button class="linkbtn" data-act="switchuser">'+(S.me?'Switch':'Sign in')+'</button>';
+  else if(showMe)me.innerHTML=(S.me?esc(pname(S.me)):'Visitor')+' · <button class="linkbtn" data-act="'+(S.me?'signoutme':'switchuser')+'">'+(S.me?'Sign out':'Sign in')+'</button>';
   let h;
   if(!(S.got.cfg&&S.got.weeks&&S.got.entries))h='<p class="muted">Loading the league…</p>';
   else if(!S.cfg)h='<div class="note warn"><p>The league has not been set up yet.</p></div>';
@@ -1507,6 +1507,10 @@ const acts={
     toast('Signed in as '+p.name+'. This phone will remember you.');requestRender(true);
   },
   visitor(){ls.set('mlfl.visitor','1');S.view='picks';requestRender(true);},
+  signoutme(){
+    const k=S.me;if(!k)return;
+    confirmBox('Sign out of '+pname(k)+'?','<p>You\'ll need your passkey to sign back in on this phone. Any picks you haven\'t confirmed yet stay saved here.</p>','Sign out',()=>acts.switchuser());
+  },
   switchuser(){ls.del('mlfl.me');ls.del('mlfl.visitor');S.meOk=null;S.gateK=null;S.gateErr='';S.view='picks';try{history.replaceState(null,'','#picks');}catch(e){}requestRender(true);window.scrollTo(0,0);},
   setpk(el){
     const k=el.dataset.k,gen=pkGenerate();

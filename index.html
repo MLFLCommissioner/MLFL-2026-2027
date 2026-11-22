@@ -238,7 +238,8 @@ function spreadLabel(g,side){const l=side==='away'?-g.sp:g.sp;return fmtLine(l)+
 function ouLabel(g,v){return (v==='over'?'Over ':'Under ')+g.tot;}
 function hasScore(g,finalOnly){return g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin);}
 // The score to grade with: the saved one, or (on the picks page only) a game the scoreboard feed says is over. Games still being played are not graded.
-function gscore(g,finalOnly){if(g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin))return [g.sa,g.sh];if(!finalOnly&&g.live&&g.live.sa!=null&&g.live.completed)return [g.live.sa,g.live.sh];return null;}
+// A game counts as final once its score is saved, or as soon as the live feed says it's over (before the robot saves it).
+function gscore(g,finalOnly){if(g.sa!=null&&g.sh!=null&&(!finalOnly||!!g.fin))return [g.sa,g.sh];if(g.live&&g.live.sa!=null&&g.live.completed)return [g.live.sa,g.live.sh];return null;}
 function evalSpread(g,side,finalOnly){
   const sc=gscore(g,finalOnly);if(!side||g.sp==null||!sc)return null;
   const mine=side==='away'?sc[0]:sc[1],opp=side==='away'?sc[1]:sc[0],line=side==='away'?-g.sp:g.sp,adj=mine+line;
@@ -283,7 +284,7 @@ function scoreWeek(week,wk,finalOnly){
   if(man){if(man.total!=null){out.total=man.total;out.manualTotal=true;}if(man.pct!=null)out.pct=man.pct;}
   return out;
 }
-function weekComplete(w){const g=Object.values((w&&w.games)||{});return g.length>0&&g.every(x=>x.fin&&x.sa!=null&&x.sh!=null);}
+function weekComplete(w){const g=Object.values((w&&w.games)||{});return g.length>0&&g.every(x=>(x.fin&&x.sa!=null&&x.sh!=null)||(x.live&&x.live.completed&&x.live.sa!=null));}
 function computeSeason(cfg,weeks,entries){
   const players=(cfg&&cfg.players)||[],rows={},winners={};
   players.forEach(p=>{const b=p.base||{};rows[p.key]={key:p.key,name:p.name,points:b.points||0,won:b.won||0,cppSum:(b.cpp||0)*(b.weeks||0),cppN:b.weeks||0,byWeek:{},fut:0};});
@@ -472,7 +473,7 @@ function liveNeeded(w){
 }
 let liveBusy=false;
 async function liveTick(){
-  if(liveBusy||document.hidden||S.view!=='picks'||S.season!=='cur'||!S.weeks)return;
+  if(liveBusy||document.hidden||(S.view!=='picks'&&S.view!=='standings')||S.season!=='cur'||!S.weeks)return;
   const n=S.selWeek,w=S.weeks[n],need=liveNeeded(w);if(!need.length)return;
   liveBusy=true;
   try{

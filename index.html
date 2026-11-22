@@ -151,6 +151,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field .spot b{font-size:.6rem}
 .field .yd{position:relative;height:1.1em;margin:6px 6px 0;font-size:.72rem;font-weight:700;opacity:.7}
 .field .yd span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.field.idle .dd{color:var(--board-ink,#fff);opacity:.75;font-style:italic}
 .field.tdb{padding:14px 16px}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:30px;height:30px}
@@ -429,7 +430,7 @@ function espnGames(json){
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
-      out.lp={id:String(lp.id||''),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      out.lp={id:String(lp.id||''),tt,side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -829,9 +830,28 @@ function cdText(k){
   return d?d+'d '+h+'h '+p(m)+'m':h?h+':'+p(m)+':'+p(sec):m+':'+p(sec);
 }
 setInterval(()=>{document.querySelectorAll('.cd[data-kick]').forEach(el=>{const t=cdText(el.dataset.kick);if(t)el.textContent=t;else{const box=el.parentNode;if(box)box.textContent='Game starting soon';}});},1000);
+// Between plays ESPN sometimes has no ball position (after a kickoff, at a timeout, at halftime).
+// Show the empty field with what's going on instead of leaving a gap.
+function fieldIdle(L){
+  const tt=String((L.lp&&L.lp.tt)||''),d=String(L.detail||'');
+  const msg=/halftime/i.test(d)||/^end of (the )?(1st|first)? ?half/i.test(tt)?'Halftime'
+    :/end of/i.test(d)||/end (of )?(quarter|period)/i.test(tt)?'End of quarter'
+    :/two-minute/i.test(tt)?'Two-minute warning'
+    :/kickoff|kick off|free kick|onside/i.test(tt)?'Kickoff'
+    :/official/i.test(tt)?'TV timeout'
+    :/timeout/i.test(tt)?'Timeout'
+    :/punt/i.test(tt)?'Punt'
+    :/extra point|two-point|conversion/i.test(tt)?'Extra point'
+    :/injury/i.test(tt)?'Injury timeout'
+    :'Next play coming up';
+  const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
+  return '<div class="field idle" role="status"><div class="track">'+ticks+'</div>'+
+    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div></div>';
+}
 function fieldBar(g,L){
   if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
-  if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
+  if(!L||L.state!=='in')return '';
+  if(!L.poss||L.spot==null)return fieldIdle(L);
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
   // The away team's end zone is on the left, so the away team drives right and the home team drives left.
   // The line trails behind the ball carrier, from their own end zone to the ball, and turns red inside the opponent's 20.

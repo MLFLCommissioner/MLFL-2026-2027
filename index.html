@@ -614,7 +614,10 @@ async function loadData(){
   }
   if(!data&&!missing){try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(r.ok)data=await r.json();}catch(e){}}
   if(!data)data=clone(SEED);
+  // Keep the live scores we already have, so reloading the league never blanks out games in progress.
+  const oldWeeks=S.weeks||{};
   S.cfg=data.cfg||clone(SEED.cfg);S.weeks=data.weeks||{};S.entries=data.entries||{};
+  Object.entries(S.weeks).forEach(([n,w])=>{const ow=oldWeeks[n];if(!ow||!ow.games||!w.games)return;Object.entries(w.games).forEach(([gid,g])=>{const og=ow.games[gid];if(og&&og.live&&!g.live&&og.away===g.away&&og.home===g.home)g.live=og.live;});});
   S.got={cfg:true,weeks:true,entries:true};S.loadedAt=Date.now();
   await loadArchived();
 }
@@ -1671,7 +1674,7 @@ async function init(){
   Object.assign(GH,detectRepo());GH.token=ls.get('mlfl.token')||'';S.owner=S.isOwner=!!GH.token;
   await loadData();await verifyMe();requestRender(true);setTimeout(liveTick,800);
   // Viewers pick up new picks and scores when they come back to the tab.
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!S.isOwner&&Date.now()-S.loadedAt>60000){await loadData();await verifyMe();requestRender();}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!S.isOwner&&Date.now()-S.loadedAt>60000){await loadData();await verifyMe();requestRender();const t=()=>liveBusy?setTimeout(t,300):liveTick();t();}});
 }
 init();
 </script>

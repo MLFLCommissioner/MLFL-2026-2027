@@ -156,9 +156,11 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field.tdb{container-type:inline-size}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:min(10px,2cqi);font-weight:800;font-size:min(1.25rem,5.4cqi);white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:min(30px,7cqi);height:min(30px,7cqi);flex:none}
+.pat{font-size:.78rem;font-weight:800;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.pat.ok{background:rgba(80,190,120,.22);color:#7fe0a0}.pat.bad{background:rgba(230,90,80,.22);color:#ff9a90}
 .lastplay{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-size:.85rem;margin-top:3px;padding:0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lastplay .muted{color:inherit;opacity:.7}
-.tdwho{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
+.tdwho{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 8px;text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
 .field.tdb.minor .tdtext{font-size:min(1.1rem,5cqi);animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
@@ -434,7 +436,7 @@ function espnGames(json){
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
-      out.lp={id:String(lp.id||''),tt,who:scorerLine(tt,tx,lp.athletesInvolved),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      out.lp={id:String(lp.id||''),tt,who:scorerLine(tt,tx,lp.athletesInvolved),pat:patResult(tt,tx),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -449,6 +451,17 @@ function espnGames(json){
     }
     return out;
   });
+}
+// Extra point or two-point try result, from its own play or from the end of the touchdown play's text.
+function patResult(tt,tx){
+  // Read the play's own text first; ESPN's play type is only a fallback.
+  const r=patFrom(String(tx||''));return r||patFrom(String(tt||''));
+}
+function patFrom(a){
+  if(!a)return null;
+  if(/two-point|2-pt|2 pt|conversion/i.test(a)){if(/succeeds|is good|good\b|complete\b/i.test(a)&&!/fails|failed|no good|incomplete|intercepted/i.test(a))return {two:true,ok:true};if(/fails|failed|no good|incomplete|intercepted|short of/i.test(a))return {two:true,ok:false};return null;}
+  const m=a.match(/(?:extra point|kick attempt|\bpat\b)[^.]*?\b(is good|good|is no good|no good|missed|blocked|aborted)/i)||a.match(/\((?:[^)]*?)\b(kick|kick is good|kick failed|kick blocked)\)/i);
+  if(!m)return null;const r=m[1].toLowerCase();return {two:false,ok:!/no good|missed|blocked|aborted|failed/.test(r)};
 }
 // Tidies ESPN's play text: odd spaces, a leading play number, formation notes like "(Shotgun)" anywhere,
 // and pre-snap notes such as "X reported in as eligible." or "Direct snap to X." before the real play.
@@ -501,8 +514,10 @@ function playLine(tt,tx,ath){
   if(/FUMBLES/i.test(t)&&(m=t.match(R('RECOVERED by (?:[A-Z]{2,3}-)?N'))))return 'Fumble · recovered by '+nm(m[1]);
   if(/FUMBLES/.test(t)&&/and recovers/i.test(t)&&(m=t.match(R('(?:^|\\. )N FUMBLES'))))return nm(m[1])+' · fumble, recovered it';
   if((m=t.match(R('^N sacked .*?for (-?\\d+) yards?(?: \\((.+?)\\))?'))))return nm(m[1])+' sacked · '+m[2]+' yds'+(m[3]?' (by '+nm(m[3].split(/[;,]/)[0])+')':'');
-  if((m=t.match(R('^N pass incomplete\\b.*?(?:to|intended for) N'))))return 'Incomplete to '+nm(m[2])+' · '+nm(m[1]);
-  if((m=t.match(R('^N pass incomplete'))))return 'Incomplete pass · '+nm(m[1]);
+  // ESPN doesn't give the distance of an incomplete pass, only whether it was thrown short or deep (about 15+ yards).
+  const dp=(t.match(/pass incomplete (short|deep)\b/i)||[])[1],dw=dp?dp.toLowerCase()+' ':'';
+  if((m=t.match(R('^N pass incomplete\\b.*?(?:to|intended for) N'))))return 'Incomplete '+dw+'pass to '+nm(m[2])+' · '+nm(m[1]);
+  if((m=t.match(R('^N pass incomplete'))))return 'Incomplete '+dw+'pass · '+nm(m[1]);
   if((m=t.match(R('^N pass\\b.*?\\bto N(?: to [A-Z]{2,3} -?\\d+)? for (-?\\d+) yards?'))))return nm(m[2])+' · '+yds(m[3])+(yds(m[3])==='no gain'?' · ':'')+'catch from '+nm(m[1]);
   if((m=t.match(R('^N (?:kicks|kicked) (\\d+) yards')))){
     if(/touchback/i.test(t))return 'Kickoff · touchback';
@@ -525,13 +540,18 @@ function tdTrack(g,m){
   S.tdm=S.tdm||new Map();const key=g.away+'|'+g.home+'|'+g.kick,prev=S.tdm.get(key)||{};
   let td=prev.td||null;const k=m.lp&&m.lp.kind;
   if(m.state!=='in')td=null;
-  else if(SCORE_MIN[k]&&m.lp.id&&m.lp.id===prev.lpId&&prev.td){/* same scoring play as last time: keep it */}
+  else if(SCORE_MIN[k]&&m.lp.id&&m.lp.id===prev.lpId&&prev.td){if(m.lp.pat&&k==='td')td=Object.assign({},td,{pat:m.lp.pat});}
   else if(SCORE_MIN[k]){
     // Credit whoever's score just went up (covers defensive and return touchdowns and safeties), else the play's team.
     let side=k==='sf'?null:m.lp.side;const need=SCORE_MIN[k];
     if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=need&&dh<need)side='away';else if(dh>=need&&da<need)side='home';}
     if(!side&&k==='sf'&&m.lp.side)side=m.lp.side==='away'?'home':'away';
-    td=side?{kind:k,side,who:m.lp.who||''}:null;
+    td=side?{kind:k,side,who:m.lp.who||'',pat:k==='td'?m.lp.pat||null:null}:null;
+  }
+  else if(k==='pat'&&td&&td.kind==='td'){if(m.lp.pat)td=Object.assign({},td,{pat:m.lp.pat});}
+  else if(k==='pat'&&!td&&m.lp.side){
+    // We only caught the extra point (the page opened, or came back, after the touchdown play): it still means a touchdown.
+    td={kind:'td',side:m.lp.side,who:'',pat:m.lp.pat||null};
   }
   else if(k==='other')td=null;
   S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id});
@@ -925,10 +945,14 @@ function fieldIdle(L){
   return '<div class="field idle" role="status"><div class="track">'+ticks+'</div>'+
     '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div>'+(/kickoff|next play/i.test(msg)?lastPlayRow(L):'')+'</div>';
 }
+function tdWhoRow(td){
+  const p=td.pat,pt=p?'<span class="pat '+(p.ok?'ok':'bad')+'">'+(p.two?'2-pt '+(p.ok?'good':'failed'):'Extra point '+(p.ok?'good':'no good'))+'</span>':'';
+  return td.who||pt?'<div class="tdwho">'+(td.who?'<span>'+esc(td.who)+'</span>':'')+pt+'</div>':'';
+}
 function lastPlayRow(L){const p=L&&L.lp&&L.lp.play;return p?'<div class="lastplay">'+esc(p)+'</div>':'';}
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
-  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div>'+(L.td.who?'<div class="tdwho">'+esc(L.td.who)+'</div>':'')+'</div>';}
+  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div>'+tdWhoRow(L.td)+'</div>';}
   if(!L||L.state!=='in')return '';
   if(!L.poss||L.spot==null)return fieldIdle(L);
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;

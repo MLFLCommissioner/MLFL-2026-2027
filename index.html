@@ -154,6 +154,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field.tdb{padding:14px 16px}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:30px;height:30px}
+.field.tdb.minor .tdtext{font-size:1.1rem;animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
@@ -424,7 +425,7 @@ function espnGames(json){
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
       out.lp={id:String(lp.id||''),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
-        kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
+        kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
       const pid=String(sit.possession),poss=pid===idOf(a)?'away':pid===idOf(h)?'home':null;
@@ -439,20 +440,21 @@ function espnGames(json){
     return out;
   });
 }
-// Keeps "Touchdown <team>" up from the touchdown until the next kickoff (or any other real play).
+// Keeps "Touchdown / Field goal / Safety <team>" up from the score until the next kickoff (or any other real play).
+const SCORE_MIN={td:6,fg:3,sf:2};
 function tdTrack(g,m){
   S.tdm=S.tdm||new Map();const key=g.away+'|'+g.home+'|'+g.kick,prev=S.tdm.get(key)||{};
-  let td=prev.td||null;
+  let td=prev.td||null;const k=m.lp&&m.lp.kind;
   if(m.state!=='in')td=null;
-  else if(m.lp&&m.lp.kind==='td'&&m.lp.id&&m.lp.id===prev.lpId&&prev.td){/* same touchdown play as last time: keep it */}
-  else if(m.lp&&m.lp.kind==='td'){
-    // Credit whoever's score just went up by 6 or more (covers defensive and return touchdowns), else the play's team.
-    let side=m.lp.side;
-    if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=6&&dh<6)side='away';else if(dh>=6&&da<6)side='home';}
-    if(!side&&prev.td)side=prev.td;
-    td=side||null;
+  else if(SCORE_MIN[k]&&m.lp.id&&m.lp.id===prev.lpId&&prev.td){/* same scoring play as last time: keep it */}
+  else if(SCORE_MIN[k]){
+    // Credit whoever's score just went up (covers defensive and return touchdowns and safeties), else the play's team.
+    let side=k==='sf'?null:m.lp.side;const need=SCORE_MIN[k];
+    if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=need&&dh<need)side='away';else if(dh>=need&&da<need)side='home';}
+    if(!side&&k==='sf'&&m.lp.side)side=m.lp.side==='away'?'home':'away';
+    td=side?{kind:k,side}:null;
   }
-  else if(m.lp&&m.lp.kind==='other')td=null;
+  else if(k==='other')td=null;
   S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id});
   if(td)m.td=td;
 }
@@ -820,7 +822,7 @@ function cdText(k){
 }
 setInterval(()=>{document.querySelectorAll('.cd[data-kick]').forEach(el=>{const t=cdText(el.dataset.kick);if(t)el.textContent=t;else{const box=el.parentNode;if(box)box.textContent='Game starting soon';}});},1000);
 function fieldBar(g,L){
-  if(L&&L.state==='in'&&L.td){const t=L.td==='away'?g.away:g.home;return '<div class="field tdb" role="status"><div class="tdtext">'+logo(t)+'<span>Touchdown '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
+  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
   if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
   // The away team's end zone is on the left, so the away team drives right and the home team drives left.

@@ -151,6 +151,11 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field .spot b{font-size:.6rem}
 .field .yd{position:relative;height:1.1em;margin:6px 6px 0;font-size:.72rem;font-weight:700;opacity:.7}
 .field .yd span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.field.tdb{padding:14px 16px}
+.tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
+.tdtext .logo{width:30px;height:30px}
+@keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
 .score.is-live{display:flex;align-items:center;justify-content:center;gap:8px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--miss);flex:none}
@@ -415,6 +420,12 @@ function espnGames(json){
     const out={away:nm(a),home:nm(h),sa:a.score!=null&&a.score!==''?parseInt(a.score,10):null,sh:h.score!=null&&h.score!==''?parseInt(h.score,10):null,state:st.state||'pre',completed:!!st.completed,detail:st.shortDetail||st.detail||''};
     // Who has the ball and where: "possessionText" reads like "HOU 35" (a team's own side of the field) or "50".
     const sit=c.situation||{},idOf=x=>String(x.id||(x.team&&x.team.id)||''),ab=x=>String((x.team&&x.team.abbreviation)||'').toUpperCase();
+    // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
+    if(out.state==='in'&&sit.lastPlay){
+      const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
+      out.lp={id:String(lp.id||''),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+        kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
+    }
     if(out.state==='in'&&sit.possession!=null){
       const pid=String(sit.possession),poss=pid===idOf(a)?'away':pid===idOf(h)?'home':null;
       if(poss){
@@ -427,6 +438,23 @@ function espnGames(json){
     }
     return out;
   });
+}
+// Keeps "Touchdown <team>" up from the touchdown until the next kickoff (or any other real play).
+function tdTrack(g,m){
+  S.tdm=S.tdm||new Map();const key=g.away+'|'+g.home+'|'+g.kick,prev=S.tdm.get(key)||{};
+  let td=prev.td||null;
+  if(m.state!=='in')td=null;
+  else if(m.lp&&m.lp.kind==='td'&&m.lp.id&&m.lp.id===prev.lpId&&prev.td){/* same touchdown play as last time: keep it */}
+  else if(m.lp&&m.lp.kind==='td'){
+    // Credit whoever's score just went up by 6 or more (covers defensive and return touchdowns), else the play's team.
+    let side=m.lp.side;
+    if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=6&&dh<6)side='away';else if(dh>=6&&da<6)side='home';}
+    if(!side&&prev.td)side=prev.td;
+    td=side||null;
+  }
+  else if(m.lp&&m.lp.kind==='other')td=null;
+  S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id});
+  if(td)m.td=td;
 }
 function liveMatch(list,g){
   const A=teamKey(g.away),H=teamKey(g.home),has=(arr,k)=>arr.some(x=>x===k||x.endsWith(k));
@@ -452,7 +480,7 @@ async function liveTick(){
     let changed=false,doneNotSaved=false;
     const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
     S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
-    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
+    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
     if(doneNotSaved&&!S.isOwner&&Date.now()-(S.loadedAt||0)>5*60000){const keep=Object.values(w.games).map(g=>[g,g.live]);await loadData();keep.forEach(([g,l])=>{const ng=Object.values((S.weeks[n]||{}).games||{}).find(x=>x.away===g.away&&x.home===g.home);if(ng&&!ng.fin&&l)ng.live=l;});changed=true;}
     if(changed)requestRender();
   }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}
@@ -785,11 +813,14 @@ function whoChips(gid,m,v,n,sel,g,visible){
 const BALL='<svg class="ball" viewBox="0 0 24 16" aria-label="has the ball" role="img"><ellipse cx="12" cy="8" rx="11" ry="7" fill="#8a4b22" stroke="#5a2e12" stroke-width="1"/><path d="M7 8h10M9.5 6.5v3M12 6.5v3M14.5 6.5v3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg>';
 // Field bar: the away team's end zone on the left, the home team's on the right; the ball carrier's logo marks the spot, and the green runs toward the end zone they are attacking.
 function fieldBar(g,L){
+  if(L&&L.state==='in'&&L.td){const t=L.td==='away'?g.away:g.home;return '<div class="field tdb" role="status"><div class="tdtext">'+logo(t)+'<span>Touchdown '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
   if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
-  const fill=toRight?'left:'+x+'%;right:0':'left:0;right:'+(100-x)+'%';
+  // The away team's end zone is on the left, so the away team drives right and the home team drives left.
+  // The line trails behind the ball carrier, from their own end zone to the ball, and turns red inside the opponent's 20.
+  const fill=toRight?'left:0;right:'+(100-x)+'%':'left:'+x+'%;right:0',rz=toRight?x>=80:x<=20;
   const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
-  return '<div class="field" aria-label="'+esc(team)+' ball'+(L.dd?', '+esc(L.dd):'')+'"><div class="track">'+ticks+'<span class="drive'+(L.rz?' rz':'')+'" style="'+fill+'"></span><span class="spot" style="left:'+x+'%">'+(logo(team)||'<b>'+esc(team.slice(0,3).toUpperCase())+'</b>')+'</span></div>'+
+  return '<div class="field" aria-label="'+esc(team)+' ball'+(L.dd?', '+esc(L.dd):'')+'"><div class="track">'+ticks+'<span class="drive'+(rz?' rz':'')+'" style="'+fill+'"></span><span class="spot" style="left:'+x+'%">'+(logo(team)||'<b>'+esc(team.slice(0,3).toUpperCase())+'</b>')+'</span></div>'+
     '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+'</div>';
 }
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){

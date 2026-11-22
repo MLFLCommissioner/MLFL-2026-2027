@@ -849,6 +849,7 @@ function fieldIdle(L){
     '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div></div>';
 }
 function fieldBar(g,L){
+  if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
   if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
   if(!L||L.state!=='in')return '';
   if(!L.poss||L.spot==null)return fieldIdle(L);

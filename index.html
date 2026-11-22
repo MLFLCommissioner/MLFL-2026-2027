@@ -155,6 +155,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field.tdb{padding:14px 16px}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:30px;height:30px}
+.tdwho{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
 .field.tdb.minor .tdtext{font-size:1.1rem;animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
@@ -430,7 +431,7 @@ function espnGames(json){
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
-      out.lp={id:String(lp.id||''),tt,side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      out.lp={id:String(lp.id||''),tt,who:scorerLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -446,6 +447,25 @@ function espnGames(json){
     return out;
   });
 }
+// Works out "who scored" from the play text, e.g. "J.Allen pass short middle to D.Kincaid for 9 yards, TOUCHDOWN."
+// becomes "D. Kincaid · 9-yd pass from J. Allen". Falls back to the players ESPN lists on the play.
+function scorerLine(tt,tx,ath){
+  const nm=x=>String(x||'').trim().replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
+  const t=String(tx||'').replace(/^(\([^)]*\)\s*)+/,'').trim(),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
+  const y=yd!=null?(yd==='0'?'':yd+'-yd '):'';let m;
+  if(/field goal/i.test(tt)){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
+  if(/safety/i.test(tt))return '';
+  if((m=t.match(/^(.+?) (\d+) yd pass from (.+?)(?: \(|$)/i)))return nm(m[1])+' · '+m[2]+'-yd pass from '+nm(m[3]);
+  if((m=t.match(/^(.+?) (\d+) yd (?:run|rush)/i)))return nm(m[1])+' · '+m[2]+'-yd run';
+  if((m=t.match(/^(.+?) (\d+) yd (interception|fumble|kickoff|punt|blocked [a-z ]+?) return/i)))return nm(m[1])+' · '+m[2]+'-yd '+m[3].toLowerCase()+' return';
+  if((m=t.match(/^(.+?) pass\b.*?\bto ([A-Z][^,()]*?)(?= for | to the | to [A-Z]{2,3} -?\d| ran | pushed |,|\.? ?\(|$)/)))return nm(m[2])+' · '+y+'pass from '+nm(m[1]);
+  if(/return|intercept|fumble/i.test(tt+' '+t)){m=t.match(/(?:intercepted by|recovered by) (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: [A-Z][\w.'-]*)*?)(?= at | for |,|\.\s|\.$|$)/i)||t.match(/^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*)?) (?:kicks|punts)/);
+    const r=t.match(/\. ([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)?) (?:to|for|ran|pushed)[^.]*TOUCHDOWN/);if(r)return nm(r[1])+' · '+(/intercept/i.test(t)?'interception return':/fumble/i.test(t)?'fumble return':/punts? /i.test(t)?'punt return':/kicks? /i.test(t)?'kickoff return':'return');if(m&&/intercepted|recovered/i.test(m[0]))return nm(m[1])+' · '+(/intercept/i.test(t)?'interception return':'fumble recovery');}
+  if((m=t.match(/^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*)?) (?:left|right|up the middle|middle|scrambles|rushe?d?|runs?|kneels|to the)/)))return nm(m[1])+' · '+y+'run';
+  const a=(ath||[]).map(x=>x&&(x.shortName||x.displayName||x.fullName)).filter(Boolean);
+  if(a.length)return /pass/i.test(tt)&&a.length>1?nm(a[1])+' · pass from '+nm(a[0]):nm(a[0]);
+  return '';
+}
 // Keeps "Touchdown / Field goal / Safety <team>" up from the score until the next kickoff (or any other real play).
 const SCORE_MIN={td:6,fg:3,sf:2};
 function tdTrack(g,m){
@@ -458,7 +478,7 @@ function tdTrack(g,m){
     let side=k==='sf'?null:m.lp.side;const need=SCORE_MIN[k];
     if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=need&&dh<need)side='away';else if(dh>=need&&da<need)side='home';}
     if(!side&&k==='sf'&&m.lp.side)side=m.lp.side==='away'?'home':'away';
-    td=side?{kind:k,side}:null;
+    td=side?{kind:k,side,who:m.lp.who||''}:null;
   }
   else if(k==='other')td=null;
   S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id});
@@ -854,7 +874,7 @@ function fieldIdle(L){
 }
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
-  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
+  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div>'+(L.td.who?'<div class="tdwho">'+esc(L.td.who)+'</div>':'')+'</div>';}
   if(!L||L.state!=='in')return '';
   if(!L.poss||L.spot==null)return fieldIdle(L);
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;

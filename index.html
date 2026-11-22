@@ -812,6 +812,13 @@ function whoChips(gid,m,v,n,sel,g,visible){
 }
 const BALL='<svg class="ball" viewBox="0 0 24 16" aria-label="has the ball" role="img"><ellipse cx="12" cy="8" rx="11" ry="7" fill="#8a4b22" stroke="#5a2e12" stroke-width="1"/><path d="M7 8h10M9.5 6.5v3M12 6.5v3M14.5 6.5v3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg>';
 // Field bar: the away team's end zone on the left, the home team's on the right; the ball carrier's logo marks the spot, and the green runs toward the end zone they are attacking.
+// Countdown to kickoff, ticking every second without redrawing the page.
+function cdText(k){
+  const ms=new Date(k).getTime()-Date.now();if(!(ms>0))return '';
+  const t=Math.floor(ms/1000),d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60),sec=t%60,p=x=>String(x).padStart(2,'0');
+  return d?d+'d '+h+'h '+p(m)+'m':h?h+':'+p(m)+':'+p(sec):m+':'+p(sec);
+}
+setInterval(()=>{document.querySelectorAll('.cd[data-kick]').forEach(el=>{const t=cdText(el.dataset.kick);if(t)el.textContent=t;else{const box=el.parentNode;if(box)box.textContent='Game starting soon';}});},1000);
 function fieldBar(g,L){
   if(L&&L.state==='in'&&L.td){const t=L.td==='away'?g.away:g.home;return '<div class="field tdb" role="status"><div class="tdtext">'+logo(t)+'<span>Touchdown '+esc(t)+'!</span>'+logo(t)+'</div></div>';}
   if(!L||L.state!=='in'||!L.poss||L.spot==null)return '';
@@ -844,7 +851,12 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const L=g.live;
   if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre')){const w=g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie';scoreLine='<div class="score">'+(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+esc(w)+')</div>';}
   else if(L&&L.state!=='pre'&&L.sa!=null){const w=L.sa>L.sh?g.away:L.sh>L.sa?g.home:'Tie';scoreLine=L.completed?'<div class="score">Final: '+L.sa+' - '+L.sh+' ('+esc(w)+')</div>':'<div class="score is-live"><span class="live-dot" aria-hidden="true"></span>'+esc(String(L.detail||'Live').replace(/^(\d{1,2}:\d{2})\s*-\s*(.+)$/,'$1 | $2'))+' | '+L.sa+' - '+L.sh+(w==='Tie'?' (Tied)':' ('+esc(w)+')')+'</div>';}
-  else scoreLine='<div class="score pre">'+(kicked(g)?(g.kick&&Date.now()-new Date(g.kick).getTime()>5*3600000?'Waiting for the final score':'In progress'):pastDeadline(g)?(lateOk(g)&&!S.isOwner?'Late pick allowed until kickoff':'Picks locked'):'Not started')+'</div>';
+  else{
+    const since=g.kick?Date.now()-new Date(g.kick).getTime():0;
+    scoreLine='<div class="score pre">'+(kicked(g)?(since>5*3600000?'Waiting for the final score':(L&&L.state==='pre')||(!L&&since<45*60000)?'Game starting soon':'In progress')
+      :pastDeadline(g)?(lateOk(g)&&!S.isOwner?'Late pick allowed until kickoff':'Game starts in <span class="cd" data-kick="'+esc(g.kick)+'">'+cdText(g.kick)+'</span>')
+      :'Not started')+'</div>';
+  }
   const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+'+sc.mult+'</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
   const cells=[opt('s','away',g.sp==null?'':spreadLabel(g,'away'),g.sp!=null,g.away),opt('s','home',g.sp==null?'':spreadLabel(g,'home'),g.sp!=null,g.home),opt('o','over',g.tot==null?'':ouLabel(g,'over'),g.tot!=null),opt('o','under',g.tot==null?'':ouLabel(g,'under'),g.tot!=null)];
   const nl=(lock.s?1:0)+(lock.o?1:0);

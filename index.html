@@ -155,7 +155,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field.tdb{padding:14px 16px}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:30px;height:30px}
-.lastplay{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-size:.85rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
+.lastplay{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-size:.85rem;margin-top:3px;padding:0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lastplay .muted{color:inherit;opacity:.7}
 .tdwho{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
 .field.tdb.minor .tdtext{font-size:1.1rem;animation:none}
@@ -453,7 +453,7 @@ function espnGames(json){
 // becomes "D. Kincaid · 9-yd pass from J. Allen". Falls back to the players ESPN lists on the play.
 function scorerLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
-  const t=String(tx||'').replace(/^(\([^)]*\)\s*)+/,'').trim(),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
+  const t=String(tx||'').replace(/[\u00a0\s]+/g,' ').trim().replace(/^(\([^)]*\)\s*)+/,'').trim(),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
   const y=yd!=null?(yd==='0'?'':yd+'-yd '):'';let m;
   if(/field goal/i.test(tt)){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
   if(/safety/i.test(tt))return '';
@@ -473,7 +473,7 @@ function playLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/^[A-Z]{2,3}-(?=[A-Z])/,'').replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
   const N="([A-Z][\\w'-]*(?:\\.\\s?[A-Z][\\w'-]*)*(?: (?:Jr\\.|Sr\\.|II|III|IV|[A-Z][\\w'-]+))*)";
   const R=x=>new RegExp(x.replace(/\bN\b/g,N)); // N stands for a player name
-  const t=String(tx||'').replace(/^(\([^)]*\)\s*)+/,'').trim(),ty=String(tt||'');
+  const t=String(tx||'').replace(/[\u00a0\s]+/g,' ').trim().replace(/^(\([^)]*\)\s*)+/,'').replace(/^(?:\d+-)?(?=[A-Z])/,'').trim(),ty=String(tt||'');
   const yds=v=>{const n=parseInt(v,10);return isNaN(n)?'':n===0?'no gain':n+'-yd ';};
   let m;
   if(!t&&!ty)return '';
@@ -485,6 +485,7 @@ function playLine(tt,tx,ath){
   if(/PENALTY/.test(t)&&/No Play/i.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+(m[2]?' '+nm(m[2]):'')+', '+m[3].trim()+', '+m[4]+' yds';return 'Penalty';}
   if(/INTERCEPTED/i.test(t)&&(m=t.match(R('INTERCEPTED by (?:[A-Z]{2,3}-)?N'))))return 'Intercepted by '+nm(m[1]);
   if(/FUMBLES/i.test(t)&&(m=t.match(R('RECOVERED by (?:[A-Z]{2,3}-)?N'))))return 'Fumble · recovered by '+nm(m[1]);
+  if(/FUMBLES/.test(t)&&/and recovers/i.test(t)&&(m=t.match(R('(?:^|\\. )N FUMBLES'))))return nm(m[1])+' · fumble, recovered it';
   if((m=t.match(R('^N sacked .*?for (-?\\d+) yards?(?: \\((.+?)\\))?'))))return nm(m[1])+' sacked · '+m[2]+' yds'+(m[3]?' (by '+nm(m[3].split(/[;,]/)[0])+')':'');
   if((m=t.match(R('^N pass incomplete\\b.*?(?:to|intended for) N'))))return 'Incomplete to '+nm(m[2])+' · '+nm(m[1]);
   if((m=t.match(R('^N pass incomplete'))))return 'Incomplete pass · '+nm(m[1]);
@@ -501,7 +502,8 @@ function playLine(tt,tx,ath){
   if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the|rushed|runs?|for)\\b.*?for (-?\\d+) yards?'))))return nm(m[1])+' · '+(yds(m[2])==='no gain'?'no gain':yds(m[2])+'rush');
   if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the).*?(no gain)'))))return nm(m[1])+' · no gain';
   if(/PENALTY/.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+', '+m[3].trim()+', '+m[4]+' yds';}
-  const c=t.replace(/\s*\(.*?\)/g,'').split(/\.\s/)[0];return c.length>70?c.slice(0,67)+'…':c||ty;
+  const c=nm(t.replace(/\s*[([][^)\]]*[)\]]/g,'').replace(/\b(short|deep) (left|right|middle)\b/gi,'').replace(/ to [A-Z]{2,3} -?\d+/g,'').replace(/\s+/g,' ').split(/\.\s/)[0]).replace(/\.$/,'');
+  return c.length>60?c.slice(0,58).replace(/\s+\S*$/,'')+'…':c||ty;
 }
 // Keeps "Touchdown / Field goal / Safety <team>" up from the score until the next kickoff (or any other real play).
 const SCORE_MIN={td:6,fg:3,sf:2};

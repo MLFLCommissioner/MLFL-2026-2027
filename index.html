@@ -489,7 +489,11 @@ function playLine(tt,tx,ath){
   if(!t&&!ty)return '';
   if(/touchdown|field goal good|safety/i.test(ty)||/TOUCHDOWN/.test(t)){const w=scorerLine(ty,t,ath);if(w)return w+(/touchdown/i.test(ty+t)&&!/field goal/i.test(ty)?' · TD':'');}
   if(/field goal/i.test(ty)&&(m=t.match(R('^N (\\d+) (?:yard|yd)s? field goal is ([Nn]o [Gg]ood|NO GOOD|[Bb]locked|BLOCKED)'))))return nm(m[1])+' · '+m[2]+'-yd field goal '+m[3].toLowerCase();
-  if(/timeout/i.test(ty)||/^timeout/i.test(t)){m=t.match(/timeout #?(\d)? ?(?:by|at) ([A-Z]{2,3})/i);return m?'Timeout · '+m[2].toUpperCase():'Timeout';}
+  if(/timeout/i.test(ty)||/^timeout/i.test(t)){
+    // A team timeout names the team ("Timeout #2 by LAC at 01:37"). TV, official and injury timeouts don't.
+    m=t.match(/timeout #?\d* ?by ([A-Z]{2,3})\b/)||t.match(/timeout #?\d* ?by ([A-Za-z .'-]+?)(?: at |\.|$)/i);
+    if(m)return 'Timeout · '+m[1].trim();
+    return /injur/i.test(ty+' '+t)?'Injury timeout':/official|tv|media|television/i.test(ty+' '+t)?'TV timeout':/challenge|review/i.test(ty+' '+t)?'Replay review':'Timeout';}
   if(/end (of )?(quarter|period|half|game)/i.test(ty+' '+t))return /half/i.test(ty+t)?'End of half':/game/i.test(ty+t)?'End of game':'End of quarter';
   if(/two-minute/i.test(ty+' '+t))return 'Two-minute warning';
   if(/PENALTY/.test(t)&&/No Play/i.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+(m[2]?' '+nm(m[2]):'')+', '+m[3].trim()+', '+m[4]+' yds';return 'Penalty';}

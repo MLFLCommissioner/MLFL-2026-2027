@@ -153,12 +153,13 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field .yd span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
 .field.idle .dd{color:var(--board-ink,#fff);opacity:.75;font-style:italic}
 .field.tdb{padding:14px 16px}
-.tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
-.tdtext .logo{width:30px;height:30px}
+.field.tdb{container-type:inline-size}
+.tdtext{display:flex;align-items:center;justify-content:center;gap:min(10px,2cqi);font-weight:800;font-size:min(1.25rem,5.4cqi);white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
+.tdtext .logo{width:min(30px,7cqi);height:min(30px,7cqi);flex:none}
 .lastplay{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-size:.85rem;margin-top:3px;padding:0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lastplay .muted{color:inherit;opacity:.7}
 .tdwho{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
-.field.tdb.minor .tdtext{font-size:1.1rem;animation:none}
+.field.tdb.minor .tdtext{font-size:min(1.1rem,5cqi);animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
@@ -449,11 +450,20 @@ function espnGames(json){
     return out;
   });
 }
+// Tidies ESPN's play text: odd spaces, a leading play number, formation notes like "(Shotgun)" anywhere,
+// and pre-snap notes such as "X reported in as eligible." or "Direct snap to X." before the real play.
+function playClean(tx){
+  const raw=String(tx||'').replace(/[\u00a0\s]+/g,' ').trim();
+  const t=raw.replace(/\((?:[^)]*(?:shotgun|huddle|formation|pistol|under center|punt formation|field goal formation)[^)]*)\)\s*/gi,'')
+    .replace(/^(\([^)]*\)\s*)+/,'').replace(/^(?:\d+-)?(?=[A-Z])/,'')
+    .replace(/^(?:.*?(?:reported in as eligible|Aborted)\.\s*)+/i,'').replace(/^Direct snap to [A-Z][\w.'-]*\.\s*/i,'').trim();
+  return t||raw;
+}
 // Works out "who scored" from the play text, e.g. "J.Allen pass short middle to D.Kincaid for 9 yards, TOUCHDOWN."
 // becomes "D. Kincaid · 9-yd pass from J. Allen". Falls back to the players ESPN lists on the play.
 function scorerLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
-  const t=String(tx||'').replace(/[\u00a0\s]+/g,' ').trim().replace(/^(\([^)]*\)\s*)+/,'').trim(),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
+  const t=playClean(tx),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
   const y=yd!=null?(yd==='0'?'':yd+'-yd '):'';let m;
   if(/field goal/i.test(tt)){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
   if(/safety/i.test(tt))return '';
@@ -473,7 +483,7 @@ function playLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/^[A-Z]{2,3}-(?=[A-Z])/,'').replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
   const N="([A-Z][\\w'-]*(?:\\.\\s?[A-Z][\\w'-]*)*(?: (?:Jr\\.|Sr\\.|II|III|IV|[A-Z][\\w'-]+))*)";
   const R=x=>new RegExp(x.replace(/\bN\b/g,N)); // N stands for a player name
-  const t=String(tx||'').replace(/[\u00a0\s]+/g,' ').trim().replace(/^(\([^)]*\)\s*)+/,'').replace(/^(?:\d+-)?(?=[A-Z])/,'').trim(),ty=String(tt||'');
+  const t=playClean(tx),ty=String(tt||'');
   const yds=v=>{const n=parseInt(v,10);return isNaN(n)?'':n===0?'no gain':n+'-yd ';};
   let m;
   if(!t&&!ty)return '';
@@ -911,7 +921,7 @@ function fieldIdle(L){
   return '<div class="field idle" role="status"><div class="track">'+ticks+'</div>'+
     '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div>'+(/kickoff|next play/i.test(msg)?lastPlayRow(L):'')+'</div>';
 }
-function lastPlayRow(L){const p=L&&L.lp&&L.lp.play;return p?'<div class="lastplay"><span class="muted">Last play:</span> '+esc(p)+'</div>':'';}
+function lastPlayRow(L){const p=L&&L.lp&&L.lp.play;return p?'<div class="lastplay">'+esc(p)+'</div>':'';}
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
   if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div>'+(L.td.who?'<div class="tdwho">'+esc(L.td.who)+'</div>':'')+'</div>';}

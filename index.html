@@ -155,6 +155,8 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .field.tdb{padding:14px 16px}
 .tdtext{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase;color:#f2c94c;animation:tdpulse 1.2s ease-in-out infinite alternate}
 .tdtext .logo{width:30px;height:30px}
+.lastplay{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-size:.85rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
+.lastplay .muted{color:inherit;opacity:.7}
 .tdwho{text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
 .field.tdb.minor .tdtext{font-size:1.1rem;animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
@@ -431,7 +433,7 @@ function espnGames(json){
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
-      out.lp={id:String(lp.id||''),tt,who:scorerLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      out.lp={id:String(lp.id||''),tt,who:scorerLine(tt,tx,lp.athletesInvolved),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -465,6 +467,41 @@ function scorerLine(tt,tx,ath){
   const a=(ath||[]).map(x=>x&&(x.shortName||x.displayName||x.fullName)).filter(Boolean);
   if(a.length)return /pass/i.test(tt)&&a.length>1?nm(a[1])+' · pass from '+nm(a[0]):nm(a[0]);
   return '';
+}
+// A short summary of the last play, e.g. "O. Hampton · 1-yd rush" or "D. Kincaid · 9-yd catch from J. Allen".
+function playLine(tt,tx,ath){
+  const nm=x=>String(x||'').trim().replace(/^[A-Z]{2,3}-(?=[A-Z])/,'').replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
+  const N="([A-Z][\\w'-]*(?:\\.\\s?[A-Z][\\w'-]*)*(?: (?:Jr\\.|Sr\\.|II|III|IV|[A-Z][\\w'-]+))*)";
+  const R=x=>new RegExp(x.replace(/\bN\b/g,N)); // N stands for a player name
+  const t=String(tx||'').replace(/^(\([^)]*\)\s*)+/,'').trim(),ty=String(tt||'');
+  const yds=v=>{const n=parseInt(v,10);return isNaN(n)?'':n===0?'no gain':n+'-yd ';};
+  let m;
+  if(!t&&!ty)return '';
+  if(/touchdown|field goal good|safety/i.test(ty)||/TOUCHDOWN/.test(t)){const w=scorerLine(ty,t,ath);if(w)return w+(/touchdown/i.test(ty+t)&&!/field goal/i.test(ty)?' · TD':'');}
+  if(/field goal/i.test(ty)&&(m=t.match(R('^N (\\d+) (?:yard|yd)s? field goal is ([Nn]o [Gg]ood|NO GOOD|[Bb]locked|BLOCKED)'))))return nm(m[1])+' · '+m[2]+'-yd field goal '+m[3].toLowerCase();
+  if(/timeout/i.test(ty)||/^timeout/i.test(t)){m=t.match(/timeout #?(\d)? ?(?:by|at) ([A-Z]{2,3})/i);return m?'Timeout · '+m[2].toUpperCase():'Timeout';}
+  if(/end (of )?(quarter|period|half|game)/i.test(ty+' '+t))return /half/i.test(ty+t)?'End of half':/game/i.test(ty+t)?'End of game':'End of quarter';
+  if(/two-minute/i.test(ty+' '+t))return 'Two-minute warning';
+  if(/PENALTY/.test(t)&&/No Play/i.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+(m[2]?' '+nm(m[2]):'')+', '+m[3].trim()+', '+m[4]+' yds';return 'Penalty';}
+  if(/INTERCEPTED/i.test(t)&&(m=t.match(R('INTERCEPTED by (?:[A-Z]{2,3}-)?N'))))return 'Intercepted by '+nm(m[1]);
+  if(/FUMBLES/i.test(t)&&(m=t.match(R('RECOVERED by (?:[A-Z]{2,3}-)?N'))))return 'Fumble · recovered by '+nm(m[1]);
+  if((m=t.match(R('^N sacked .*?for (-?\\d+) yards?(?: \\((.+?)\\))?'))))return nm(m[1])+' sacked · '+m[2]+' yds'+(m[3]?' (by '+nm(m[3].split(/[;,]/)[0])+')':'');
+  if((m=t.match(R('^N pass incomplete\\b.*?(?:to|intended for) N'))))return 'Incomplete to '+nm(m[2])+' · '+nm(m[1]);
+  if((m=t.match(R('^N pass incomplete'))))return 'Incomplete pass · '+nm(m[1]);
+  if((m=t.match(R('^N pass\\b.*?\\bto N(?: to [A-Z]{2,3} -?\\d+)? for (-?\\d+) yards?'))))return nm(m[2])+' · '+yds(m[3])+(yds(m[3])==='no gain'?' · ':'')+'catch from '+nm(m[1]);
+  if((m=t.match(R('^N (?:kicks|kicked) (\\d+) yards')))){
+    if(/touchback/i.test(t))return 'Kickoff · touchback';
+    const r=t.match(R('\\. N (?:to|ran|pushed)[^.]*?for (-?\\d+) yards?'))||t.match(R(', N (?:to|ran|pushed)[^.]*?for (-?\\d+) yards?'));
+    return r?'Kickoff · '+nm(r[1])+' '+yds(r[2])+'return':'Kickoff';
+  }
+  if((m=t.match(R('^N punts (\\d+) yards?')))){const r=t.match(R('\\. N (?:to|ran|pushed)[^.]*?for (-?\\d+) yards?'));return nm(m[1])+' · '+m[2]+'-yd punt'+(/fair catch/i.test(t)?', fair catch':/touchback/i.test(t)?', touchback':/out of bounds/i.test(t)?', out of bounds':r?', '+nm(r[1])+' '+yds(r[2])+'return':'');}
+  if((m=t.match(R('^N (?:extra point|kick attempt) is ([Gg]ood|GOOD|[Nn]o [Gg]ood|NO GOOD)'))))return nm(m[1])+' · extra point '+m[2].toLowerCase();
+  if((m=t.match(R('^N kneels'))))return nm(m[1])+' · kneel';
+  if((m=t.match(R('^N spiked'))))return nm(m[1])+' · spike';
+  if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the|rushed|runs?|for)\\b.*?for (-?\\d+) yards?'))))return nm(m[1])+' · '+(yds(m[2])==='no gain'?'no gain':yds(m[2])+'rush');
+  if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the).*?(no gain)'))))return nm(m[1])+' · no gain';
+  if(/PENALTY/.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+', '+m[3].trim()+', '+m[4]+' yds';}
+  const c=t.replace(/\s*\(.*?\)/g,'').split(/\.\s/)[0];return c.length>70?c.slice(0,67)+'…':c||ty;
 }
 // Keeps "Touchdown / Field goal / Safety <team>" up from the score until the next kickoff (or any other real play).
 const SCORE_MIN={td:6,fg:3,sf:2};
@@ -870,8 +907,9 @@ function fieldIdle(L){
     :'Next play coming up';
   const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
   return '<div class="field idle" role="status"><div class="track">'+ticks+'</div>'+
-    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div></div>';
+    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div>'+(/kickoff|next play/i.test(msg)?lastPlayRow(L):'')+'</div>';
 }
+function lastPlayRow(L){const p=L&&L.lp&&L.lp.play;return p?'<div class="lastplay"><span class="muted">Last play:</span> '+esc(p)+'</div>':'';}
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
   if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+'!</span>'+logo(t)+'</div>'+(L.td.who?'<div class="tdwho">'+esc(L.td.who)+'</div>':'')+'</div>';}
@@ -883,7 +921,7 @@ function fieldBar(g,L){
   const fill=toRight?'left:0;right:'+(100-x)+'%':'left:'+x+'%;right:0',rz=toRight?x>=80:x<=20;
   const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
   return '<div class="field" aria-label="'+esc(team)+' ball'+(L.dd?', '+esc(L.dd):'')+'"><div class="track">'+ticks+'<span class="drive'+(rz?' rz':'')+'" style="'+fill+'"></span><span class="spot" style="left:'+x+'%">'+(logo(team)||'<b>'+esc(team.slice(0,3).toUpperCase())+'</b>')+'</span></div>'+
-    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+'</div>';
+    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div>'+(L.dd?'<div class="dd">'+esc(L.dd)+'</div>':'')+lastPlayRow(L)+'</div>';
 }
 function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const lock=(sub&&sub.p&&sub.p[gid])||{},dp=(draft&&draft.p[gid])||{},sp=(sent&&sent[gid])||{},canTap=open&&S.curMay!==false&&!started(g),show=visible(g);

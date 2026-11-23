@@ -584,7 +584,8 @@ const SUMMARY='https://site.api.espn.com/apis/site/v2/sports/football/nfl/summar
 async function tdBackfill(g,m){
   S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};
   const key=g.away+'|'+g.home+'|'+g.kick,cur=S.tdm.get(key)||{},k=m.lp&&m.lp.kind;
-  if(m.state!=='in'||cur.td||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
+  // Also used when we know a touchdown happened (we saw the extra point) but not who scored it.
+  if(m.state!=='in'||(cur.td&&(cur.td.who||cur.td.kind!=='td'))||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
   const stamp=m.period+'|'+m.clock;if(S.tdChk[key]===stamp)return;S.tdChk[key]=stamp;
   try{
     const r=await fetch(SUMMARY+encodeURIComponent(m.eid),{cache:'no-store'});if(!r.ok)return;
@@ -594,8 +595,9 @@ async function tdBackfill(g,m){
     const tt=String((last.type&&last.type.text)||''),tx=String(last.text||''),tid=String((last.team&&last.team.id)||'');
     const kind=/touchdown/i.test(tt+' '+tx)?'td':/field goal/i.test(tt)?'fg':/safety/i.test(tt)?'sf':null;
     let side=tid&&tid===m.aid?'away':tid&&tid===m.hid?'home':null;if(!kind||!side)return;
-    const now=S.tdm.get(key)||{};if(now.td)return; // something newer arrived meanwhile
-    let pat=kind==='td'?patResult(tt,tx):null;
+    const now=S.tdm.get(key)||{};
+    if(now.td&&(now.td.who||now.td.kind!==kind||now.td.side!==side))return; // something newer arrived meanwhile
+    let pat=(now.td&&now.td.pat)||(kind==='td'?patResult(tt,tx):null);
     if(kind==='td'&&!pat&&last.awayScore!=null){const d=(side==='away'?m.sa-last.awayScore:m.sh-last.homeScore);if(d===1)pat={two:false,ok:true};else if(d===2)pat={two:true,ok:true};}
     const td={kind,side,who:scorerLine(tt,tx,null),pat};
     S.tdm.set(key,Object.assign({},now,{td}));if(g.live&&g.live.state==='in')g.live.td=td;requestRender();

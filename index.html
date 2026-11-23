@@ -439,7 +439,8 @@ function espnGames(json){
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
-      out.lp={id:String(lp.id||''),tt,who:/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx)?missLine(tt,tx):scorerLine(tt,tx,lp.athletesInvolved),pat:patResult(tt,tx),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      out.aab=ab(a);out.hab=ab(h);
+      out.lp={id:String(lp.id||''),tt,raw:playClean(tx),who:/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx)?missLine(tt,tx):scorerLine(tt,tx,lp.athletesInvolved),pat:patResult(tt,tx),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':(/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx))?'fgx':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -1000,11 +1001,22 @@ function lastPlayRow(L){
   if(lp.endq)return '<div class="lastplay">'+(lp.prevPlay?esc(lp.prevPlay)+' ':'')+'<span class="qtag">End of quarter</span></div>';
   return lp.play?'<div class="lastplay">'+esc(lp.play)+'</div>':'';
 }
+// After a kickoff ESPN has no ball spot until the first snap. The kickoff text says where the return ended
+// ("…from SF 35 to MIN 0. M.Price to MIN 17 for 17 yards"), so put the receiving team there.
+function kickSpot(L){
+  const lp=L.lp;if(!lp||!/kickoff|kicks|free kick|onside/i.test(lp.tt+' '+(lp.raw||''))||!L.aab||!L.hab)return null;
+  const t=String(lp.raw||''),from=(t.match(/kicks[^.]*? from ([A-Z]{2,3}) -?\d+/)||[])[1];if(!from)return null;
+  const side=from===L.aab?'home':from===L.hab?'away':null;if(!side)return null;
+  const spots=[...t.matchAll(/\b(?:to|at) ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>x[1]===L.aab||x[1]===L.hab);
+  const last=spots[spots.length-1];if(!last||/touchback|end zone/i.test(t)&&spots.length<2)return null;
+  const yl=Number(last[2]),x=last[1]===L.aab?yl:100-yl;
+  return {poss:side,spot:x,dd:'Kickoff'};
+}
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
   if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety',fgx:'Missed field goal'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+(L.td.kind==='fgx'?' miss':'')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+(L.td.kind==='fgx'?'':'!')+'</span>'+logo(t)+'</div>'+tdWhoRow(L.td)+'</div>';}
   if(!L||L.state!=='in')return '';
-  if(!L.poss||L.spot==null)return fieldIdle(L);
+  if(!L.poss||L.spot==null){const k=kickSpot(L);if(k)L=Object.assign({},L,k);else return fieldIdle(L);}
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;
   // The away team's end zone is on the left, so the away team drives right and the home team drives left.
   // The line trails behind the ball carrier, from their own end zone to the ball, and turns red inside the opponent's 20.

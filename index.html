@@ -430,7 +430,8 @@ function espnGames(json){
   return ((json&&json.events)||[]).map(ev=>{
     const c=(ev.competitions||[])[0]||{},st=((c.status||ev.status||{}).type)||{},cs=c.competitors||[];
     const side=h=>cs.find(x=>x.homeAway===h)||{},a=side('away'),h=side('home'),nm=x=>{const t=x.team||{};return [t.name,t.shortDisplayName,t.displayName,t.location&&t.name?t.location+' '+t.name:''].filter(Boolean).map(teamKey);};
-    const out={away:nm(a),home:nm(h),sa:a.score!=null&&a.score!==''?parseInt(a.score,10):null,sh:h.score!=null&&h.score!==''?parseInt(h.score,10):null,state:st.state||'pre',completed:!!st.completed,detail:st.shortDetail||st.detail||''};
+    const out={away:nm(a),home:nm(h),sa:a.score!=null&&a.score!==''?parseInt(a.score,10):null,sh:h.score!=null&&h.score!==''?parseInt(h.score,10):null,state:st.state||'pre',completed:!!st.completed,detail:st.shortDetail||st.detail||'',
+      eid:String(ev.id||c.id||''),clock:String((c.status||ev.status||{}).displayClock||''),period:Number((c.status||ev.status||{}).period)||0,aid:String(a.id||(a.team&&a.team.id)||''),hid:String(h.id||(h.team&&h.team.id)||'')};
     // Who has the ball and where: "possessionText" reads like "HOU 35" (a team's own side of the field) or "50".
     const sit=c.situation||{},idOf=x=>String(x.id||(x.team&&x.team.id)||''),ab=x=>String((x.team&&x.team.abbreviation)||'').toUpperCase();
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
@@ -460,7 +461,7 @@ function patResult(tt,tx){
 function patFrom(a){
   if(!a)return null;
   if(/two-point|2-pt|2 pt|conversion/i.test(a)){if(/succeeds|is good|good\b|complete\b/i.test(a)&&!/fails|failed|no good|incomplete|intercepted/i.test(a))return {two:true,ok:true};if(/fails|failed|no good|incomplete|intercepted|short of/i.test(a))return {two:true,ok:false};return null;}
-  const m=a.match(/(?:extra point|kick attempt|\bpat\b)[^.]*?\b(is good|good|is no good|no good|missed|blocked|aborted)/i)||a.match(/\((?:[^)]*?)\b(kick|kick is good|kick failed|kick blocked)\)/i);
+  const m=a.match(/(?:extra point|kick attempt|\bpat\b)[^.]*?\b(is good|good|is no good|no good|missed|blocked|aborted|failed)/i)||a.match(/\((?:[^)]*?)\b(kick|kick is good|kick failed|kick blocked)\)/i);
   if(!m)return null;const r=m[1].toLowerCase();return {two:false,ok:!/no good|missed|blocked|aborted|failed/.test(r)};
 }
 // Tidies ESPN's play text: odd spaces, a leading play number, formation notes like "(Shotgun)" anywhere,
@@ -547,7 +548,7 @@ function tdTrack(g,m){
     let side=k==='sf'?null:m.lp.side;const need=SCORE_MIN[k];
     if(prev.sa!=null&&m.sa!=null){const da=m.sa-prev.sa,dh=m.sh-prev.sh;if(da>=need&&dh<need)side='away';else if(dh>=need&&da<need)side='home';}
     if(!side&&k==='sf'&&m.lp.side)side=m.lp.side==='away'?'home':'away';
-    td=side?{kind:k,side,who:m.lp.who||'',pat:k==='td'?m.lp.pat||null:null}:null;
+    td=side?{kind:k,side,who:m.lp.who||'',pat:k==='td'?m.lp.pat||null:null,pre:prev.sa!=null?(side==='away'?prev.sa:prev.sh):null}:null;
   }
   else if(k==='pat'&&td&&td.kind==='td'){if(m.lp.pat)td=Object.assign({},td,{pat:m.lp.pat});}
   else if(k==='pat'&&!td&&m.lp.side){
@@ -555,8 +556,34 @@ function tdTrack(g,m){
     td={kind:'td',side:m.lp.side,who:'',pat:m.lp.pat||null};
   }
   else if(k==='other')td=null;
+  // ESPN doesn't always post the extra point as its own play. If the scoring team is up 7 (or 8) from before the touchdown, the try was good.
+  if(td&&td.kind==='td'&&!td.pat&&td.pre!=null&&m.sa!=null){const d=(td.side==='away'?m.sa:m.sh)-td.pre;if(d===7)td=Object.assign({},td,{pat:{two:false,ok:true}});else if(d===8)td=Object.assign({},td,{pat:{two:true,ok:true}});}
   S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id});
   if(td)m.td=td;
+}
+// Opening the page during a TV timeout or the extra point after a score: the scoreboard's last play no longer shows
+// the score, so look up the game's most recent scoring play once. The game clock doesn't run between a score and
+// the kickoff, so if that scoring play happened at this exact quarter and clock, the banner belongs up.
+const SUMMARY='https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=';
+async function tdBackfill(g,m){
+  S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};
+  const key=g.away+'|'+g.home+'|'+g.kick,cur=S.tdm.get(key)||{},k=m.lp&&m.lp.kind;
+  if(m.state!=='in'||cur.td||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
+  const stamp=m.period+'|'+m.clock;if(S.tdChk[key]===stamp)return;S.tdChk[key]=stamp;
+  try{
+    const r=await fetch(SUMMARY+encodeURIComponent(m.eid),{cache:'no-store'});if(!r.ok)return;
+    const sp=((await r.json()).scoringPlays)||[],last=sp[sp.length-1];if(!last)return;
+    const per=Number(last.period&&last.period.number),clk=String((last.clock&&last.clock.displayValue)||'');
+    if(per!==m.period||clk!==m.clock)return;
+    const tt=String((last.type&&last.type.text)||''),tx=String(last.text||''),tid=String((last.team&&last.team.id)||'');
+    const kind=/touchdown/i.test(tt+' '+tx)?'td':/field goal/i.test(tt)?'fg':/safety/i.test(tt)?'sf':null;
+    let side=tid&&tid===m.aid?'away':tid&&tid===m.hid?'home':null;if(!kind||!side)return;
+    const now=S.tdm.get(key)||{};if(now.td)return; // something newer arrived meanwhile
+    let pat=kind==='td'?patResult(tt,tx):null;
+    if(kind==='td'&&!pat&&last.awayScore!=null){const d=(side==='away'?m.sa-last.awayScore:m.sh-last.homeScore);if(d===1)pat={two:false,ok:true};else if(d===2)pat={two:true,ok:true};}
+    const td={kind,side,who:scorerLine(tt,tx,null),pat};
+    S.tdm.set(key,Object.assign({},now,{td}));if(g.live&&g.live.state==='in')g.live.td=td;requestRender();
+  }catch(e){/* no summary: leave the card as it is */}
 }
 function liveMatch(list,g){
   const A=teamKey(g.away),H=teamKey(g.home),has=(arr,k)=>arr.some(x=>x===k||x.endsWith(k));
@@ -582,7 +609,7 @@ async function liveTick(){
     let changed=false,doneNotSaved=false;
     const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
     S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
-    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
+    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);tdBackfill(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
     if(doneNotSaved&&!S.isOwner&&Date.now()-(S.loadedAt||0)>5*60000){const keep=Object.values(w.games).map(g=>[g,g.live]);await loadData();keep.forEach(([g,l])=>{const ng=Object.values((S.weeks[n]||{}).games||{}).find(x=>x.away===g.away&&x.home===g.home);if(ng&&!ng.fin&&l)ng.live=l;});changed=true;}
     if(changed)requestRender();
   }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}

@@ -583,6 +583,30 @@ function tdTrack(g,m){
 // the score, so look up the game's most recent scoring play once. The game clock doesn't run between a score and
 // the kickoff, so if that scoring play happened at this exact quarter and clock, the banner belongs up.
 const SUMMARY='https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=';
+// One summary request per game per stoppage, shared by the lookups below.
+function summaryFor(eid,stamp){
+  S.sumC=S.sumC||{};const k=eid+'|'+stamp;
+  if(!S.sumC[k])S.sumC[k]=fetch(SUMMARY+encodeURIComponent(eid),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  return S.sumC[k];
+}
+// Opened the page during a timeout or the end of a quarter: we never saw the play before it, so look it up once.
+async function prevBackfill(g,m){
+  const lp=m.lp;if(m.state!=='in'||!lp||!lp.endq||lp.prevPlay||!m.eid||!m.clock||!m.period)return;
+  S.pvChk=S.pvChk||{};const key=g.away+'|'+g.home+'|'+g.kick,stamp=m.period+'|'+m.clock;if(S.pvChk[key]===stamp)return;S.pvChk[key]=stamp;
+  try{
+    const j=await summaryFor(m.eid,stamp);if(!j||!j.drives)return;
+    const ds=[].concat(j.drives.previous||[],j.drives.current?[j.drives.current]:[]),plays=[];
+    ds.forEach(d=>(d.plays||[]).forEach(p=>plays.push(p)));
+    for(let i=plays.length-1;i>=0;i--){
+      const p=plays[i],tt=String((p.type&&p.type.text)||''),tx=String(p.text||'');
+      if(/timeout|end (of )?(quarter|period|half)|end quarter|two-minute|official/i.test(tt+' '+tx))continue;
+      const line=playLine(tt,tx,null);if(!line)continue;
+      const e=S.tdm&&S.tdm.get(key);if(e&&!e.real)e.real=line;
+      if(g.live&&g.live.lp&&g.live.lp.endq&&!g.live.lp.prevPlay){g.live.lp.prevPlay=line;requestRender();}
+      return;
+    }
+  }catch(e){}
+}
 async function tdBackfill(g,m){
   S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};
   const key=g.away+'|'+g.home+'|'+g.kick,cur=S.tdm.get(key)||{},k=m.lp&&m.lp.kind;
@@ -590,8 +614,8 @@ async function tdBackfill(g,m){
   if(m.state!=='in'||(cur.td&&(cur.td.who||cur.td.kind!=='td'))||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
   const stamp=m.period+'|'+m.clock;if(S.tdChk[key]===stamp)return;S.tdChk[key]=stamp;
   try{
-    const r=await fetch(SUMMARY+encodeURIComponent(m.eid),{cache:'no-store'});if(!r.ok)return;
-    const sp=((await r.json()).scoringPlays)||[],last=sp[sp.length-1];if(!last)return;
+    const j=await summaryFor(m.eid,stamp);if(!j)return;
+    const sp=j.scoringPlays||[],last=sp[sp.length-1];if(!last)return;
     const per=Number(last.period&&last.period.number),clk=String((last.clock&&last.clock.displayValue)||'');
     if(per!==m.period||clk!==m.clock)return;
     const tt=String((last.type&&last.type.text)||''),tx=String(last.text||''),tid=String((last.team&&last.team.id)||'');
@@ -629,7 +653,7 @@ async function liveTick(){
     let changed=false,doneNotSaved=false;
     const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
     S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
-    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);tdBackfill(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
+    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);tdBackfill(g,m);prevBackfill(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
     if(doneNotSaved&&!S.isOwner&&Date.now()-(S.loadedAt||0)>5*60000){const keep=Object.values(w.games).map(g=>[g,g.live]);await loadData();keep.forEach(([g,l])=>{const ng=Object.values((S.weeks[n]||{}).games||{}).find(x=>x.away===g.away&&x.home===g.home);if(ng&&!ng.fin&&l)ng.live=l;});changed=true;}
     if(changed)requestRender();
   }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}
@@ -991,7 +1015,7 @@ function fieldIdle(L){
     :'Next play coming up';
   const ticks=[0,10,20,30,40,50,60,70,80,90,100].map(t=>'<i style="left:'+t+'%"></i>').join('');
   return '<div class="field idle" role="status"><div class="track">'+ticks+'</div>'+
-    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div>'+(/kickoff|next play/i.test(msg)?lastPlayRow(L):'')+'</div>';
+    '<div class="yd">'+[[0,'E'],[20,'20'],[50,'50'],[80,'20'],[100,'E']].map(([p,t])=>'<span style="left:'+p+'%">'+t+'</span>').join('')+'</div><div class="dd">'+msg+'</div>'+(/kickoff|next play/i.test(msg)?lastPlayRow(L):L.lp&&L.lp.endq&&L.lp.prevPlay?'<div class="lastplay">'+esc(L.lp.prevPlay)+'</div>':'')+'</div>';
 }
 function tdWhoRow(td){
   const p=td.pat,pt=p?'<span class="pat '+(p.ok?'ok':'bad')+'">'+(p.two?'2-pt '+(p.ok?'good':'failed'):'Extra point '+(p.ok?'good':'no good'))+'</span>':'';

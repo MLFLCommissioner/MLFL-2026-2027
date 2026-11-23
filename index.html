@@ -518,7 +518,8 @@ function playLine(tt,tx,ath){
   const dp=(t.match(/pass incomplete (short|deep)\b/i)||[])[1],dw=dp?dp.toLowerCase()+' ':'';
   if((m=t.match(R('^N pass incomplete\\b.*?(?:to|intended for) N'))))return 'Incomplete '+dw+'pass to '+nm(m[2])+' · '+nm(m[1]);
   if((m=t.match(R('^N pass incomplete'))))return 'Incomplete '+dw+'pass · '+nm(m[1]);
-  if((m=t.match(R('^N pass\\b.*?\\bto N(?: to [A-Z]{2,3} -?\\d+)? for (-?\\d+) yards?'))))return nm(m[2])+' · '+yds(m[3])+(yds(m[3])==='no gain'?' · ':'')+'catch from '+nm(m[1]);
+  // Completed pass: anything can sit between the receiver and the yards ("pushed ob at NYG 13", "ran ob at", "to KC 40").
+  if((m=t.match(R('^N pass\\b[^.]*?\\bto N\\b[^.]*? for (-?\\d+|no gain) yards?')))||(m=t.match(R('^N pass\\b[^.]*?\\bto N\\b[^.]*? for (no gain)'))))return nm(m[2])+' · '+(/no gain/i.test(m[3])?'no gain catch':yds(m[3])+'catch')+' from '+nm(m[1]);
   if((m=t.match(R('^N (?:kicks|kicked) (\\d+) yards')))){
     if(/touchback/i.test(t))return 'Kickoff · touchback';
     const r=t.match(R('\\. N (?:to|ran|pushed)[^.]*?for (-?\\d+) yards?'))||t.match(R(', N (?:to|ran|pushed)[^.]*?for (-?\\d+) yards?'));
@@ -528,10 +529,10 @@ function playLine(tt,tx,ath){
   if((m=t.match(R('^N (?:extra point|kick attempt) is ([Gg]ood|GOOD|[Nn]o [Gg]ood|NO GOOD)'))))return nm(m[1])+' · extra point '+m[2].toLowerCase();
   if((m=t.match(R('^N kneels'))))return nm(m[1])+' · kneel';
   if((m=t.match(R('^N spiked'))))return nm(m[1])+' · spike';
-  if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the|rushed|runs?|for)\\b.*?for (-?\\d+) yards?'))))return nm(m[1])+' · '+(yds(m[2])==='no gain'?'no gain':yds(m[2])+'rush');
+  if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the|rushed|runs?|for|pushed|ran)\\b[^.]*?for (-?\\d+) yards?'))))return nm(m[1])+' · '+(yds(m[2])==='no gain'?'no gain':yds(m[2])+'rush');
   if((m=t.match(R('^N (?:scrambles )?(?:left|right|up the middle|middle|to the).*?(no gain)'))))return nm(m[1])+' · no gain';
   if(/PENALTY/.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-?([^,]*), ([^,]+?), (\d+) yards/);if(m)return 'Penalty · '+m[1]+', '+m[3].trim()+', '+m[4]+' yds';}
-  const c=nm(t.replace(/\s*[([][^)\]]*[)\]]/g,'').replace(/\b(short|deep) (left|right|middle)\b/gi,'').replace(/ to [A-Z]{2,3} -?\d+/g,'').replace(/\s+/g,' ').split(/\.\s/)[0]).replace(/\.$/,'');
+  const c=nm(t.replace(/\s*[([][^)\]]*[)\]]/g,'').replace(/\b(short|deep) (left|right|middle)\b/gi,'').replace(/ (?:pushed|ran) ob at [A-Z]{2,3} -?\d+/gi,'').replace(/ (?:to|at) [A-Z]{2,3} -?\d+/g,'').replace(/\s+/g,' ').split(/\.\s/)[0]).replace(/\.$/,'');
   return c.length>60?c.slice(0,58).replace(/\s+\S*$/,'')+'…':c||ty;
 }
 // Keeps "Touchdown / Field goal / Safety <team>" up from the score until the next kickoff (or any other real play).

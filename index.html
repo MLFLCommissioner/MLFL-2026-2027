@@ -163,7 +163,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .tdwho{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 8px;text-align:center;color:var(--board-ink,#fff);opacity:.85;font-weight:600;font-size:.95rem;margin-top:4px}
 .field.tdb.minor .tdtext{font-size:min(1.1rem,5cqi);animation:none}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
-@media (prefers-reduced-motion:reduce){.tdtext{animation:none}}
+/* The scoring banner pulses everywhere, including phones with Reduce Motion on, because the league asked for it. */
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
 .score.is-live{display:flex;align-items:center;justify-content:center;gap:8px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--miss);flex:none}

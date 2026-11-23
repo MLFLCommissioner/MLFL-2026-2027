@@ -591,7 +591,7 @@ function liveMatch(list,g){
   const r=list.find(e=>has(e.away,H)&&has(e.home,A));return r?{sa:r.sh,sh:r.sa,state:r.state,completed:r.completed,detail:r.detail,poss:r.poss?(r.poss==='away'?'home':'away'):undefined,spot:r.spot!=null?100-r.spot:undefined,dd:r.dd,rz:r.rz}:null;
 }
 function liveNeeded(w){
-  const now=Date.now();return Object.values((w&&w.games)||{}).filter(g=>!g.fin&&g.kick&&now>=new Date(g.kick).getTime()-10*60000&&now<=new Date(g.kick).getTime()+3*86400000);
+  const now=Date.now();return Object.values((w&&w.games)||{}).filter(g=>!g.fin&&g.kick&&now>=new Date(g.kick).getTime()-10*60000&&now<=new Date(g.kick).getTime()+7*86400000);
 }
 let liveBusy=false;
 async function liveTick(){

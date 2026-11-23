@@ -574,7 +574,8 @@ function tdTrack(g,m){
   if(td&&td.kind==='td'&&!td.pat&&td.pre!=null&&m.sa!=null){const d=(td.side==='away'?m.sa:m.sh)-td.pre;if(d===7)td=Object.assign({},td,{pat:{two:false,ok:true}});else if(d===8)td=Object.assign({},td,{pat:{two:true,ok:true}});}
   // Remember the last real play, so "End of quarter" can still show what happened right before it.
   let real=prev.real||'';
-  if(m.lp){if(/end (of )?(quarter|period)|end quarter/i.test(m.lp.tt+' '+m.lp.play)){m.lp.endq=true;m.lp.prevPlay=real;}else if(m.lp.kind!=='hold'&&m.lp.play)real=m.lp.play;}
+  // Timeouts and the end of a quarter aren't really plays: show the play before them, with a small tag.
+  if(m.lp){if(m.lp.kind==='hold'||/end (of )?(quarter|period)|end quarter/i.test(m.lp.tt+' '+m.lp.play)){m.lp.endq=true;m.lp.prevPlay=real;m.lp.tag=/end (of )?(quarter|period)|end quarter/i.test(m.lp.tt+' '+m.lp.play)?'End of quarter':(m.lp.play||'Timeout');}else if(m.lp.play)real=m.lp.play;}
   S.tdm.set(key,{td,sa:m.sa,sh:m.sh,lpId:m.lp&&m.lp.id,real});
   if(td)m.td=td;
 }
@@ -998,7 +999,7 @@ function tdWhoRow(td){
 }
 function lastPlayRow(L){
   const lp=L&&L.lp;if(!lp)return '';
-  if(lp.endq)return '<div class="lastplay">'+(lp.prevPlay?esc(lp.prevPlay)+' ':'')+'<span class="qtag">End of quarter</span></div>';
+  if(lp.endq)return '<div class="lastplay">'+(lp.prevPlay?esc(lp.prevPlay)+' ':'')+'<span class="qtag">'+esc(lp.tag||'End of quarter')+'</span></div>';
   return lp.play?'<div class="lastplay">'+esc(lp.play)+'</div>':'';
 }
 // After a kickoff ESPN has no ball spot until the first snap. The kickoff text says where the return ended

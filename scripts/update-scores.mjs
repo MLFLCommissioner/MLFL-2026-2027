@@ -13,13 +13,13 @@ const key = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 
-// Games that started in the last 3 days and are not final yet.
+// Games that started in the last 7 days and are not final yet (a week covers Thursday through Monday, with room to catch up).
 const targets = [];
 for (const [n, w] of Object.entries(data.weeks || {})) {
   for (const [gid, g] of Object.entries(w.games || {})) {
     if (g.fin || !g.kick) continue;
     const k = Date.parse(g.kick);
-    if (now >= k && now <= k + 3 * DAY) targets.push({ n, gid, g, k });
+    if (now >= k && now <= k + 7 * DAY) targets.push({ n, gid, g, k });
   }
 }
 if (!targets.length) { console.log('No games waiting for a final score.'); process.exit(0); }

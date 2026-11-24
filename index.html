@@ -384,6 +384,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .gwx-t{display:flex;align-items:center;gap:5px;font-size:1.3rem;font-weight:900;line-height:1}
 .gwx-i{font-size:1.15rem;line-height:1}
 .gwx-s{font-size:.62rem;font-weight:700;opacity:.65;line-height:1.25}
+.gwx-m{display:flex;gap:6px;font-size:.62rem;font-weight:800;opacity:.75;line-height:1.2;white-space:nowrap}.gwx-d{display:inline-flex;align-items:center;gap:1px}
 .gwx.in{flex-direction:row;align-items:center;gap:5px;top:14px}.gwx.in .gwx-s{font-size:.72rem}
 
 .inj{margin:0 10px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -425,6 +426,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .lc-drop svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
 .lcombo input.lc-in{padding-right:62px;min-height:40px}
 .lc-clear{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:var(--board-ink);font-size:1rem;line-height:1;cursor:pointer}
+.lc-clear{display:flex;align-items:center;justify-content:center;padding:0;margin:0;-webkit-appearance:none;appearance:none}.lc-clear svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;fill:none;display:block;pointer-events:none}
 .lc-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px;list-style:none;max-height:260px;overflow-y:auto;background:#1b2427;border:1px solid rgba(255,255,255,.18);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .lc-list li{padding:9px 10px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.92rem;color:#eef3f4}
 .lc-list li[aria-selected="true"],.lc-list li[data-v]:hover{background:rgba(242,201,76,.18)}
@@ -447,6 +449,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .card.game .rows .opt{min-height:58px}
 .card.game .inj{margin-top:auto}
 .card.game .rows+.inj{margin-top:auto}
+.games:has(.inj.open) .card.game:not(:has(.inj.open)){align-self:start}
 /* Letters a system font draws clearly, so O and Q never look like zeros. */
 .ist{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 
@@ -1489,8 +1492,10 @@ async function wxLoad(week){
 function wxTag(g){
   const w=S.wx&&S.wx[wxKey(g)];if(!w||gscore(g,true))return '';
   if(w.indoor)return '<div class="gwx in" title="'+esc(w.venue||'Indoors')+'"><span class="gwx-i">🏟️</span><span class="gwx-s">Indoors</span></div>';
-  const bits=[w.txt];if(w.pop!=null&&w.pop>=20)bits.push(w.pop+'% precip');if(w.wind!=null&&w.wind>=12)bits.push(w.wind+' mph wind');
-  return '<div class="gwx" title="Kickoff forecast: '+esc(w.t+'°F, '+bits.join(', '))+'"><span class="gwx-t"><span class="gwx-i">'+w.icon+'</span>'+w.t+'°</span><span class="gwx-s">'+esc(bits.join(' · '))+'</span></div>';
+  const pop=w.pop!=null?w.pop+'%':'',wind=w.wind!=null?w.wind+' mph':'';
+  const tip=[w.txt,pop&&pop+' chance of precip',wind&&wind+' wind'].filter(Boolean).join(', ');
+  const det=[pop&&'<span class="gwx-d" title="Chance of precip">💧'+pop+'</span>',wind&&'<span class="gwx-d" title="Wind">💨'+esc(wind)+'</span>'].filter(Boolean).join('');
+  return '<div class="gwx" title="Kickoff forecast: '+esc(w.t+'°F, '+tip)+'"><span class="gwx-t"><span class="gwx-i">'+w.icon+'</span>'+w.t+'°</span><span class="gwx-s">'+esc(w.txt)+'</span>'+(det?'<span class="gwx-m">'+det+'</span>':'')+'</div>';
 }
 function cdText(k){
   const ms=new Date(k).getTime()-Date.now();if(!(ms>0))return '';
@@ -1655,7 +1660,7 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
       const list=opts.map(o=>[o,legLabel(week,o),used.includes(o.split('|').slice(0,2).join('|'))?1:0]);
       h+='<li class="pleg"><span class="lnum">'+(locked.length+j+1)+'</span><div class="lcombo" data-opts="'+esc(JSON.stringify(list))+'">'+
         '<input id="legq'+j+'" class="lc-in" type="text" data-i="'+j+'" value="'+esc(mine?legLabel(week,mine):'')+'" placeholder="Type a team or tap to choose" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-label="Parlay leg '+(locked.length+j+1)+'">'+
-        (mine?'<button class="lc-clear" type="button" data-i="'+j+'" aria-label="Clear this leg">×</button>':'')+
+        (mine?'<button class="lc-clear" type="button" data-i="'+j+'" aria-label="Clear this leg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>':'')+
         '<button class="lc-drop" type="button" tabindex="-1" aria-label="Show all picks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'+
         '<ul class="lc-list" role="listbox" hidden></ul>'+
         '<select id="leg'+j+'" data-act="leg" data-i="'+j+'" hidden aria-hidden="true" tabindex="-1"><option value=""></option>'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===mine?' selected':'')+'>'+esc(legLabel(week,o))+'</option>').join('')+'</select></div></li>';

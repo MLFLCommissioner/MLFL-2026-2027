@@ -106,6 +106,25 @@ nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
 main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .weekhead{font-size:1.9rem;line-height:1.05}
+.wkhero{background:linear-gradient(135deg,var(--board) 0%,color-mix(in srgb,var(--board) 78%,var(--accent)) 100%);color:var(--board-ink);border-radius:16px;padding:16px 18px 14px;margin:4px 0 14px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.wkhero-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.wkeyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.wkpill{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.12)}
+.wkpill.live{background:rgba(229,72,77,.2);color:#ff8a80}.wkpill.fin{background:rgba(80,190,120,.2);color:#7fe0a0}.wkpill.prog{background:rgba(242,201,76,.18);color:#f2c94c}
+.wkhero-main{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 10px}
+.wkhero .weekhead{font-size:2.6rem;font-weight:900;letter-spacing:-.01em;margin:0;text-align:center;flex:1}
+.wkarrow{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:inherit;font-size:1.6rem;line-height:1;cursor:pointer;flex:none}
+.wkarrow:hover:not([disabled]){background:rgba(255,255,255,.14)}.wkarrow[disabled]{opacity:.25;cursor:default}
+.wkdays{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.wkday{display:inline-flex;flex-direction:column;align-items:center;gap:1px;min-width:74px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:6px 14px 7px;white-space:nowrap}
+.wkday b{font-weight:800;text-transform:uppercase;font-size:.72rem;letter-spacing:.14em;color:#f2c94c}
+.wkday .md{font-size:1.15rem;font-weight:800;line-height:1.15}
+.wkday small{opacity:.65;font-size:.7rem;font-weight:600}
+.wkhero-ctl{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:12px}
+.wkhero-ctl label{color:inherit;display:flex;align-items:center;gap:6px;font-size:.85rem;opacity:.9}
+.wkhero-ctl select{margin:0;background:rgba(255,255,255,.1);color:var(--board-ink);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:5px 8px;font:inherit;font-weight:600;max-width:46vw}
+.wkhero-ctl select option{color:#111;background:#fff}
+@media (max-width:480px){.wkhero-ctl{gap:8px}.wkhero-ctl label{font-size:.8rem}}
 .note{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);padding:12px 14px;border-radius:6px}
 .note.warn{border-left-color:var(--pick)}
 .note p{margin:0 0 8px}.note p:last-child{margin:0}
@@ -238,7 +257,7 @@ td input[type=text]{width:8.5rem}td input[type=number]{width:4.6rem}
 .dialog ul{margin:0;padding-left:20px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--board);color:var(--board-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
-@media (max-width:420px){.mast h1{font-size:1.6rem}.weekhead{font-size:1.5rem}}
+@media (max-width:420px){.mast h1{font-size:1.6rem}.weekhead{font-size:1.5rem}.wkhero .weekhead{font-size:2.1rem}.wkday{min-width:64px;padding:5px 10px 6px}.wkday .md{font-size:1.05rem}}
 </style>
 </head>
 <body>
@@ -889,6 +908,50 @@ function render(){
 
 /* ---------- Picks ---------- */
 function curSeasonLabel(){const y=Number(S.cfg&&S.cfg.season)||2026;return y+'-'+(y+1);}
+// The days a week's games are played, e.g. [{d:'Thu',md:'Nov 19',n:1},{d:'Sun',md:'Nov 22',n:13},{d:'Mon',md:'Nov 23',n:1}].
+function weekDays(week){
+  const out=[];Object.values(week.games||{}).map(g=>g.kick).filter(Boolean).sort().forEach(k=>{
+    const key=ctDay(k),last=out[out.length-1];
+    if(last&&last.key===key)last.n++;else out.push({key,d:chi(k,{weekday:'short'}),md:chi(k,{month:'short',day:'numeric'}),n:1});
+  });return out;
+}
+// Turns a saved label like "Nov 12, 15, 16 | 2026" into day chips (Thu Nov 12, Sun Nov 15, Mon Nov 16).
+function labelDays(label){
+  // Tidy older spellings: "2022/2023" (use the later year), "Jan 7/8" or "Jan 2-3" (two days), "Nov, 13" (stray comma).
+  const L=String(label||'').replace(/(\d{4})\s*\/\s*(\d{4})/,'$2').replace(/(\d)\s*[-\/]\s*(?=\d)/g,'$1, ').replace(/^([A-Za-z]{3,})\.?\s*,\s*/,'$1 ');
+  const m=L.match(/^(.*?)\s*\|\s*(\d{4})\s*$/);if(!m)return null;
+  // "Oct/Nov 29, 1, 2": days use the first month until the numbers start over, then the second month.
+  const two=m[1].match(/^([A-Za-z]{3})[a-z]*\.?\s*\/\s*([A-Za-z]{3})[a-z]*\.?\s+(.+)$/);
+  if(two){let cur=two[1],prev=0;m[1]=two[3].split(',').map(x=>{const d=Number(x.trim());if(prev&&d<prev)cur=two[2];prev=d;return cur+' '+x.trim();}).join(', ');}
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let mon=null;const raw=[];
+  for(const part of m[1].split(',')){
+    const p=part.trim().match(/^(?:([A-Za-z]{3})[a-z]*\.?\s+)?(\d{1,2})$/);if(!p)return null;
+    if(p[1])mon=MO.findIndex(x=>x.toLowerCase()===p[1].slice(0,3).toLowerCase());if(mon==null||mon<0)return null;
+    raw.push([mon,Number(p[2])]);
+  }
+  // A week that runs Dec into Jan: the December days belong to the year before the label's year.
+  const wraps=raw.some((x,i)=>i&&x[0]<raw[i-1][0]);let yr=Number(m[2])-(wraps?1:0);
+  return raw.length?raw.map((x,i)=>{if(i&&x[0]<raw[i-1][0])yr++;const d=new Date(yr,x[0],x[1]);return {d:DW[d.getDay()],md:MO[x[0]]+' '+x[1]};}):null;
+}
+function weekStatus(week,isCur){
+  const gs=Object.values(week.games||{});if(!gs.length)return {t:'Board coming soon',c:'soon'};
+  const done=gs.filter(g=>gscore(g,true)).length,live=gs.some(g=>g.live&&g.live.state==='in'&&!g.live.completed);
+  if(done===gs.length)return {t:'Final',c:'fin'};
+  if(live)return {t:'Live now',c:'live'};
+  if(gs.some(g=>kicked(g)))return {t:done+' of '+gs.length+' final',c:'prog'};
+  return {t:isCur?'This week':'Upcoming',c:'soon'};
+}
+// The banner at the top of the Picks page: season, big week name, the days games are played, status and week arrows.
+function weekHero(o){
+  const i=o.nums.indexOf(o.n),prev=i>0?o.nums[i-1]:null,next=i>=0&&i<o.nums.length-1?o.nums[i+1]:null;
+  const arrow=(to,lab,ch)=>'<button class="wkarrow" data-act="'+o.step+'" data-to="'+(to==null?'':to)+'" aria-label="'+lab+'"'+(to==null?' disabled':'')+'>'+ch+'</button>';
+  if(!(o.days&&o.days.length)&&o.label){const ld=labelDays(o.label);if(ld){o.days=ld;o.label='';}}
+  const days=o.days&&o.days.length?'<div class="wkdays">'+o.days.map(x=>'<span class="wkday"><b>'+esc(x.d)+'</b><span class="md">'+esc(x.md)+'</span>'+(o.days.length>1&&x.n?'<small>'+x.n+' game'+(x.n===1?'':'s')+'</small>':'')+'</span>').join('')+'</div>':(o.label?'<div class="wkdays"><span class="wkday">'+esc(o.label)+'</span></div>':'');
+  return '<section class="wkhero"><div class="wkhero-top"><span class="wkeyebrow">'+esc(o.eyebrow)+'</span><span class="wkpill '+o.status.c+'">'+(o.status.c==='live'?'<span class="live-dot" aria-hidden="true"></span>':'')+esc(o.status.t)+'</span></div>'+
+    '<div class="wkhero-main">'+arrow(prev,'Previous week','‹')+'<h2 class="weekhead">'+esc(o.title)+'</h2>'+arrow(next,'Next week','›')+'</div>'+days+
+    '<div class="wkhero-ctl">'+(o.select?'<label class="small">Week '+o.select+'</label>':'')+seasonPicker()+'</div></section>';
+}
 function seasonPicker(){
   return '<label class="small muted" for="seasonsel">Season <select id="seasonsel"><option value="cur"'+(S.season==='cur'?' selected':'')+'>'+esc(curSeasonLabel())+' (current)</option>'+SEASONS.map(x=>'<option value="'+esc(x.id)+'"'+(S.season===x.id?' selected':'')+'>'+esc(x.id)+'</option>').join('')+'</select></label>';
 }
@@ -901,10 +964,9 @@ function viewPicks(){
   const n=S.selWeek,week=S.weeks[n];
   let h='';
   const lab=week?(week.label||weekLabel(week)):'';
-  h+='<div class="bar"><h2 class="weekhead">'+esc(wname(n))+(lab?' | '+esc(lab):'')+'</h2>';
-  h+=seasonPicker();
-  if(nums.length>1)h+='<label class="small muted" for="weeksel">Show week <select id="weeksel">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select></label>';
-  h+='</div>';
+  h+=weekHero({eyebrow:curSeasonLabel()+' Season'+(week&&week.round?' · Postseason':''),title:wname(n),days:week&&Object.values(week.games||{}).every(g=>g.kick)?weekDays(week):null,label:week?(week.label||weekLabel(week)):'',
+    status:week?weekStatus(week,n===cur):{t:'Not posted yet',c:'soon'},nums,n,step:'wkstep',
+    select:nums.length>1?'<select id="weeksel" aria-label="Show week">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select>':''});
   if(!week){
     h+='<div class="note"><p><strong>The Week '+esc(n)+' board has not been built yet.</strong></p><p>'+(S.isOwner?'Open the <a href="#commish">Commissioner</a> tab to load this week\'s lines.':'The commissioner will post the lines here. The standings are up to date in the meantime.')+'</p></div>';
     return h;
@@ -1216,8 +1278,8 @@ function archPicks(A){
   const n=S.aWeek,week=A.weeks[n],inWeek=A.players.filter(p=>A.entries[p.key]&&A.entries[p.key][n]);
   if(!S.aPlayer||!inWeek.some(p=>p.key===S.aPlayer))S.aPlayer=(inWeek[0]||{}).key;
   const sel=S.aPlayer,ent=(A.entries[sel]||{})[n]||{};
-  let h='<div class="bar"><h2 class="weekhead">'+esc(aWname(week,n))+(week.label?' | '+esc(week.label):'')+'</h2>'+seasonPicker()+
-    '<label class="small muted" for="aweeksel">Show week <select id="aweeksel">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(aWname(A.weeks[x],x))+'</option>').join('')+'</select></label></div>';
+  let h=weekHero({eyebrow:A.id+' Season'+(week.round?' · Postseason':''),title:aWname(week,n),label:week.label||'',status:{t:'Final',c:'fin'},nums,n,step:'awkstep',
+    select:'<select id="aweeksel" aria-label="Show week">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(aWname(A.weeks[x],x))+'</option>').join('')+'</select>'});
   h+='<p class="muted small">'+esc(A.id)+' season, from the league\'s Google Sheets. Past seasons are read-only and show each week as its sheet recorded it.</p>';
   h+='<div class="pills" role="group" aria-label="Whose picks to show">'+inWeek.map(p=>'<button class="pill" data-act="aselp" data-k="'+esc(p.key)+'" aria-pressed="'+(p.key===sel)+'">'+esc(p.name)+'</button>').join('')+'</div>';
   if(ent.note)h+='<div class="note warn"><p>'+esc(ent.note)+'</p></div>';
@@ -1857,6 +1919,8 @@ const acts={
     else{ls.set('mlfl.cmode','1');toast('Commissioner view on. You can see and fix everyone\'s picks.');}
     requestRender(true);
   },
+  wkstep(el){if(el.dataset.to==='')return;S.selWeek=Number(el.dataset.to);requestRender(true);setTimeout(liveTick,300);},
+  awkstep(el){if(el.dataset.to==='')return;S.aWeek=Number(el.dataset.to);requestRender(true);},
   pkhide(el){if(S.pkShow)delete S.pkShow[el.dataset.k];requestRender(true);},
   async pkcopy(el){const pw=pkLocal(players().find(x=>x.key===el.dataset.k));try{await navigator.clipboard.writeText(pw);toast('Copied.');}catch(e){toast('Press and hold the passkey to copy it.');}},
   clearpk(el){

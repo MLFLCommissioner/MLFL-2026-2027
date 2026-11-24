@@ -1030,12 +1030,16 @@ function lastPlayRow(L){
 // ("…from SF 35 to MIN 0. M.Price to MIN 17 for 17 yards"), so put the receiving team there.
 function kickSpot(L){
   const lp=L.lp;if(!lp||!/kickoff|kicks|free kick|onside/i.test(lp.tt+' '+(lp.raw||''))||!L.aab||!L.hab)return null;
+  // Play text and the scoreboard sometimes spell a team differently (WAS / WSH, LA / LAR, JAC / JAX).
+  const AL={WAS:'WSH',WSH:'WSH',LA:'LAR',LAR:'LAR',JAC:'JAX',JAX:'JAX'},nk=x=>AL[x]||x,A=nk(L.aab),H=nk(L.hab);
   const t=String(lp.raw||''),from=(t.match(/kicks[^.]*? from ([A-Z]{2,3}) -?\d+/)||[])[1];if(!from)return null;
-  const side=from===L.aab?'home':from===L.hab?'away':null;if(!side)return null;
-  const spots=[...t.matchAll(/\b(?:to|at) ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>x[1]===L.aab||x[1]===L.hab);
+  const side=nk(from)===A?'home':nk(from)===H?'away':null;if(!side)return null;
+  const spots=[...t.matchAll(/\b(?:to|at)(?: the)? ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>nk(x[1])===A||nk(x[1])===H);
   const last=spots[spots.length-1];if(!last||/touchback|end zone/i.test(t)&&spots.length<2)return null;
-  const yl=Number(last[2]),x=last[1]===L.aab?yl:100-yl;
-  return {poss:side,spot:x,dd:'Kickoff'};
+  const yl=Number(last[2]),own=nk(last[1])===A,x=own?yl:100-yl;
+  // A kickoff always leads to 1st & 10 for the receiving team at the spot where the return ended.
+  const spotTxt=yl===50?'50':(own?L.aab:L.hab)+' '+yl;
+  return {poss:side,spot:x,dd:'1st & 10 at '+spotTxt};
 }
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime

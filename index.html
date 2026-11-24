@@ -2317,7 +2317,7 @@ async function sendMail(subject,message){
 function emailCode(k,n,code,c){
   const link=location.origin+location.pathname+'?code='+encodeURIComponent(code)+'#commish';
   return sendMail('MLFL picks: '+pname(k)+', '+wname(n),
-    pname(k)+' sent picks for '+wname(n)+'.\n\nPick code: '+code+'\n\n'+c.made+' pick'+(c.made===1?'':'s')+(c.legs.length?' and '+c.legs.length+' parlay leg'+(c.legs.length===1?'':'s'):'')+'.\n\nOpen this link to load the code on the Commissioner tab:\n'+link);
+    pname(k)+' sent picks for '+wname(n)+'.\n\nPick code: '+code+'\n\n'+c.made+' pick'+(c.made===1?'':'s')+(c.legs.length?' and '+c.legs.length+' parlay leg'+(c.legs.length===1?'':'s'):'')+'.\n\nOpen this link to review and confirm the picks:\n'+link);
 }
 function adminMail(){
   const on=!!mailKey();
@@ -2453,7 +2453,8 @@ const acts={
     });
     const anyLate=late+lateLegs.length;
     if(!made&&!legs.length&&!anyLate){toast('Nothing new in that code for '+pname(d.key)+'. It is already locked in'+(legSkip?', or the parlay is full or over.':'.'));return;}
-    const body='<ul><li>'+made+' new pick'+(made===1?'':'s')+(legs.length?' and '+legs.length+' new parlay leg'+(legs.length===1?'':'s')+', making '+(have.length+legs.length)+' of 5':'')+'.</li>'+(dup?'<li>'+dup+' already locked in and left unchanged.</li>':'')+(legSkip?'<li>'+legSkip+' parlay leg'+(legSkip===1?'':'s')+' left out (already in, or the parlay is full or over).</li>':'')+'</ul>'+
+    const oldWk=d.n!==S.cfg.currentWeek?'<p class="dnote" style="color:#f2c94c;text-align:left"><strong>Heads up:</strong> this code is for '+esc(wname(d.n))+', not the current week ('+esc(wname(S.cfg.currentWeek))+').</p>':'';
+    const body=oldWk+'<ul><li>'+made+' new pick'+(made===1?'':'s')+(legs.length?' and '+legs.length+' new parlay leg'+(legs.length===1?'':'s')+', making '+(have.length+legs.length)+' of 5':'')+'.</li>'+(dup?'<li>'+dup+' already locked in and left unchanged.</li>':'')+(legSkip?'<li>'+legSkip+' parlay leg'+(legSkip===1?'':'s')+' left out (already in, or the parlay is full or over).</li>':'')+'</ul>'+
       (anyLate?'<p><strong>'+late+' pick'+(late===1?'':'s')+(lateLegs.length?' and '+lateLegs.length+' parlay leg'+(lateLegs.length===1?'':'s'):'')+' in this code '+(anyLate===1?'is':'are')+' past the deadline or kickoff.</strong> '+(anyLate===1?'It is':'They are')+' left out unless you tick the box.</p><label for="dlg-check"><input type="checkbox" id="dlg-check"> Include '+(anyLate===1?'it':'them')+'. The code reached me in time.</label>':'');
     confirmBox('Enter '+wname(d.n)+' picks for '+pname(d.key)+'?',body,'Submit and lock',async incl=>{
       const allP=clone(p),allLegs=legs.slice();
@@ -2648,6 +2649,13 @@ async function init(){
   render();
   Object.assign(GH,detectRepo());GH.token=ls.get('mlfl.token')||'';S.owner=S.isOwner=!!GH.token;
   await loadData();await verifyMe();requestRender(true);setTimeout(liveTick,800);
+  // Opened from the pick-code email: go straight to the confirm screen (nothing saves until you confirm).
+  if(S.form.pcode&&new URLSearchParams(location.search).get('code')){
+    try{history.replaceState(null,'',location.pathname+'#commish');}catch(e){}
+    setTimeout(()=>{const box=$('#pcode');if(!box)return;
+      if(S.isOwner&&S.weeks&&Object.keys(S.weeks).length){box.value=S.form.pcode;acts.loadcode();}
+      else box.scrollIntoView({block:'center',behavior:'smooth'});},120);
+  }
   // Viewers pick up new picks and scores when they come back to the tab.
   document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!S.isOwner&&Date.now()-S.loadedAt>60000){await loadData();await verifyMe();requestRender();const t=()=>liveBusy?setTimeout(t,300):liveTick();t();}});
 }

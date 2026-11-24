@@ -2327,6 +2327,7 @@ function adminMail(){
     '<div class="bar"><button class="btn primary" data-act="mailsave">Save</button><button class="btn" data-act="mailtest"'+(on?'':' disabled')+'>Send a test email</button></div>'+
     '<p class="muted small">Free for up to 250 emails a month. To turn it off, clear the box and save.</p></div></section>';
 }
+function codeClear(){clearForm('pcode');const b=document.getElementById('pcode');if(b){b.value='';b.blur();}}
 function clearForm(prefix){Object.keys(S.form).forEach(k=>{if(k.startsWith(prefix))delete S.form[k];});}
 const acts={
   hofgo(el){
@@ -2436,7 +2437,7 @@ const acts={
   loadcode(){
     let d;try{d=decodePicks(S.cfg,S.weeks,$('#pcode').value);}catch(e){toast(e.message);return;}
     const week=S.weeks[d.n],cur=subWeek(d.key,d.n);
-    if(week.open===false){toast('Picks are closed for '+wname(d.n)+'. Reopen them first if you want to add this.');return;}
+    if(week.open===false){codeClear();toast('Picks are closed for '+wname(d.n)+'. Reopen them first if you want to add this.');return;}
     const p={},lateP={};let made=0,late=0,dup=0;
     Object.keys(d.p).forEach(gid=>['s','o'].forEach(m=>{
       if(!d.p[gid][m])return;
@@ -2452,16 +2453,16 @@ const acts={
       if(kicked(g)||(pastDeadline(g)&&!lateAllowed(d.n,d.key)))lateLegs.push(l);else legs.push(l);
     });
     const anyLate=late+lateLegs.length;
-    if(!made&&!legs.length&&!anyLate){toast('Nothing new in that code for '+pname(d.key)+'. It is already locked in'+(legSkip?', or the parlay is full or over.':'.'));return;}
+    if(!made&&!legs.length&&!anyLate){codeClear();toast('Nothing new in that code for '+pname(d.key)+'. It is already locked in'+(legSkip?', or the parlay is full or over.':'.'));return;}
     const oldWk=d.n!==S.cfg.currentWeek?'<p class="dnote" style="color:#f2c94c;text-align:left"><strong>Heads up:</strong> this code is for '+esc(wname(d.n))+', not the current week ('+esc(wname(S.cfg.currentWeek))+').</p>':'';
     const body=oldWk+'<ul><li>'+made+' new pick'+(made===1?'':'s')+(legs.length?' and '+legs.length+' new parlay leg'+(legs.length===1?'':'s')+', making '+(have.length+legs.length)+' of 5':'')+'.</li>'+(dup?'<li>'+dup+' already locked in and left unchanged.</li>':'')+(legSkip?'<li>'+legSkip+' parlay leg'+(legSkip===1?'':'s')+' left out (already in, or the parlay is full or over).</li>':'')+'</ul>'+
       (anyLate?'<p><strong>'+late+' pick'+(late===1?'':'s')+(lateLegs.length?' and '+lateLegs.length+' parlay leg'+(lateLegs.length===1?'':'s'):'')+' in this code '+(anyLate===1?'is':'are')+' past the deadline or kickoff.</strong> '+(anyLate===1?'It is':'They are')+' left out unless you tick the box.</p><label for="dlg-check"><input type="checkbox" id="dlg-check"> Include '+(anyLate===1?'it':'them')+'. The code reached me in time.</label>':'');
     confirmBox('Enter '+wname(d.n)+' picks for '+pname(d.key)+'?',body,'Submit and lock',async incl=>{
       const allP=clone(p),allLegs=legs.slice();
       if(incl){Object.keys(lateP).forEach(g=>{allP[g]=Object.assign(allP[g]||{},lateP[g]);});lateLegs.forEach(l=>allLegs.push(l));}
-      if(!Object.keys(allP).length&&!allLegs.length){toast('Nothing was added.');return;}
+      if(!Object.keys(allP).length&&!allLegs.length){codeClear();toast('Nothing was added.');return;}
       const ok=await saveEntry(d.key,e=>mergeWeek(e,d.n,allP,allLegs));
-      if(ok){clearForm('pcode');toast(pname(d.key)+"'s "+wname(d.n)+' picks are in.');requestRender(true);}
+      if(ok){codeClear();toast(pname(d.key)+"'s "+wname(d.n)+' picks are in.');requestRender(true);}
     });
   },
   futsubmit(){

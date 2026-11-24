@@ -441,6 +441,36 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .lk.win{background:rgba(76,195,138,.2);color:#7fe0a0}
 .lk.combo{background:rgba(167,99,234,.24);color:#d2b3ff}
 .lk.miss{background:rgba(229,83,75,.18);color:#ff8f84}
+
+/* Cards in a row still line up, but the pick boxes keep their size: any extra height goes above the injury bar instead. */
+.card.game .rows{flex:0 0 auto;grid-template-rows:auto auto}
+.card.game .rows .opt{min-height:58px}
+.card.game .inj{margin-top:auto}
+.card.game .rows+.inj{margin-top:auto}
+/* Letters a system font draws clearly, so O and Q never look like zeros. */
+.ist{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
+/* ---- Dialogs in the dark card style ---- */
+.overlay{background:rgba(4,10,12,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.dialog{background:var(--board);color:var(--board-ink);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px 20px 18px;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.dialog h2{font-size:1.45rem;font-weight:900;line-height:1.15;margin:0}
+.dialog p{margin:0}.dialog .muted{color:var(--board-ink);opacity:.65}
+.dialog ul{opacity:.9}
+.dialog .btn{white-space:nowrap;background:rgba(255,255,255,.06);color:var(--board-ink);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 18px;font-weight:800}
+.dialog .btn.primary{background:#f2c94c;color:#1d1600;border-color:#f2c94c}
+.dialog .btn.danger{background:rgba(229,83,75,.9);color:#fff;border-color:transparent}
+.dialog .dlg-bar,.dialog #dlg-bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;margin-top:4px}
+.dialog input,.dialog textarea,.dialog select{background:rgba(255,255,255,.08);color:var(--board-ink);border:1px solid rgba(255,255,255,.2);border-radius:10px}
+.dialog label{color:var(--board-ink)}
+.dsum{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.dtile{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.dtile b{font-size:1.9rem;font-weight:900;line-height:1}.dtile span{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.65}
+.dtile.gold{background:rgba(242,201,76,.14);border-color:rgba(242,201,76,.5)}.dtile.gold b{color:#f2c94c}
+.dnote{font-size:.85rem;opacity:.7;line-height:1.4}
+.dialog.done{text-align:center;align-items:stretch}
+.dcheck{width:56px;height:56px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:rgba(76,195,138,.18);box-shadow:0 0 0 6px rgba(76,195,138,.08)}
+.dcheck svg{width:30px;height:30px;fill:none;stroke:#7fe0a0;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.deyebrow{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:-8px}
 </style>
 </head>
 <body>
@@ -917,8 +947,13 @@ function buildDeadlines(){S.dl=new Map();S.gweek=new Map();Object.entries(S.week
 const subWeek=(k,n)=>{const e=S.entries[k];const w=e&&e.weeks&&e.weeks[n];return w&&w.at?w:null;};
 let toastT;
 function toast(msg){$('#toast').innerHTML='<div class="toast" role="status">'+esc(msg)+'</div>';clearTimeout(toastT);toastT=setTimeout(()=>{$('#toast').innerHTML='';},4200);}
+// A finished-action screen in the same style: big check, title, what happened, one OK button.
+function doneBox(title,sub,bodyHtml){
+  $('#modal').innerHTML='<div class="overlay"><div class="dialog done" role="dialog" aria-modal="true"><div class="dcheck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="deyebrow">'+esc(sub)+'</div><h2>'+esc(title.replace(/\s*✓$/,''))+'</h2>'+bodyHtml+'<div class="bar dlg-bar"><button class="btn primary" id="dlg-no">OK</button></div></div></div>';
+  $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};$('#dlg-no').focus();
+}
 function confirmBox(title,bodyHtml,yesLabel,onYes){
-  $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>'+esc(title)+'</h2>'+bodyHtml+'<div class="bar"><button class="btn primary" id="dlg-yes">'+esc(yesLabel)+'</button><button class="btn" id="dlg-no">Go back</button></div></div></div>';
+  $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>'+esc(title)+'</h2>'+bodyHtml+'<div class="bar dlg-bar"><button class="btn primary" id="dlg-yes">'+esc(yesLabel)+'</button><button class="btn" id="dlg-no">Go back</button></div></div></div>';
   $('#dlg-no').onclick=()=>{$('#modal').innerHTML='';};
   $('#dlg-yes').onclick=()=>{const c=$('#dlg-check'),v=!!(c&&c.checked);$('#modal').innerHTML='';onYes(v);};
   $('#dlg-yes').focus();
@@ -1240,7 +1275,11 @@ document.addEventListener('focusin',ev=>{const t=ev.target;if(t.classList&&t.cla
 document.addEventListener('input',ev=>{const t=ev.target;if(t.classList&&t.classList.contains('lc-in'))lcShow(t,t.value);});
 document.addEventListener('focusout',ev=>{const t=ev.target;if(t.classList&&t.classList.contains('lc-in'))setTimeout(()=>{if(document.activeElement!==t)lcClose(t);},150);});
 document.addEventListener('mousedown',ev=>{const li=ev.target.closest&&ev.target.closest('.lc-list li[data-v]');if(!li)return;ev.preventDefault();if(li.classList.contains('dis'))return;lcPick(li.closest('.lcombo').querySelector('.lc-in'),li.dataset.v);});
-document.addEventListener('touchend',ev=>{const li=ev.target.closest&&ev.target.closest('.lc-list li[data-v]');if(!li)return;ev.preventDefault();if(li.classList.contains('dis'))return;lcPick(li.closest('.lcombo').querySelector('.lc-in'),li.dataset.v);},{passive:false});
+// On phones, only a tap chooses a pick: a finger that moves (scrolling the list) never does.
+let lcTouch=null;
+document.addEventListener('touchstart',ev=>{const li=ev.target.closest&&ev.target.closest('.lc-list li[data-v]');lcTouch=li?{li,x:ev.touches[0].clientX,y:ev.touches[0].clientY,moved:false}:null;},{passive:true});
+document.addEventListener('touchmove',ev=>{if(!lcTouch)return;const t=ev.touches[0];if(Math.abs(t.clientX-lcTouch.x)>8||Math.abs(t.clientY-lcTouch.y)>8)lcTouch.moved=true;},{passive:true});
+document.addEventListener('touchend',ev=>{const tt=lcTouch;lcTouch=null;if(!tt)return;ev.preventDefault();if(tt.moved||tt.li.classList.contains('dis'))return;lcPick(tt.li.closest('.lcombo').querySelector('.lc-in'),tt.li.dataset.v);},{passive:false});
 document.addEventListener('mousedown',ev=>{const b=ev.target.closest&&ev.target.closest('.lc-drop');if(!b)return;ev.preventDefault();
   const inp=b.closest('.lcombo').querySelector('.lc-in'),ul=b.closest('.lcombo').querySelector('.lc-list');
   if(!ul.hidden&&document.activeElement===inp){inp.blur();return;}inp.focus();lcShow(inp,'');});
@@ -2076,7 +2115,14 @@ function collectDraft(n,k){
   const legs=par?openLegs(week,sub,d,pend.legs).map(c=>{const [g,m,v]=c.split('|');return {g,m,v};}):[];
   return {p,legs,made,avail,par,nl};
 }
-function draftSummary(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until 30 minutes before the first game on their day (Monday games lock with Sunday).':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
+function draftSummary(c){
+  const tot=c.nl+c.legs.length;
+  return '<div class="dsum"><div class="dtile"><b>'+c.made+'</b><span>of '+c.avail+' picks</span></div>'+
+    (c.par?'<div class="dtile'+(c.legs.length?' gold':'')+'"><b>'+(c.legs.length?'+'+c.legs.length:'0')+'</b><span>Parlay'+(tot?' · '+tot+'/5':'')+'</span></div>':'')+'</div>'+
+    (c.made<c.avail?'<p class="dnote">The rest stay open until 30 minutes before the first game on their day. Monday games lock with Sunday.</p>':'')+
+    (c.par&&tot&&tot<5?'<p class="dnote">Add the other parlay legs later.</p>':'');
+}
+function draftSummaryOld(c){return '<ul><li>'+c.made+' of the '+c.avail+' open pick'+(c.avail===1?'':'s')+' made'+(c.made<c.avail?'. The rest stay open until 30 minutes before the first game on their day (Monday games lock with Sunday).':'.')+'</li>'+(c.par?'<li>'+(c.legs.length?'Parlay: '+c.legs.length+' new leg'+(c.legs.length===1?'':'s')+', making '+(c.nl+c.legs.length)+' of 5.'+(c.nl+c.legs.length<5?' Add the rest later.':''):'Parlay: no new legs.'+(c.nl?' '+c.nl+' of 5 already in.':''))+'</li>':'')+'</ul>';}
 // Pick codes by email, through Web3Forms (free: 250 emails a month). Its access key only lets people send email to you, so it is safe to keep in the league data.
 function mailKey(){return (S.cfg&&S.cfg.mail&&S.cfg.mail.key)||'';}
 async function sendMail(subject,message){
@@ -2159,9 +2205,9 @@ const acts={
     if(!mayEdit(S.selPlayer))return;
     const n=S.selWeek,k=S.selPlayer,c=collectDraft(n,k),legs=c.legs;
     if(!c.made&&!legs.length){toast('Make at least one new pick before you submit.');return;}
-    confirmBox('Submit '+wname(n)+' picks for '+pname(k)+'?',draftSummary(c)+'<p>These picks lock when you submit. You can unlock them from the Commissioner tab.</p>','Submit and lock',async()=>{
+    confirmBox('Submit '+wname(n)+' picks for '+pname(k)+'?',draftSummary(c)+'<p class="dnote">These picks lock when you submit. You can unlock them from the Commissioner tab.</p>','Submit and lock',async()=>{
       const ok=await saveEntry(k,e=>mergeWeek(e,n,c.p,legs));
-      if(ok){delete S.drafts[draftKey(n,k)];ls.del('mlfl.draft.'+draftKey(n,k));toast('Picks submitted and locked.');requestRender(true);}
+      if(ok){delete S.drafts[draftKey(n,k)];ls.del('mlfl.draft.'+draftKey(n,k));requestRender(true);doneBox('Picks locked ✓',wname(n)+' · '+pname(k),'<div class="dsum"><div class="dtile"><b>'+c.made+'</b><span>pick'+(c.made===1?'':'s')+' locked</span></div>'+(c.par?'<div class="dtile'+(legs.length?' gold':'')+'"><b>'+(c.nl+legs.length)+'/5</b><span>parlay legs</span></div>':'')+'</div><p class="dnote">Saved to the league. Everyone sees them once each game\'s picks lock.</p>');}
     });
   },
   getcode(){
@@ -2181,7 +2227,7 @@ const acts={
     emailCode(k,n,code,c).then(ok=>{
       if(!$('#dlg-body'))return;
       if(!ok){showCode('<strong>Your picks could not be sent automatically.</strong> Copy this code and text it to the commissioner instead.');return;}
-      $('#dlg-title').textContent='Picks sent ✓';
+      $('#dlg-title').textContent='Picks sent';const dl=$('#dlg-title').closest('.dialog');if(dl){dl.classList.add('done');dl.insertAdjacentHTML('afterbegin','<div class="dcheck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>');}
       $('#dlg-body').innerHTML='<p>Your picks were sent to the commissioner and are <strong>waiting for verification</strong>. They\'ll show as Verification Pending until they\'re approved.</p>';
       $('#dlg-bar').innerHTML='<button class="btn primary" id="dlg-no">OK</button>';wire();$('#dlg-no').focus();
     });

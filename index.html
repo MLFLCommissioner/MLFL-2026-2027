@@ -167,7 +167,16 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 @keyframes tdpulse{from{opacity:.75;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 /* The scoring banner pulses everywhere, including phones with Reduce Motion on, because the league asked for it. */
 .field .dd{text-align:center;font-weight:700;font-size:.9rem}
-.score.is-live{display:flex;align-items:center;justify-content:center;gap:8px}
+.score.sb{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px 14px}
+.sbt{display:flex;align-items:center;gap:10px;justify-self:start;transition:opacity .3s}
+.sbt.home{justify-self:end}
+.sbt .logo{width:34px;height:34px}
+.sbt .pts{font-size:1.9rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.sbt.trail{opacity:.5}
+.sbm{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.livepill{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#ff8a80;background:rgba(229,72,77,.16);padding:2px 9px;border-radius:999px}
+.sbclock{font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sbfinal{font-size:.8rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.8;white-space:nowrap}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--miss);flex:none}
 @media (prefers-reduced-motion:no-preference){.live-dot{animation:livepulse 1.4s ease-in-out infinite}}
 @keyframes livepulse{50%{opacity:.25}}
@@ -993,6 +1002,23 @@ function whoChips(gid,m,v,n,sel,g,visible){
 const BALL='<svg class="ball" viewBox="0 0 24 16" aria-label="has the ball" role="img"><ellipse cx="12" cy="8" rx="11" ry="7" fill="#8a4b22" stroke="#5a2e12" stroke-width="1"/><path d="M7 8h10M9.5 6.5v3M12 6.5v3M14.5 6.5v3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg>';
 // Field bar: the away team's end zone on the left, the home team's on the right; the ball carrier's logo marks the spot, and the green runs toward the end zone they are attacking.
 // Countdown to kickoff, ticking every second without redrawing the page.
+// Scoreboard strip: [logo] 17   LIVE · Q3 2:36   13 [logo]. The team ahead is bright, the other dimmed.
+function scoreBug(g,sa,sh,mode,detail){
+  const Q={'1st':'Q1','2nd':'Q2','3rd':'Q3','4th':'Q4','OT':'OT'},d=String(detail||'').trim();
+  let mid;
+  if(mode==='final')mid='<span class="sbfinal">'+(/ot/i.test(d)?'Final / OT':'Final')+'</span>';
+  else{
+    const m=d.match(/^(\d{1,2}:\d{2})\s*-\s*(\S+)/),e=d.match(/end of (?:the )?(\S+)/i);
+    const when=m?(Q[m[2]]||m[2])+' · '+m[1]:/half/i.test(d)?'Halftime':e?'End '+(Q[e[1]]||e[1]):d;
+    mid='<span class="livepill"><span class="live-dot" aria-hidden="true"></span>Live</span>'+(when?'<span class="sbclock">'+esc(when)+'</span>':'');
+  }
+  const lead=sa>sh?'a':sh>sa?'h':'';
+  const label=g.away+' '+sa+', '+g.home+' '+sh+(mode==='final'?', final':d?', '+d:'');
+  return '<div class="score sb'+(mode==='final'?' fin':' is-live')+'" role="group" aria-label="'+esc(label)+'">'+
+    '<span class="sbt'+(lead==='h'?' trail':'')+'">'+logo(g.away)+'<span class="pts">'+sa+'</span></span>'+
+    '<span class="sbm">'+mid+'</span>'+
+    '<span class="sbt home'+(lead==='a'?' trail':'')+'"><span class="pts">'+sh+'</span>'+logo(g.home)+'</span></div>';
+}
 function cdText(k){
   const ms=new Date(k).getTime()-Date.now();if(!(ms>0))return '';
   const t=Math.floor(ms/1000),d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60),sec=t%60,p=x=>String(x).padStart(2,'0');
@@ -1073,8 +1099,8 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   };
   let scoreLine;
   const L=g.live;
-  if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre')){const w=g.sa>g.sh?g.away:g.sh>g.sa?g.home:'Tie';scoreLine='<div class="score">'+(g.fin?'Final: ':'Live: ')+g.sa+' - '+g.sh+' ('+esc(w)+')</div>';}
-  else if(L&&L.state!=='pre'&&L.sa!=null){const w=L.sa>L.sh?g.away:L.sh>L.sa?g.home:'Tie';scoreLine=L.completed?'<div class="score">Final: '+L.sa+' - '+L.sh+' ('+esc(w)+')</div>':'<div class="score is-live"><span class="live-dot" aria-hidden="true"></span>'+esc(String(L.detail||'Live').replace(/^(\d{1,2}:\d{2})\s*-\s*(.+)$/,'$1 | $2'))+' | '+L.sa+' - '+L.sh+(w==='Tie'?' (Tied)':' ('+esc(w)+')')+'</div>';}
+  if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre'))scoreLine=scoreBug(g,g.sa,g.sh,g.fin?'final':'live','');
+  else if(L&&L.state!=='pre'&&L.sa!=null)scoreLine=scoreBug(g,L.sa,L.sh,L.completed?'final':'live',L.completed?String(L.detail||''):String(L.detail||''));
   else{
     const since=g.kick?Date.now()-new Date(g.kick).getTime():0;
     scoreLine='<div class="score pre">'+(kicked(g)?(since>5*3600000?'Waiting for the final score':(L&&L.state==='pre')||(!L&&since<45*60000)?'Game starting soon':'In progress')

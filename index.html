@@ -558,7 +558,7 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 .fcard{margin:0;padding:12px}
 .fcard.me{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
 .fhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
-.fhead .lbname{display:flex;align-items:center}
+.fhead .lbname{display:flex;align-items:center}.fhead .lbname small{margin-left:.35em}
 .fpts{font-family:var(--display);font-weight:900;font-size:1.5rem;opacity:.6}.fpts.hl{color:#f2c94c;opacity:1}
 .frow{display:grid;grid-template-columns:5.6rem 1fr 1.6rem;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-top:6px}
 .flab{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.65;display:flex;flex-direction:column;line-height:1.2}.flab small{font-size:.66rem;opacity:.8;letter-spacing:.04em}
@@ -1127,7 +1127,7 @@ const cmodeOn=()=>!!S.owner&&ls.get('mlfl.cmode')==='1';
 function whoAmI(){return S.meOk?S.meOk.k:null;}
 function viewGate(){
   const ps=players().filter(p=>p.pin);
-  let h='<section class="card gate"><h3>Who\'s here?</h3><div class="pad stack"><p>Tap your name and enter your passkey. This phone will remember you after that.</p>';
+  let h='<section class="card gate"><h3>Who\'s here?</h3><div class="pad stack"><p>Tap your name and enter your passkey. This device will remember you after that.</p>';
   h+='<div class="pills" role="group" aria-label="Players">'+ps.map(p=>'<button class="pill" data-act="gatepick" data-k="'+esc(p.key)+'" aria-pressed="'+(S.gateK===p.key)+'">'+esc(p.name)+'</button>').join('')+'</div>';
   if(S.gateK){
     h+='<label for="gate-pw">'+esc(pname(S.gateK))+'\'s passkey <input type="password" id="gate-pw" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" size="20"></label>';
@@ -2287,7 +2287,7 @@ function adminPicks(n){
   return '<section class="card"><h3>Who has picked · '+esc(wname(n))+'</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Picks</th><th class="l">Late picks</th></tr></thead><tbody>'+players().map(p=>{const w=subWeek(p.key,n),lt=lateAllowed(n,p.key);return '<tr><td>'+esc(p.name)+'</td><td class="l">'+(w?'Submitted <button class="btn" data-act="unlock" data-k="'+esc(p.key)+'">Unlock</button>':'<span class="muted">Not submitted</span>')+'</td><td class="l">'+(lt?'<span class="pkbtns"><strong>Allowed</strong><button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Turn off</button></span>':'<button class="btn" data-act="togglelate" data-k="'+esc(p.key)+'">Allow</button>')+'</td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">To enter picks for someone by hand, open Picks and choose their name. Unlock lets you change their picks and submit again.</p><p class="pad muted small"><strong>Late picks</strong> let one player keep picking after the lock (30 minutes before each day\'s first game). Games still close at kickoff. Others\' picks for locked games are already visible, so only allow it when you trust it\'s fair. It lasts for this week until you turn it off.</p></section>';
 }
 function adminPasskeys(){
-  return '<section class="card"><h3>Player passkeys</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>'<tr><td>'+esc(p.name)+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>').join('')+'</tbody></table></div><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per phone, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
+  return '<section class="card"><h3>Player passkeys</h3><div class="tw"><table><thead><tr><th>Player</th><th class="l">Passkey</th></tr></thead><tbody>'+players().map(p=>'<tr><td>'+esc(p.name)+'</td><td class="l">'+(p.pin?'<span class="pkbtns">'+pkCell(p)+'<button class="btn" data-act="setpk" data-k="'+esc(p.key)+'">Reset</button><button class="btn" data-act="clearpk" data-k="'+esc(p.key)+'">Remove</button></span>':'<button class="btn primary" data-act="setpk" data-k="'+esc(p.key)+'">Set passkey</button>')+'</td></tr>').join('')+'</tbody></table></div><p class="pad muted small">Once any player has a passkey, everyone who opens the site picks their name and enters their passkey once per device, or continues as a Visitor (view only). A player without a passkey can\'t sign in. Resetting a passkey signs that player out everywhere. Reveal only works on the device where the passkey was set, because passkeys are never saved in the league file.</p></section>';
 }
 function adminBase(){
   return '<section class="card"><h3>Starting totals carried over from the sheet</h3><div class="tw"><table><thead><tr><th>Player</th><th>Points</th><th>Weeks won</th><th>Correct pick %</th><th>Weeks counted</th></tr></thead><tbody>'+players().map(p=>{const b=p.base||{};const i=(k,v,st)=>'<input type="number" id="b-'+esc(p.key)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(v==null?0:v)+'" step="'+st+'" aria-label="'+k+'">';return '<tr data-bk="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td>'+i('points',b.points,'1')+'</td><td>'+i('won',b.won,'1')+'</td><td>'+i('cpp',b.cpp,'0.01')+'</td><td>'+i('weeks',b.weeks,'1')+'</td></tr>';}).join('')+'</tbody></table></div><div class="pad bar"><button class="btn primary" data-act="savebase">Save starting totals</button><span class="muted small">The season percentage is the average of each week\'s percentage.</span></div></section>';
@@ -2427,7 +2427,7 @@ const acts={
       $('#dlg-bar').innerHTML='<button class="btn primary" id="dlg-copy">Copy code</button><button class="btn" id="dlg-no">Done</button>';wire();};
     const wire=()=>{const no=$('#dlg-no');if(no)no.onclick=()=>{$('#modal').innerHTML='';};const cp=$('#dlg-copy');if(cp){cp.onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Code copied. Paste it into a text to the commissioner.');}catch(e){$('#codeout').focus();$('#codeout').select();toast('Press and hold the code to copy it.');}};cp.focus();}};
     $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2 id="dlg-title">'+(mail?'Sending your picks…':'Picks confirmed')+'</h2><p class="muted">'+title+'</p>'+draftSummary(c)+'<div id="dlg-body">'+(mail?'<p class="sending">Sending to the commissioner. One moment.</p>':'')+'</div><div class="bar" id="dlg-bar"></div></div></div>';
-    if(!mail){showCode('Your picks are saved on this phone. Send this code to the commissioner so they can approve them.');return;}
+    if(!mail){showCode('Your picks are saved on this device. Send this code to the commissioner so they can approve them.');return;}
     emailCode(k,n,code,c).then(ok=>{
       if(!$('#dlg-body'))return;
       if(!ok){showCode('<strong>Your picks could not be sent automatically.</strong> Copy this code and text it to the commissioner instead.');return;}
@@ -2439,7 +2439,7 @@ const acts={
   withdraw(){
     if(!mayEdit(S.selPlayer))return;
     const n=S.selWeek,k=S.selPlayer,pend=pendingFor(n,k);
-    confirmBox('Withdraw your pending picks?','<p>Your '+pend.count+' pending pick'+(pend.count===1?'':'s')+' will be unlocked on this phone so you can change them and confirm again. '+(mailKey()?'The commissioner will get an email saying you withdrew them.':'Tell the commissioner to ignore the code you sent.')+'</p>','Withdraw',async()=>{
+    confirmBox('Withdraw your pending picks?','<p>Your '+pend.count+' pending pick'+(pend.count===1?'':'s')+' will be unlocked on this device so you can change them and confirm again. '+(mailKey()?'The commissioner will get an email saying you withdrew them.':'Tell the commissioner to ignore the code you sent.')+'</p>','Withdraw',async()=>{
       if(mailKey())await sendMail('MLFL picks withdrawn: '+pname(k)+', '+wname(n),pname(k)+' withdrew the picks confirmed '+(pend.at?chi(pend.at,{weekday:'short',hour:'numeric',minute:'2-digit'})+' CT':'earlier')+' for '+wname(n)+'. Do not load that code. A new one will follow.');
       clearSent(n,k);toast('Withdrawn. Change your picks and tap Confirm picks again.');requestRender(true);
     });
@@ -2556,17 +2556,17 @@ const acts={
     if(!ok){S.gateFails=(S.gateFails||0)+1;await new Promise(r=>setTimeout(r,Math.min(8000,600*S.gateFails)));S.gateErr='That passkey is not right. Passkeys are case sensitive.';requestRender(true);setTimeout(()=>{const j=$('#gate-pw');if(j)j.focus();},30);return;}
     ls.set('mlfl.me',JSON.stringify({k,x}));ls.del('mlfl.visitor');S.meOk={k};S.gateK=null;S.gateErr='';S.gateFails=0;
     S.selPlayer=k;ls.set('mlfl.sel',k);S.view='picks';try{history.replaceState(null,'',location.pathname+location.search+'#picks');}catch(e){}
-    toast('Signed in as '+p.name+'. This phone will remember you.');requestRender(true);
+    toast('Signed in as '+p.name+'. This device will remember you.');requestRender(true);
   },
   visitor(){ls.set('mlfl.visitor','1');S.view='picks';requestRender(true);},
   signoutme(){
     const k=S.me;if(!k)return;
-    confirmBox('Sign out of '+pname(k)+'?','<p>You\'ll need your passkey to sign back in on this phone. Any picks you haven\'t confirmed yet stay saved here.</p>','Sign out',()=>acts.switchuser());
+    confirmBox('Sign out of '+pname(k)+'?','<p>You\'ll need your passkey to sign back in on this device. Any picks you haven\'t confirmed yet stay saved here.</p>','Sign out',()=>acts.switchuser());
   },
   switchuser(){ls.del('mlfl.me');ls.del('mlfl.visitor');S.meOk=null;S.gateK=null;S.gateErr='';S.view='picks';try{history.replaceState(null,'','#picks');}catch(e){}requestRender(true);window.scrollTo(0,0);},
   setpk(el){
     const k=el.dataset.k,gen=pkGenerate();
-    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>New passkey for '+esc(pname(k))+'</h2><p>Use this one, or type your own. It needs at least 8 characters with a lowercase letter, a capital letter, a number and a symbol. Passkeys are case sensitive.</p><p><input type="text" id="pk-new" value="'+esc(gen)+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" size="22"> <button class="btn" id="pk-regen">New random</button></p><p class="err" id="pk-err"></p>'+(players().find(p=>p.key===k).pin?'<p class="muted small">Saving signs '+esc(pname(k))+' out on every phone until they enter the new passkey.</p>':'')+'<div class="bar"><button class="btn primary" id="pk-yes">Save passkey</button><button class="btn" id="pk-no">Go back</button></div></div></div>';
+    $('#modal').innerHTML='<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>New passkey for '+esc(pname(k))+'</h2><p>Use this one, or type your own. It needs at least 8 characters with a lowercase letter, a capital letter, a number and a symbol. Passkeys are case sensitive.</p><p><input type="text" id="pk-new" value="'+esc(gen)+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" size="22"> <button class="btn" id="pk-regen">New random</button></p><p class="err" id="pk-err"></p>'+(players().find(p=>p.key===k).pin?'<p class="muted small">Saving signs '+esc(pname(k))+' out on every device until they enter the new passkey.</p>':'')+'<div class="bar"><button class="btn primary" id="pk-yes">Save passkey</button><button class="btn" id="pk-no">Go back</button></div></div></div>';
     $('#pk-no').onclick=()=>{$('#modal').innerHTML='';};
     $('#pk-regen').onclick=()=>{$('#pk-new').value=pkGenerate();$('#pk-err').textContent='';};
     $('#pk-yes').onclick=async()=>{

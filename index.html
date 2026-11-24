@@ -369,7 +369,14 @@ td input[type=text]{width:8.5rem}td input[type=number]{width:4.6rem}
 .dialog{background:var(--surface);color:var(--ink);border-radius:10px;max-width:440px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px}
 .dialog h2{font-size:1.5rem}
 .dialog ul{margin:0;padding-left:20px}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--board);color:var(--board-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:70;width:max-content;max-width:min(440px,calc(100% - 24px));display:flex;align-items:flex-start;gap:12px;padding:13px 16px 13px 13px;border-radius:14px;background:#0f1d1f;color:#eef5f5;border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--tc,#3fc1cc);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:1rem;font-weight:600;line-height:1.4;cursor:pointer;animation:toastin .28s cubic-bezier(.2,1.2,.4,1) both}
+.toast.ok{--tc:#27a862}.toast.warn{--tc:#f2c94c}.toast.info{--tc:#3fc1cc}
+.toast .tic{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--tc) 22%,transparent);margin-top:-1px}
+.toast .tic svg{width:16px;height:16px;fill:none;stroke:var(--tc);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.toast .tmsg{flex:1;min-width:0;text-wrap:pretty}
+.toast.out{animation:toastout .22s ease-in both}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,-14px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastout{to{opacity:0;transform:translate(-50%,-10px)}}
 ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 @media (max-width:420px){.mast h1{font-size:1.6rem}.weekhead{font-size:1.5rem}.wkhero .weekhead{font-size:2.1rem}.wkday{min-width:64px;padding:5px 10px 6px}.wkday .md{font-size:1.05rem}}
 
@@ -1057,7 +1064,20 @@ function buildDeadlines(){S.dl=new Map();S.gweek=new Map();Object.entries(S.week
 });}
 const subWeek=(k,n)=>{const e=S.entries[k];const w=e&&e.weeks&&e.weeks[n];return w&&w.at?w:null;};
 let toastT;
-function toast(msg){$('#toast').innerHTML='<div class="toast" role="status">'+esc(msg)+'</div>';clearTimeout(toastT);toastT=setTimeout(()=>{$('#toast').innerHTML='';},4200);}
+// Pop-up messages: a card at the top of the screen with an icon (green = done, gold = heads up, teal = info).
+// Stays longer for longer messages; tap it to close.
+function toastKind(m){
+  if(/could not|error|did not accept|not valid|already linked|same name|^nothing|^picks are closed|^no scores|^that does not|^this page could not|^(add|enter|fill|choose|make|tick|save your|sign in on)\b/i.test(m))return 'warn';
+  if(/saved|submitted|copied|removed|unlocked|signed in|built|updated|are in|withdrawn|deleted|sent/i.test(m))return 'ok';
+  return 'info';
+}
+const TOAST_IC={ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',warn:'<path d="M12 7v6"/><path d="M12 17h.01"/>',info:'<path d="M12 11v6"/><path d="M12 7h.01"/>'};
+function toast(msg,kind){
+  kind=kind||toastKind(String(msg));
+  const box=$('#toast');box.innerHTML='<div class="toast '+kind+'" role="'+(kind==='warn'?'alert':'status')+'"><span class="tic" aria-hidden="true"><svg viewBox="0 0 24 24">'+TOAST_IC[kind]+'</svg></span><span class="tmsg">'+esc(msg)+'</span></div>';
+  const el=box.firstChild;el.onclick=()=>{el.classList.add('out');setTimeout(()=>{if(box.firstChild===el)box.innerHTML='';},220);};
+  clearTimeout(toastT);toastT=setTimeout(()=>{if(box.firstChild===el)el.onclick();},Math.min(9000,Math.max(3800,String(msg).length*65)));
+}
 // A finished-action screen in the same style: big check, title, what happened, one OK button.
 function doneBox(title,sub,bodyHtml){
   $('#modal').innerHTML='<div class="overlay"><div class="dialog done" role="dialog" aria-modal="true"><div class="dcheck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="deyebrow">'+esc(sub)+'</div><h2>'+esc(title.replace(/\s*✓$/,''))+'</h2>'+bodyHtml+'<div class="bar dlg-bar"><button class="btn primary" id="dlg-no">OK</button></div></div></div>';

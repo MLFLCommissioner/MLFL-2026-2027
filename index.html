@@ -579,6 +579,13 @@ function tdTrack(g,m){
     td={kind:'td',side:m.lp.side,who:'',pat:m.lp.pat||null};
   }
   else if(k==='other')td=null;
+  // The score went up but we never saw the scoring play (it came and went between checks, and a timeout followed).
+  // Work out what it was from how much the score changed; the lookup below fills in who scored.
+  if(!td&&m.state==='in'&&k!=='other'&&prev.sa!=null&&m.sa!=null){
+    const da=m.sa-prev.sa,dh=m.sh-prev.sh,side=da>0&&dh===0?'away':dh>0&&da===0?'home':null,inc=side==='away'?da:dh;
+    const kind=inc===3?'fg':inc>=6&&inc<=8?'td':inc===2?'sf':null;
+    if(side&&kind)td={kind,side,who:'',pat:kind==='td'&&inc===7?{two:false,ok:true}:kind==='td'&&inc===8?{two:true,ok:true}:null,pre:kind==='td'?(side==='away'?prev.sa:prev.sh):null};
+  }
   // ESPN doesn't always post the extra point as its own play. If the scoring team is up 7 (or 8) from before the touchdown, the try was good.
   if(td&&td.kind==='td'&&!td.pat&&td.pre!=null&&m.sa!=null){const d=(td.side==='away'?m.sa:m.sh)-td.pre;if(d===7)td=Object.assign({},td,{pat:{two:false,ok:true}});else if(d===8)td=Object.assign({},td,{pat:{two:true,ok:true}});}
   // Remember the last real play, so "End of quarter" can still show what happened right before it.
@@ -620,7 +627,7 @@ async function tdBackfill(g,m){
   S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};
   const key=g.away+'|'+g.home+'|'+g.kick,cur=S.tdm.get(key)||{},k=m.lp&&m.lp.kind;
   // Also used when we know a touchdown happened (we saw the extra point) but not who scored it.
-  if(m.state!=='in'||(cur.td&&(cur.td.who||cur.td.kind!=='td'))||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
+  if(m.state!=='in'||(cur.td&&cur.td.who)||!m.eid||!m.clock||!m.period||!(k==='hold'||k==='pat'))return;
   const stamp=m.period+'|'+m.clock;if(S.tdChk[key]===stamp)return;S.tdChk[key]=stamp;
   try{
     const j=await summaryFor(m.eid,stamp);if(!j)return;

@@ -474,10 +474,27 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .dcheck{width:56px;height:56px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:rgba(76,195,138,.18);box-shadow:0 0 0 6px rgba(76,195,138,.08)}
 .dcheck svg{width:30px;height:30px;fill:none;stroke:#7fe0a0;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .deyebrow{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:-8px}
+
+/* Masthead + tabs: same dark board style as the cards */
+.mast{background:linear-gradient(120deg,var(--board) 0%,color-mix(in srgb,var(--board) 82%,var(--accent)) 100%);color:var(--board-ink);border-bottom:1px solid rgba(255,255,255,.06)}
+.mast .wrap{padding-top:16px;padding-bottom:12px}
+.mast h1{display:flex;align-items:center;gap:10px;font-size:2rem;letter-spacing:.03em;font-weight:900}
+.mast h1 em{font-style:normal;color:var(--accent)}
+:root:not([data-theme="dark"]) .mast h1 em{color:#5fd3dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mast h1 em{color:var(--accent)}}
+.mast .mk{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
+.mast .mk svg{width:22px;height:22px;fill:none;stroke:#f2c94c;stroke-width:1.8;stroke-linecap:round}
+.mast .sub{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);opacity:1;color:color-mix(in srgb,var(--board-ink) 80%,transparent)}
+.mast .me{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:.9rem}
+nav{background:color-mix(in srgb,var(--board) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.07)}
+nav .wrap{gap:6px;padding-top:8px;padding-bottom:8px;scrollbar-width:none}nav .wrap::-webkit-scrollbar{display:none}
+nav a{padding:7px 14px;border:1px solid transparent;border-bottom:1px solid transparent;border-radius:999px;color:color-mix(in srgb,var(--board-ink) 62%,transparent);font-weight:700;font-size:.95rem;transition:background .15s,color .15s}
+nav a:hover{color:var(--board-ink);background:rgba(255,255,255,.05)}
+nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 </style>
 </head>
 <body>
-<div class="mast"><div class="wrap"><h1>MLFL Pick'em</h1><span class="sub" id="season"></span><span class="me" id="me" hidden></span></div></div>
+<div class="mast"><div class="wrap"><h1><span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="6.2" transform="rotate(-35 12 12)"/><path d="M8.6 15.4l6.8-6.8M10 11.6l2.4 2.4M11.6 10l2.4 2.4M8.4 13.2l2.4 2.4"/></svg></span>MLFL <em>Pick'em</em></h1><span class="sub" id="season"></span><span class="me" id="me" hidden></span></div></div>
 <nav><div class="wrap" id="nav"></div></nav>
 <div class="wrap"><main id="view"><p class="muted">Loading the league…</p></main></div>
 <div id="modal"></div><div id="toast"></div>

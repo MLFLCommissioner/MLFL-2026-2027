@@ -403,11 +403,44 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .iwhy{font-size:.7rem;opacity:.5;white-space:nowrap}
 .injnote{font-size:.66rem;opacity:.45;margin:0}
 
-.card.game .matchup .rec{font-family:var(--body);font-size:.72rem;font-weight:700;opacity:.55;margin-left:-.1em;font-variant-numeric:tabular-nums}
+.card.game .matchup .rec{font-family:var(--body);font-size:.8em;font-weight:600;opacity:.5;font-variant-numeric:tabular-nums}
 
-.card.game .matchup .mt{display:inline-flex;align-items:baseline;gap:.3em;white-space:nowrap}
-.card.game .matchup .mt .team{align-self:center}
-@media (max-width:420px){.card.game .matchup{font-size:1.05rem}.card.game .matchup .rec{font-size:.66rem}}
+.card.game .matchup .mt{display:inline-flex;align-items:center;gap:.35em;white-space:nowrap}
+@media (max-width:420px){.card.game .matchup{font-size:1.05rem}}
+
+.sbt{flex-direction:column;align-items:flex-start;gap:3px}
+.sbt.home{align-items:flex-end}
+.sbrow{display:flex;align-items:center;gap:10px}
+.sbrec{font-size:.72rem;font-weight:700;opacity:.6;font-variant-numeric:tabular-nums;letter-spacing:.02em;padding-left:2px}
+.sbt.home .sbrec{padding-right:2px}
+.sbt.trail .sbrec{opacity:1}
+.score.sb.pre2 .sbt .logo{width:34px;height:34px}
+.sbpre{font-size:.88rem;font-weight:700;opacity:.8;text-align:center}
+
+.lcombo{position:relative;width:100%;min-width:0}
+.lcombo input.lc-in{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);color:var(--board-ink);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 32px 8px 10px;font:inherit;font-weight:600}
+.lcombo input.lc-in::placeholder{color:var(--board-ink);opacity:.45;font-weight:500}
+.lcombo input.lc-in:focus{outline:none;border-color:#f2c94c;box-shadow:0 0 0 2px rgba(242,201,76,.25)}
+.lc-drop{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:none;color:var(--board-ink);cursor:pointer;display:grid;place-items:center;padding:0}
+.lc-drop svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.lcombo input.lc-in{padding-right:62px;min-height:40px}
+.lc-clear{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:var(--board-ink);font-size:1rem;line-height:1;cursor:pointer}
+.lc-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px;list-style:none;max-height:260px;overflow-y:auto;background:#1b2427;border:1px solid rgba(255,255,255,.18);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.lc-list li{padding:9px 10px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.92rem;color:#eef3f4}
+.lc-list li[aria-selected="true"],.lc-list li[data-v]:hover{background:rgba(242,201,76,.18)}
+.lc-list li.dis{opacity:.4;cursor:default}.lc-list li small{font-weight:500;opacity:.8}
+.lc-list li.none{opacity:.6;cursor:default}
+.pcard,.pcard .pbox{overflow:visible}
+
+.lgd{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-width:640px;margin-left:auto;margin-right:auto;width:100%;box-sizing:border-box;background:var(--board);color:var(--board-ink);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 14px;font-size:.8rem;font-weight:700}
+.lgd span{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;font-size:.72rem;line-height:1.15;opacity:.9}
+.lk{font-style:normal;display:inline-grid;place-items:center;min-width:30px;height:24px;padding:0 7px;border-radius:8px;font-size:.75rem;font-weight:900;box-sizing:border-box}
+.lk.pick{background:rgba(242,201,76,.16);border:1.5px solid #f2c94c;color:#fff}
+.lk.cov{position:relative;width:30px;padding:0;background:rgba(255,255,255,.05);border:2px solid #4cc38a}
+.lk.cov::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#4cc38a}
+.lk.win{background:rgba(76,195,138,.2);color:#7fe0a0}
+.lk.combo{background:rgba(167,99,234,.24);color:#d2b3ff}
+.lk.miss{background:rgba(229,83,75,.18);color:#ff8f84}
 </style>
 </head>
 <body>
@@ -1158,7 +1191,13 @@ function viewPicks(){
   h+='<div class="games">'+games.map(([gid,g])=>gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible)).join('')+'</div>';
   h+='<div class="two">'+parlayCard(week,n,sel,sub,draft,sc,open,visible)+'<div class="stack">'+(canAdd?(S.owner?'<button class="btn primary" data-act="submit">'+(S.isOwner?'Submit '+esc(pname(sel))+"'s picks":'Confirm picks')+'</button>':'<button class="btn primary" data-act="getcode">Confirm picks</button>'):'')+totalsCard(n,sel,sc,sub)+'</div></div>';
   h+=weekTable(week,n);
-  h+='<div class="legend" aria-label="Key"><span><i class="badge pick">Pick</i> Final pick</span><span><i class="badge win">+'+weekMult(week)+'</i> Correct pick</span><span><i class="badge combo">+'+3*weekMult(week)+'</i> Both picks correct in the same game</span><span><i class="badge miss">0</i> Incorrect pick or push</span></div>';
+  // Key, drawn with the same tiles the game cards use.
+  h+='<div class="lgd" aria-label="Key">'+
+    '<span><i class="lk pick">Pick</i>Your pick</span>'+
+    '<span><i class="lk cov"></i>Covering</span>'+
+    '<span><i class="lk win">+'+weekMult(week)+'</i>Correct</span>'+
+    '<span><i class="lk combo">+'+3*weekMult(week)+'</i>Both right</span>'+
+    '<span><i class="lk miss">0</i>No points</span></div>';
   return h;
 }
 // Teams on a bye: every NFL team not on this week's board. Regular season only, and only once the board looks complete.
@@ -1183,6 +1222,36 @@ function roster(act,rows){
       '<span class="rav"><span>'+esc(r.ab)+'</span>'+(r.me?'<i class="rme">You</i>':'')+'</span>'+
       '<span class="rname">'+esc(r.name)+'</span>'+(r.sub?'<span class="rsub">'+esc(r.sub)+'</span>':'')+'</button>').join('')+'</div>';
 }
+// ---- Parlay leg search box ----
+function lcOpts(box){try{return JSON.parse(box.dataset.opts||'[]');}catch(e){return [];}}
+function lcShow(inp,q){
+  const box=inp.closest('.lcombo'),ul=box.querySelector('.lc-list'),words=String(q||'').toLowerCase().split(/\s+/).filter(Boolean);
+  const hits=lcOpts(box).filter(o=>words.every(w=>o[1].toLowerCase().includes(w)));
+  ul.innerHTML=hits.length?hits.map((o,i)=>'<li role="option" data-v="'+esc(o[0])+'"'+(o[2]?' aria-disabled="true" class="dis"':'')+(i===0&&!o[2]?' aria-selected="true"':'')+'>'+esc(o[1])+(o[2]?' <small>already used</small>':'')+'</li>').join(''):'<li class="none">No picks match</li>';
+  ul.hidden=false;inp.setAttribute('aria-expanded','true');
+}
+function lcPick(inp,v){
+  const box=inp.closest('.lcombo'),sel=box.querySelector('select');sel.value=v;
+  inp.blur();sel.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function lcClose(inp){const box=inp.closest('.lcombo');if(!box)return;const ul=box.querySelector('.lc-list');ul.hidden=true;inp.setAttribute('aria-expanded','false');
+  const sel=box.querySelector('select'),cur=sel.value?(lcOpts(box).find(o=>o[0]===sel.value)||[])[1]:'';inp.value=cur||'';}
+document.addEventListener('focusin',ev=>{const t=ev.target;if(t.classList&&t.classList.contains('lc-in')){t.select();lcShow(t,'');}});
+document.addEventListener('input',ev=>{const t=ev.target;if(t.classList&&t.classList.contains('lc-in'))lcShow(t,t.value);});
+document.addEventListener('focusout',ev=>{const t=ev.target;if(t.classList&&t.classList.contains('lc-in'))setTimeout(()=>{if(document.activeElement!==t)lcClose(t);},150);});
+document.addEventListener('mousedown',ev=>{const li=ev.target.closest&&ev.target.closest('.lc-list li[data-v]');if(!li)return;ev.preventDefault();if(li.classList.contains('dis'))return;lcPick(li.closest('.lcombo').querySelector('.lc-in'),li.dataset.v);});
+document.addEventListener('touchend',ev=>{const li=ev.target.closest&&ev.target.closest('.lc-list li[data-v]');if(!li)return;ev.preventDefault();if(li.classList.contains('dis'))return;lcPick(li.closest('.lcombo').querySelector('.lc-in'),li.dataset.v);},{passive:false});
+document.addEventListener('mousedown',ev=>{const b=ev.target.closest&&ev.target.closest('.lc-drop');if(!b)return;ev.preventDefault();
+  const inp=b.closest('.lcombo').querySelector('.lc-in'),ul=b.closest('.lcombo').querySelector('.lc-list');
+  if(!ul.hidden&&document.activeElement===inp){inp.blur();return;}inp.focus();lcShow(inp,'');});
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('.lc-clear');if(!b)return;ev.preventDefault();const box=b.closest('.lcombo');lcPick(box.querySelector('.lc-in'),'');});
+document.addEventListener('keydown',ev=>{
+  const t=ev.target;if(!(t.classList&&t.classList.contains('lc-in')))return;
+  const ul=t.closest('.lcombo').querySelector('.lc-list'),items=[...ul.querySelectorAll('li[data-v]:not(.dis)')],cur=items.findIndex(x=>x.getAttribute('aria-selected')==='true');
+  if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();if(ul.hidden)lcShow(t,t.value);if(!items.length)return;const n=(cur+(ev.key==='ArrowDown'?1:-1)+items.length)%items.length;items.forEach(x=>x.removeAttribute('aria-selected'));items[n].setAttribute('aria-selected','true');items[n].scrollIntoView({block:'nearest'});}
+  else if(ev.key==='Enter'){ev.preventDefault();const it=items[cur>=0?cur:0];if(it)lcPick(t,it.dataset.v);}
+  else if(ev.key==='Escape'){t.blur();}
+});
 function countPicks(w){let c=0;Object.values((w&&w.p)||{}).forEach(x=>{if(x.s)c++;if(x.o)c++;});return c;}
 // What this device last put into a pick code, so a player can still see their own locked picks before kickoff.
 function getSent(n,k){try{return JSON.parse(ls.get('mlfl.sent.'+draftKey(n,k))||'{}')||{};}catch(e){return {};}}
@@ -1234,6 +1303,14 @@ const BALL='<svg class="ball" viewBox="0 0 24 16" aria-label="has the ball" role
 // Field bar: the away team's end zone on the left, the home team's on the right; the ball carrier's logo marks the spot, and the green runs toward the end zone they are attacking.
 // Countdown to kickoff, ticking every second without redrawing the page.
 // Scoreboard strip: [logo] 17   LIVE · Q3 2:36   13 [logo]. The team ahead is bright, the other dimmed.
+function teamRec(g){const r=S.season==='cur'&&S.rec&&S.rec[g.away+'|'+g.home];return r||{};}
+// Before kickoff: the same strip with each team's logo and record, and the countdown or start time in the middle.
+function preBug(g,mid){
+  const rc=teamRec(g);
+  return '<div class="score sb pre2"><span class="sbt"><span class="sbrow">'+logo(g.away)+'</span>'+(rc.a?'<small class="sbrec">'+esc(rc.a)+'</small>':'')+'</span>'+
+    '<span class="sbm"><span class="sbpre">'+mid+'</span></span>'+
+    '<span class="sbt home"><span class="sbrow">'+logo(g.home)+'</span>'+(rc.h?'<small class="sbrec">'+esc(rc.h)+'</small>':'')+'</span></div>';
+}
 function scoreBug(g,sa,sh,mode,detail){
   const Q={'1st':'Q1','2nd':'Q2','3rd':'Q3','4th':'Q4','OT':'OT'},d=String(detail||'').trim();
   let mid;
@@ -1245,10 +1322,11 @@ function scoreBug(g,sa,sh,mode,detail){
   }
   const lead=sa>sh?'a':sh>sa?'h':'';
   const label=g.away+' '+sa+', '+g.home+' '+sh+(mode==='final'?', final':d?', '+d:'');
+  const rc=teamRec(g);
   return '<div class="score sb'+(mode==='final'?' fin':' is-live')+'" role="group" aria-label="'+esc(label)+'">'+
-    '<span class="sbt'+(lead==='h'?' trail':'')+'">'+logo(g.away)+'<span class="pts">'+sa+'</span></span>'+
+    '<span class="sbt'+(lead==='h'?' trail':'')+'"><span class="sbrow">'+logo(g.away)+'<span class="pts">'+sa+'</span></span>'+(rc.a?'<small class="sbrec">'+esc(rc.a)+'</small>':'')+'</span>'+
     '<span class="sbm">'+mid+'</span>'+
-    '<span class="sbt home'+(lead==='a'?' trail':'')+'"><span class="pts">'+sh+'</span>'+logo(g.home)+'</span></div>';
+    '<span class="sbt home'+(lead==='a'?' trail':'')+'"><span class="sbrow"><span class="pts">'+sh+'</span>'+logo(g.home)+'</span>'+(rc.h?'<small class="sbrec">'+esc(rc.h)+'</small>':'')+'</span></div>';
 }
 /* ---- Kickoff weather ----
    Forecast for the kickoff hour at the home team's stadium, from Open-Meteo (free, no key). ESPN's scoreboard tells us
@@ -1459,9 +1537,9 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   else if(L&&L.state!=='pre'&&L.sa!=null)scoreLine=scoreBug(g,L.sa,L.sh,L.completed?'final':'live',L.completed?String(L.detail||''):String(L.detail||''));
   else{
     const since=g.kick?Date.now()-new Date(g.kick).getTime():0;
-    scoreLine='<div class="score pre">'+(kicked(g)?(since>5*3600000?'Waiting for the final score':(L&&L.state==='pre')||(!L&&since<45*60000)?'Game starting soon':'In progress')
+    scoreLine=preBug(g,(kicked(g)?(since>5*3600000?'Waiting for the final score':(L&&L.state==='pre')||(!L&&since<45*60000)?'Game starting soon':'In progress')
       :pastDeadline(g)?(lateOk(g)&&!S.isOwner?'Late pick allowed until kickoff':'Game starts in <span class="cd" data-kick="'+esc(g.kick)+'">'+cdText(g.kick)+'</span>')
-      :'Not started')+'</div>';
+      :'Not started'));
   }
   const r=sc.per[gid]||{},cell=x=>x===true?'<div class="res win">+'+sc.mult+'</div>':(x===false||x==='push')?'<div class="res miss">0</div>':'<div class="res none">.</div>';
   // While a game is being played, ring the side that is covering and the total that is ahead right now. Gone once it's final.
@@ -1473,8 +1551,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const nl=(lock.s?1:0)+(lock.o?1:0);
   const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. '+(S.me&&S.me!==sel?'Lock in your own picks for this game to see '+(nl===1?'it':'them')+'.':'Hidden until picks lock.')+'</div>':'';
   const wx=wxTag(g);
-  const rc=S.season==='cur'&&S.rec&&S.rec[g.away+'|'+g.home],rcs=x=>x?'<small class="rec">'+esc(x)+'</small>':'';
-  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup"><span class="mt">'+teamTag(g.away)+rcs(rc&&rc.a)+'</span><span class="vs">vs</span><span class="mt">'+teamTag(g.home)+rcs(rc&&rc.h)+'</span></h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
+  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
     cells[0]+cells[1]+(r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw))+cells[2]+cells[3]+(r.combo?'':cell(r.ow))+hidden+'</div>'+injBlock(gid,g)+'</article>';
 }
 function legLabel(week,code,own){
@@ -1535,7 +1612,14 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
     h+='<ol class="plegs edit">';
     for(let j=0;j<slots;j++){
       const mine=cur[j]||'',used=cur.filter((x,k)=>k!==j&&x).map(x=>x.split('|').slice(0,2).join('|'));
-      h+='<li class="pleg"><span class="lnum">'+(locked.length+j+1)+'</span><select id="leg'+j+'" data-act="leg" data-i="'+j+'" aria-label="Parlay leg '+(locked.length+j+1)+'"><option value="">Choose a pick</option>'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===mine?' selected':'')+(used.includes(o.split('|').slice(0,2).join('|'))?' disabled':'')+'>'+esc(legLabel(week,o))+'</option>').join('')+'</select></li>';
+      // A search box over the real dropdown: tap to see every pick, or type part of a team name to narrow it down.
+      const list=opts.map(o=>[o,legLabel(week,o),used.includes(o.split('|').slice(0,2).join('|'))?1:0]);
+      h+='<li class="pleg"><span class="lnum">'+(locked.length+j+1)+'</span><div class="lcombo" data-opts="'+esc(JSON.stringify(list))+'">'+
+        '<input id="legq'+j+'" class="lc-in" type="text" data-i="'+j+'" value="'+esc(mine?legLabel(week,mine):'')+'" placeholder="Type a team or tap to choose" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-label="Parlay leg '+(locked.length+j+1)+'">'+
+        (mine?'<button class="lc-clear" type="button" data-i="'+j+'" aria-label="Clear this leg">×</button>':'')+
+        '<button class="lc-drop" type="button" tabindex="-1" aria-label="Show all picks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'+
+        '<ul class="lc-list" role="listbox" hidden></ul>'+
+        '<select id="leg'+j+'" data-act="leg" data-i="'+j+'" hidden aria-hidden="true" tabindex="-1"><option value=""></option>'+opts.map(o=>'<option value="'+esc(o)+'"'+(o===mine?' selected':'')+'>'+esc(legLabel(week,o))+'</option>').join('')+'</select></div></li>';
     }
     h+='</ol><p class="phelp">Any five spread or over/under picks from this week. Legs lock as you send them, so you can send a Thursday leg first and the rest later. If a locked leg loses or pushes, the parlay is over.</p>';
   }

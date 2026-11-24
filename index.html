@@ -46,6 +46,28 @@ body.hof-on main{padding-top:28px}
 .hof .dim{color:var(--hof-dim)}
 .hof-link{color:var(--hof-gold-hi);text-decoration:underline;text-decoration-color:rgba(217,180,90,.5);text-underline-offset:3px}
 .hof-link:hover{text-decoration-color:var(--hof-gold-hi)}
+
+.hof-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.hof-member{position:relative;padding:16px 16px 14px;border:1px solid rgba(217,180,90,.3);border-radius:8px;background:rgba(11,10,18,.7);box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:12px}
+.hof-member.won{border-color:var(--hof-gold-lo);background:linear-gradient(160deg,rgba(58,13,24,.92),rgba(11,10,18,.96) 70%);box-shadow:inset 0 0 0 3px rgba(11,10,18,.85),inset 0 0 0 4px rgba(217,180,90,.3),0 10px 30px rgba(0,0,0,.45)}
+.hm-top{display:flex;align-items:center;gap:12px}
+.hm-rank{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--hof-display);font-weight:700;font-size:.8rem;color:var(--hof-gold);border:1px solid rgba(217,180,90,.5);background:rgba(217,180,90,.06)}
+.hof-member.won .hm-rank{color:#1a1206;background:linear-gradient(180deg,var(--hof-gold-hi),var(--hof-gold) 55%,var(--hof-gold-lo));border-color:var(--hof-gold-hi)}
+.hm-name{flex:1;min-width:0;font-family:var(--hof-display);font-weight:700;font-size:1.45rem;letter-spacing:.06em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-count{display:flex;flex-direction:column;align-items:center;line-height:1}
+.hm-count b{font-family:var(--hof-display);font-weight:900;font-size:2rem}
+.hm-count small{font-family:var(--hof-display);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--hof-dim);margin-top:2px}
+.hm-crowns{display:flex;flex-wrap:wrap;gap:5px}
+.hm-yr{display:inline-flex;align-items:center;gap:4px;padding:4px 9px 4px 6px;border-radius:999px;border:1px solid rgba(217,180,90,.45);background:rgba(217,180,90,.08);font-family:var(--hof-display);font-size:.78rem;letter-spacing:.05em;color:var(--hof-gold-hi);white-space:nowrap}
+.hm-yr svg{width:15px;height:auto}
+.hm-none{font-style:italic;color:var(--hof-dim);font-size:1.05rem}
+.hm-stats{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid rgba(217,180,90,.22);padding-top:10px;margin-top:auto}
+.hm-s{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:0}
+.hm-s+.hm-s{border-left:1px solid rgba(217,180,90,.14)}
+.hm-s b{font-family:var(--hof-display);font-weight:700;font-size:1.05rem;color:var(--hof-ivory);font-variant-numeric:tabular-nums}
+.hm-s span{font-family:var(--hof-display);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--hof-dim);white-space:nowrap}
+.hm-c{display:block;height:14px;margin-top:3px}.hm-c svg{width:20px;height:auto;filter:drop-shadow(0 1px 3px rgba(217,180,90,.45))}
+.hm-s.top b{background:linear-gradient(180deg,var(--hof-gold-hi),var(--hof-gold) 55%,var(--hof-gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
 .hof .foot{text-align:center;font-style:italic;color:var(--hof-dim);font-size:1rem}
 @media (prefers-reduced-motion:no-preference){.hof-plaque{transition:transform .2s ease}.hof-plaque:hover{transform:translateY(-3px)}}
 /* Layout idea: a scoreboard. Teal masthead, a wall of game cards that read like the sheet's blocks, results in a right-hand column. */
@@ -122,6 +144,7 @@ main{padding:20px 0 56px;display:flex;flex-direction:column;gap:20px}
 .wkday .md{font-size:1.15rem;font-weight:800;line-height:1.15}
 .wkday small{opacity:.65;font-size:.7rem;font-weight:600}
 .wkbye{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.wkbye-none{font-size:.88rem;font-weight:700;opacity:.85;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
 .wkbye-l{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
 .wkbye-t{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:6px;width:100%;max-width:calc(var(--n,4) * 110px)}
 .wkbt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);min-width:0}
@@ -491,6 +514,55 @@ nav .wrap{gap:6px;padding-top:8px;padding-bottom:8px;scrollbar-width:none}nav .w
 nav a{padding:7px 14px;border:1px solid transparent;border-bottom:1px solid transparent;border-radius:999px;color:color-mix(in srgb,var(--board-ink) 62%,transparent);font-weight:700;font-size:.95rem;transition:background .15s,color .15s}
 nav a:hover{color:var(--board-ink);background:rgba(255,255,255,.05)}
 nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+
+/* ---- Standings & Futures: dark cards like the Picks tab ---- */
+.phero .wkhero-main{margin:6px 0 8px}.phero .wkdays{margin-top:2px}
+.wkpill.gold{background:rgba(242,201,76,.18);color:#f2c94c}
+.dcard{background:var(--board);color:var(--board-ink);border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.14);padding:14px 10px 10px;margin:0 0 14px;overflow:hidden}
+.dcard .thead{margin-top:0}
+.sboard .lbl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lbr.st{cursor:default}.lbr.st:hover{background:rgba(255,255,255,.04)}
+.lbr.st .lbtot small{white-space:nowrap}
+.sav{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);font-size:.66rem;font-weight:900;letter-spacing:.02em;margin-right:8px;vertical-align:middle;flex:0 0 auto}
+.lbname .sav{margin-top:-2px}
+.lbr.p1 .sav{background:rgba(242,201,76,.25);color:#f2c94c}
+.dtw{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)}
+.dtab th,.dtab td{border-bottom:1px solid rgba(255,255,255,.06);padding:9px 10px;text-align:center}
+.dtab th{color:var(--board-ink);opacity:.55;font-size:.7rem;font-weight:800;letter-spacing:.1em}
+.dtab th a{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+.dtab th a:hover{color:var(--accent);opacity:1}
+.dtab tr:last-child td{border-bottom:0}
+.dtab th.l,.dtab td.l{text-align:left;position:sticky;left:0;background:var(--board);z-index:1;font-weight:800}
+.dtab td.l .sav{width:24px;height:24px;font-size:.58rem}
+.dtab .tt{background:rgba(255,255,255,.05)}.dtab td.tt b{font-family:var(--display);font-size:1.15rem;font-weight:900}
+.dtab .dim{opacity:.35}
+.wchip{display:inline-block;min-width:2.2em;padding:2px 6px;border-radius:8px;background:#f2c94c;color:#1d1600;font-weight:900}
+.wchip.sm{min-width:0;padding:0 5px;font-size:.7rem;color:#f2c94c}
+.dfoot{font-size:.78rem;opacity:.6;text-align:center;margin:10px 4px 2px}
+.dlist{margin:12px 4px 2px;padding-left:20px;font-size:.88rem;line-height:1.5;opacity:.85}.dlist li{margin:3px 0}
+.ttiles.rules{margin-top:4px}
+@media (max-width:520px){.ttiles.rules{grid-template-columns:repeat(3,1fr)}.ttiles.rules .tv{font-size:1.2rem}}
+.fchip .md{display:inline-flex;align-items:center;gap:5px}.fchip .logo{width:18px;height:18px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:14px}
+.fcard{margin:0;padding:12px}
+.fcard.me{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.fhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+.fhead .lbname{display:flex;align-items:center}
+.fpts{font-family:var(--display);font-weight:900;font-size:1.5rem;opacity:.6}.fpts.hl{color:#f2c94c;opacity:1}
+.frow{display:grid;grid-template-columns:5.6rem 1fr 1.6rem;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-top:6px}
+.flab{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.65;display:flex;flex-direction:column;line-height:1.2}.flab small{font-size:.66rem;opacity:.8;letter-spacing:.04em}
+.fteam{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.02rem;min-width:0}.fteam .logo{width:28px;height:28px}
+.fteam span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fres{font-weight:900;text-align:center}
+.frow.win{background:rgba(39,168,98,.16);border-color:rgba(39,168,98,.5)}.frow.win .fres{color:#7fe0a0}
+.frow.miss{opacity:.55}.frow.miss .fres{color:#ff8a80}
+.fnone{opacity:.55;font-weight:700;text-align:center;padding:18px 0;margin:0}
+.fpop{gap:4px}.fpt{display:flex;flex-direction:column;align-items:center;gap:3px}.fpt .logo{width:34px;height:34px}.fpt b{font-size:1rem}
+.fform .fsel{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:4px 2px 12px}
+.fform label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+.fform select{background:rgba(255,255,255,.08);color:var(--board-ink);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px;font:inherit;font-weight:600;text-transform:none;letter-spacing:0}
+.fform select option{color:#111;background:#fff}
+.fform .dlg-bar{display:grid;margin:0 2px}.fform .btn.primary{background:#f2c94c;color:#1d1600;border-color:#f2c94c;font-weight:800;padding:10px}
 </style>
 </head>
 <body>
@@ -1188,7 +1260,7 @@ function weekHero(o){
   const days=o.days&&o.days.length?'<div class="wkdays">'+o.days.map(x=>'<span class="wkday"><b>'+esc(x.d)+'</b><span class="md">'+esc(x.md)+'</span>'+(o.days.length>1&&x.n?'<small>'+x.n+' game'+(x.n===1?'':'s')+'</small>':'')+'</span>').join('')+'</div>':(o.label?'<div class="wkdays"><span class="wkday">'+esc(o.label)+'</span></div>':'');
   return '<section class="wkhero"><div class="wkhero-top"><span class="wkeyebrow">'+esc(o.eyebrow)+'</span><span class="wkpill '+o.status.c+'">'+(o.status.c==='live'?'<span class="live-dot" aria-hidden="true"></span>':'')+esc(o.status.t)+'</span></div>'+
     '<div class="wkhero-main">'+arrow(prev,'Previous week','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>')+'<h2 class="weekhead">'+esc(o.title)+'</h2>'+arrow(next,'Next week','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>')+'</div>'+days+
-    (o.bye&&o.bye.length?'<div class="wkbye"><span class="wkbye-l">On bye</span><span class="wkbye-t" style="--n:'+(o.bye.length<=5?o.bye.length:o.bye.length===6?3:4)+'">'+o.bye.map(t=>'<span class="wkbt">'+logo(t)+'<span>'+esc(t)+'</span></span>').join('')+'</span></div>':'')+'<div class="wkhero-ctl">'+(o.select?'<label class="small">Week '+o.select+'</label>':'')+seasonPicker()+'</div></section>';
+    (o.bye&&o.bye.length?'<div class="wkbye"><span class="wkbye-l">On bye</span><span class="wkbye-t" style="--n:'+(o.bye.length<=5?o.bye.length:o.bye.length===6?3:4)+'">'+o.bye.map(t=>'<span class="wkbt">'+logo(t)+'<span>'+esc(t)+'</span></span>').join('')+'</span></div>':(o.noBye?'<div class="wkbye"><span class="wkbye-l">On bye</span><span class="wkbye-none">No teams on bye this week</span></div>':''))+'<div class="wkhero-ctl">'+(o.select?'<label class="small">Week '+o.select+'</label>':'')+seasonPicker()+'</div></section>';
 }
 function seasonPicker(){
   return '<label class="small muted" for="seasonsel">Season <select id="seasonsel"><option value="cur"'+(S.season==='cur'?' selected':'')+'>'+esc(curSeasonLabel())+' (current)</option>'+SEASONS.map(x=>'<option value="'+esc(x.id)+'"'+(S.season===x.id?' selected':'')+'>'+esc(x.id)+'</option>').join('')+'</select></label>';
@@ -1204,7 +1276,7 @@ function viewPicks(){
   const lab=week?(week.label||weekLabel(week)):'';
   if(week)setTimeout(()=>{recLoad(week);wxLoad(week);injLoad(week);},0);
   h+=weekHero({eyebrow:curSeasonLabel()+' Season'+(week&&week.round?' · Postseason':''),title:wname(n),days:week&&Object.values(week.games||{}).every(g=>g.kick)?weekDays(week):null,label:week?(week.label||weekLabel(week)):'',
-    status:week?weekStatus(week,n===cur):{t:'Not posted yet',c:'soon'},nums,n,step:'wkstep',bye:week?byeTeams(week):[],
+    status:week?weekStatus(week,n===cur):{t:'Not posted yet',c:'soon'},nums,n,step:'wkstep',bye:week?byeTeams(week):[],noBye:noByes(week),
     select:nums.length>1?'<select id="weeksel" aria-label="Show week">'+nums.map(x=>'<option value="'+x+'"'+(x===n?' selected':'')+'>'+esc(wname(x))+(x===cur?' (current)':'')+'</option>').join('')+'</select>':''});
   if(!week){
     h+='<div class="note"><p><strong>The Week '+esc(n)+' board has not been built yet.</strong></p><p>'+(S.isOwner?'Open the <a href="#commish">Commissioner</a> tab to load this week\'s lines.':'The commissioner will post the lines here. The standings are up to date in the meantime.')+'</p></div>';
@@ -1262,6 +1334,13 @@ function byeTeams(week){
   const on=new Set();gs.forEach(g=>{on.add(String(g.away||'').trim());on.add(String(g.home||'').trim());});
   const off=Object.keys(LOGOS).filter(t=>!on.has(t)).sort();
   return off.length<=12?off:[];
+}
+// Every team plays this week (a full regular-season board with all 32 teams).
+function noByes(week){
+  if(!week||week.round)return false;
+  const gs=Object.values(week.games||{});if(gs.length<16)return false;
+  const on=new Set();gs.forEach(g=>{on.add(String(g.away||'').trim());on.add(String(g.home||'').trim());});
+  return Object.keys(LOGOS).every(t=>on.has(t));
 }
 function byeLine(week){
   const t=byeTeams(week);if(!t.length)return '';
@@ -1818,47 +1897,89 @@ function archPicks(A){
   h+=leaderBoard(aWname(week,n)+' scoreboard','','aselp',rows.map(r=>({key:r.p.key,name:r.p.name,total:r.t,pct:r.pct,sel:r.p.key===S.aPlayer,guest:(A.guests||[]).includes(r.p.key)})));
   return h;
 }
+// ---- Shared pieces for the Standings and Futures tabs (same dark card look as Picks) ----
+function pageHero(o){
+  return '<section class="wkhero phero"><div class="wkhero-top"><span class="wkeyebrow">'+esc(o.eyebrow)+'</span>'+(o.pill?'<span class="wkpill '+(o.pill.c||'')+'">'+esc(o.pill.t)+'</span>':'')+'</div>'+
+    '<div class="wkhero-main"><h2 class="weekhead">'+esc(o.title)+'</h2></div>'+(o.html||'')+'<div class="wkhero-ctl">'+seasonPicker()+'</div></section>';
+}
+function stInit(name){return String(name||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,3).toUpperCase();}
+function stAv(key,name){const p=players().find(x=>x.key===key);return '<span class="sav">'+esc(p?abbr(p):stInit(name))+'</span>';}
+// Season standings as leaderboard rows: rank, avatar, name, chips and the total, with a bar for how close each player is to the leader.
+function stBoard(title,sub,list,meKey){
+  const max=Math.max(1,...list.map(r=>r.points||0)),top=list.length?list[0].points:0;
+  return '<section class="dcard sboard"><div class="thead">'+esc(title)+'</div>'+(sub?'<div class="tnote">'+esc(sub)+'</div>':'')+'<ol class="lbl">'+list.map((r,i)=>{
+    const pos=1+list.filter(x=>x.points>r.points).length,w=Math.max(0,(r.points||0)/max*100),pb=top-r.points;
+    const chips=[['Weeks won',r.won,r.won>0],['Correct',r.cpp==null?'–':(Math.round(r.cpp*10)/10)+'%']];
+    if(r.fut)chips.push(['Futures','+'+r.fut,true]);
+    return '<li><div class="lbr st'+(pos<=3?' p'+pos:'')+(r.key===meKey?' sel':'')+'">'+
+      '<span class="lbbar" style="width:'+w.toFixed(1)+'%"></span><span class="lbrank">'+ordinal(pos)+'</span>'+
+      '<span class="lbwho">'+'<span class="lbname">'+stAv(r.key,r.name)+esc(r.name)+(r.key===meKey?' <small>(you)</small>':'')+'</span>'+
+      '<span class="lbchips">'+chips.map(c=>'<span class="lbchip'+(c[2]?' hl':'')+'">'+esc(c[0])+' <b>'+esc(c[1])+'</b></span>').join('')+'</span></span>'+
+      '<span class="lbtot"><b>'+r.points+'</b><small>'+(pb===0?(pos===1?'Leader':'Tied'):'−'+pb+' back')+'</small></span></div></li>';
+  }).join('')+'</ol></section>';
+}
+// Points by week, on a dark card. Gold chip = week winner. Tapping a week opens it on Picks.
+function stWeeks(list,nums,winners,label,act,extraCols){
+  extraCols=extraCols||[];
+  return '<section class="dcard"><div class="thead">Points by week</div><div class="tw dtw"><table class="dtab"><thead><tr><th class="l">Player</th>'+extraCols.map(c=>'<th>'+esc(c.h)+'</th>').join('')+nums.map(n=>'<th><a href="#picks" data-act="'+act+'" data-n="'+n+'">'+esc(label(n))+'</a></th>').join('')+(extraCols.length||act==='goweek'?'<th>Futures</th>':'')+'<th class="tt">Total</th></tr></thead><tbody>'+
+    list.map(r=>'<tr><td class="l">'+stAv(r.key,r.name)+esc(r.name)+'</td>'+extraCols.map(c=>'<td>'+c.v(r)+'</td>').join('')+nums.map(n=>{const v=r.byWeek[n];return '<td>'+(v==null?'<span class="dim">–</span>':(winners[n]||[]).includes(r.key)?'<span class="wchip">'+v+'</span>':v)+'</td>';}).join('')+(extraCols.length||act==='goweek'?'<td>'+(r.fut?'+'+r.fut:'<span class="dim">0</span>')+'</td>':'')+'<td class="tt"><b>'+r.points+'</b></td></tr>').join('')+
+    '</tbody></table></div><div class="dfoot"><span class="wchip sm">00</span> Week winner · Tap a week to see every pick</div></section>';
+}
 function archStandings(A){
-  const st=aStandings(A),list=st.list,max=list.length?list[0].points:0,nums=aNums(A);
-  let h='<div class="bar"><h2 class="weekhead">'+esc(A.id)+' Final Standings</h2>'+seasonPicker()+'</div>';
-  if(list.length)h+='<p><strong>Season champion: '+esc(list[0].name)+'</strong></p>';
-  h+='<section class="card"><div class="tw"><table><thead><tr><th class="l">#</th><th class="l">Player</th><th>Points</th><th title="Points behind the leader">PB</th><th>Weeks won</th><th>Correct pick %</th></tr></thead><tbody>'+
-    list.map((r,i)=>'<tr class="'+(i===0?'lead':'')+'"><td class="l">'+rankTag(i+1)+'</td><td class="l">'+esc(r.name)+'</td><td><strong>'+r.points+'</strong></td><td class="pb">'+(max-r.points===0?'<span class="muted">—</span>':'-'+(max-r.points))+'</td><td>'+r.won+'</td><td>'+(r.cpp==null?'':r.cpp.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
-  h+='<section class="card"><h3>Points by week</h3><div class="tw"><table><thead><tr><th>Player</th>'+nums.map(n=>'<th><a href="#picks" data-act="agoweek" data-n="'+n+'">'+esc(aShort(A.weeks[n],n))+'</a></th>').join('')+'<th>Total</th></tr></thead><tbody>'+
-    list.map(r=>'<tr><td>'+esc(r.name)+'</td>'+nums.map(n=>'<td class="'+((st.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td><strong>'+r.points+'</strong></td></tr>').join('')+'</tbody></table></div><p class="pad muted small">A gold cell marks the week winner. Tap a week to see every pick.'+(A.tie==='none'?' This season a tied week went to nobody.':'')+'</p></section>';
-  if(A.notes&&A.notes.length)h+='<section class="card"><h3>About this season\'s records</h3><div class="pad"><ul>'+A.notes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></section>';
+  const st=aStandings(A),list=st.list,nums=aNums(A);
+  let h=pageHero({eyebrow:A.id+' Season',title:'Final Standings',pill:list.length?{t:'Champion · '+list[0].name,c:'gold'}:{t:'Final',c:'fin'}});
+  h+=stBoard('Final standings','',list,null);
+  h+=stWeeks(list,nums,st.winners,n=>aShort(A.weeks[n],n),'agoweek');
+  if(A.tie==='none')h+='<p class="muted small">This season a tied week went to nobody.</p>';
+  if(A.notes&&A.notes.length)h+='<section class="dcard"><div class="thead">About this season\'s records</div><ul class="dlist">'+A.notes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></section>';
   return h;
 }
 /* ---------- Standings ---------- */
 function viewStandings(){
   if(archSeason())return archStandings(archSeason());
   const hasBase=players().some(p=>p.base&&p.base.points);
-  const s=computeSeason(S.cfg,S.weeks,S.entries),max=Math.max(...s.list.map(r=>r.points));
-  let h='<div class="bar"><h2 class="weekhead">Current Point Standings</h2>'+seasonPicker()+'</div>';
-  h+='<section class="card"><div class="tw"><table><thead><tr><th class="l">#</th><th class="l">Player</th><th>Points</th><th title="Points behind the leader">PB</th><th>Weeks won</th><th>Correct pick %</th></tr></thead><tbody>'+
-    s.list.map((r,i)=>'<tr class="'+(i===0?'lead':'')+'"><td class="l">'+rankTag(i+1)+'</td><td class="l">'+esc(r.name)+(r.key===S.me?' (you)':'')+'</td><td><strong>'+r.points+'</strong></td><td class="pb">'+(max-r.points===0?'<span class="muted">—</span>':'-'+(max-r.points))+'</td><td>'+r.won+'</td><td>'+(r.cpp==null?'':r.cpp.toFixed(2)+'%')+'</td></tr>').join('')+'</tbody></table></div></section>';
+  const s=computeSeason(S.cfg,S.weeks,S.entries);
+  const done=s.nums.filter(n=>weekComplete(S.weeks[n])),last=done.length?done[done.length-1]:null;
+  const live=s.nums.some(n=>!weekComplete(S.weeks[n]));
+  let h=pageHero({eyebrow:curSeasonLabel()+' Season',title:'Standings',pill:last?{t:'Through '+wname(last),c:''}:{t:'Season start',c:''}});
+  h+=stBoard('Season standings',live?'Counts finished games so far':'',s.list,S.me);
   if(S.cfg.baseLabel)h+='<p class="muted small">'+esc(S.cfg.baseLabel)+'</p>';
-  h+='<section class="card"><h3>Points by week</h3>';
-  if(!s.nums.length)h+='<div class="pad muted">Weekly results will appear here once the first week is played on this site.</div>';
-  else h+='<div class="tw"><table><thead><tr><th>Player</th>'+(hasBase?'<th>Carried over</th>':'')+s.nums.map(n=>'<th><a href="#picks" data-act="goweek" data-n="'+n+'">'+esc(S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n)+'</a></th>').join('')+'<th>Futures</th><th>Total</th></tr></thead><tbody>'+
-    s.list.map(r=>{const p=players().find(x=>x.key===r.key);return '<tr><td>'+esc(r.name)+'</td>'+(hasBase?'<td>'+((p.base&&p.base.points)||0)+'</td>':'')+s.nums.map(n=>'<td class="'+((s.winners[n]||[]).includes(r.key)?'winner':'')+'">'+(r.byWeek[n]==null?'':r.byWeek[n])+'</td>').join('')+'<td>'+r.fut+'</td><td><strong>'+r.points+'</strong></td></tr>';}).join('')+'</tbody></table></div><p class="pad muted small">Only final games count here. A gold cell marks the week winner. Tap a week to see every pick.</p>';
-  h+='</section>';
-  h+='<section class="card"><h3>How points work</h3><div class="pad"><ul><li>+1 for each correct spread pick and each correct over/under pick.</li><li>+3 instead when both of your picks in the same game are correct.</li><li>A push scores 0.</li><li>+20 when all five legs of your parlay win. A push or a loss on any leg scores 0.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over; if it wins, the remaining legs can still be added before their games kick off.</li><li>Postseason rounds score double: +2 per correct pick and +6 for both in a game. The parlay stays at +20.</li><li>No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>Picks lock 30 minutes before the first game of each day (Central time). Every game that day locks at the same time, including night games. Monday games lock with Sunday\'s games.</li><li>The highest total in a finished week wins the week. Ties share the win.</li><li>PB is how many points a player is behind the leader.</li></ul></div></section>';
+  if(!s.nums.length)h+='<section class="dcard"><div class="thead">Points by week</div><p class="dfoot">Weekly results will appear here once the first week is played on this site.</p></section>';
+  else h+=stWeeks(s.list,s.nums,s.winners,n=>S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n,'goweek',hasBase?[{h:'Carried over',v:r=>{const p=players().find(x=>x.key===r.key);return (p&&p.base&&p.base.points)||0;}}]:[]);
+  const tile=(v,l,hl)=>'<div class="ttile'+(hl?' hl':'')+'"><span class="tv">'+v+'</span><span class="tl">'+l+'</span></div>';
+  h+='<section class="dcard"><div class="thead">How points work</div><div class="ttiles n6 rules">'+tile('+1','Correct pick')+tile('+3','Both in a game')+tile('0','Push')+tile('+20','5-leg parlay',1)+tile('×2','Postseason')+tile('+10/+20','Futures')+'</div>'+
+    '<ul class="dlist"><li>Postseason picks are +2 each and +6 for both in a game. The parlay stays at +20.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over. A push or a loss on any leg scores 0. No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>Picks lock 30 minutes before the first game of each day (Central time); every game that day locks together. Monday games lock with Sunday\'s.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></section>';
   return h;
 }
 
 /* ---------- Futures ---------- */
+// Futures as one card per player: AFC, NFC and Super Bowl picks with logos, and a check or cross once decided.
+function futRow(lab,pts,team,res){
+  const st=!team?'':res?(team===res?'win':'miss'):'';
+  return '<div class="frow '+st+'"><span class="flab">'+lab+'<small>+'+pts+'</small></span>'+(team?'<span class="fteam">'+logo(team)+'<span>'+esc(team)+'</span></span>':'<span class="fteam dim">—</span>')+'<span class="fres">'+(st==='win'?'✓':st==='miss'?'✕':'')+'</span></div>';
+}
+function futCard(name,key,f,res,pts,meKey){
+  return '<article class="dcard fcard'+(key===meKey?' me':'')+'"><header class="fhead"><span class="lbname">'+stAv(key,name)+esc(name)+(key===meKey?' <small>(you)</small>':'')+'</span>'+(pts!=null?'<span class="fpts'+(pts>0?' hl':'')+'">'+(pts>0?'+'+pts:'0')+'</span>':'')+'</header>'+
+    (f?futRow('AFC',10,f[0],res.afc)+futRow('NFC',10,f[1],res.nfc)+futRow('Super Bowl',20,f[2],res.sb):'<p class="fnone">Not entered yet</p>')+'</article>';
+}
+// The most-picked team in each category.
+function futPopular(sets){
+  const cat=(i,lab)=>{const c={};sets.forEach(f=>{if(f&&f[i])c[f[i]]=(c[f[i]]||0)+1;});const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+    return '<div class="ttile fpop"><span class="tl">'+lab+'</span>'+(top?'<span class="fpt">'+logo(top[0])+'<b>'+esc(top[0])+'</b></span><span class="tl">'+top[1]+' of '+sets.filter(Boolean).length+'</span>':'<span class="tv">–</span>')+'</div>';};
+  return '<section class="dcard"><div class="thead">Most picked</div><div class="ttiles n3">'+cat(0,'AFC')+cat(1,'NFC')+cat(2,'Super Bowl')+'</div></section>';
+}
+function futHeroHtml(res){
+  const chip=(lab,pts,team)=>'<span class="wkday fchip"><b>'+lab+'</b>'+(team?'<span class="md">'+logo(team)+esc(team)+'</span>':'<span class="md">+'+pts+'</span>')+'</span>';
+  return '<div class="wkdays">'+chip('AFC',10,res.afc)+chip('NFC',10,res.nfc)+chip('Super Bowl',20,res.sb)+'</div>';
+}
 function archFutures(A){
-  let h='<div class="bar"><h2 class="weekhead">'+esc(A.id)+' Future Picks</h2>'+seasonPicker()+'</div>';
   const F=A.fut;
-  if(!F)return h+'<div class="note"><p>There were no future picks in the '+esc(A.id)+' season.</p></div>';
-  const m=F.h.match(/\((.*)\)/);
-  h+='<p class="muted">'+esc(m?m[1].replace(/\bSB\b/,'Super Bowl winner').replace(/\bAFC\b/,'AFC winner').replace(/\bNFC\b/,'NFC winner'):'')+'</p>';
-  const r=F.res||{},mark=(pick,res)=>teamTag(pick)+(res?(pick===res?' <span class="badge win">✓</span>':' <span class="badge miss">✕</span>'):'');
+  if(!F)return pageHero({eyebrow:A.id+' Season',title:'Futures'})+'<section class="dcard"><p class="dfoot">There were no future picks in the '+esc(A.id)+' season.</p></section>';
+  const r=F.res||{};
+  let h=pageHero({eyebrow:A.id+' Season',title:'Futures',pill:{t:'Final',c:'fin'},html:futHeroHtml(r)});
   const ps=A.players.filter(p=>F.picks[p.key]).map(p=>({p,f:F.picks[p.key],pts:F.pts[p.key]||0})).sort((a,b)=>b.pts-a.pts);
-  h+='<section class="card"><div class="tw"><table><thead><tr><th>Player</th><th class="l">AFC winner</th><th class="l">NFC winner</th><th class="l">Super Bowl winner</th><th>Points</th></tr></thead><tbody>'+
-    ps.map(x=>'<tr><td>'+esc(x.p.name)+'</td><td class="l">'+mark(x.f[0],r.afc)+'</td><td class="l">'+mark(x.f[1],r.nfc)+'</td><td class="l">'+mark(x.f[2],r.sb)+'</td><td><strong>'+(x.pts?'+'+x.pts:'0')+'</strong></td></tr>').join('')+'</tbody></table></div></section>';
-  h+='<section class="card"><h3>How it finished</h3><div class="pad stack"><div class="bar">'+(r.afc?'<span>AFC winner: '+teamTag(r.afc)+'</span>':'')+(r.nfc?'<span>NFC winner: '+teamTag(r.nfc)+'</span>':'')+(r.sb?'<span>Super Bowl winner: '+teamTag(r.sb)+'</span>':'')+'</div>'+(r.sbNote?'<p class="muted small">'+esc(r.sbNote)+'</p>':'')+'<p class="muted small">Future points were added to the final week\'s total on the sheets, so they are already in the standings.</p></div></section>';
+  h+='<div class="fgrid">'+ps.map(x=>futCard(x.p.name,x.p.key,x.f,r,x.pts,null)).join('')+'</div>';
+  h+='<p class="muted small">'+(r.sbNote?esc(r.sbNote)+' ':'')+'Future points were added to the final week\'s total on the sheets, so they are already in the standings.</p>';
   return h;
 }
 const CROWN='<svg viewBox="0 0 64 44" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e3a1"/><stop offset=".5" stop-color="#d9b45a"/><stop offset="1" stop-color="#8a6a24"/></linearGradient></defs><path d="M4 14l14 11L32 4l14 21 14-11-5 24H9z" fill="url(#cg)" stroke="#5a4316" stroke-width="1.2" stroke-linejoin="round"/><rect x="9" y="38" width="46" height="5" rx="1.5" fill="url(#cg)"/><circle cx="4" cy="13" r="3" fill="#f6e3a1"/><circle cx="32" cy="4" r="3.2" fill="#f6e3a1"/><circle cx="60" cy="13" r="3" fill="#f6e3a1"/><circle cx="32" cy="29" r="3" fill="#7a1b2c" stroke="#f6e3a1" stroke-width="1"/></svg>';
@@ -1919,8 +2040,19 @@ function viewHof(){
   h+='<div class="hof-rule">Champions</div><div class="hof-champs">'+
     (D.live?'<div class="hof-plaque live"><span class="yr">'+esc(D.live.yr)+'</span><span class="nm gold">'+esc(D.live.name)+'</span><span class="pts">leads with '+D.live.pts+' points · season in progress</span></div>':'')+
     D.champs.slice().reverse().map(c=>'<div class="hof-plaque">'+CROWN+'<span class="yr">'+esc(c.yr)+'</span><span class="nm gold">'+esc(c.name)+'</span><span class="pts">'+c.pts+' points'+(c.by!=null?', won by '+c.by:'')+'</span></div>').join('')+'</div>';
-  h+='<div class="hof-rule">Titles</div><div class="tw"><table><thead><tr><th class="l">Member</th><th class="l">Championships</th><th>Seasons</th><th>All-time points</th><th>Weeks won</th><th>Parlays hit</th><th>Correct pick %</th></tr></thead><tbody>'+
-    people.map(p=>'<tr><td class="l"><strong>'+esc(p.name)+'</strong></td><td class="l">'+(p.titles.length?'<span class="crowns">'+'♛'.repeat(p.titles.length)+'</span> '+p.titles.length+' <span class="dim">('+esc(p.titles.join(', '))+')</span>':'<span class="dim">—</span>')+'</td><td>'+p.seasons+'</td><td>'+p.points+'</td><td>'+p.won+'</td><td>'+p.parlays+'</td><td>'+(p.n?(p.c/p.n*100).toFixed(2)+'%':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  // Titles: one card per member — crowns and the seasons they won, then their career numbers.
+  const shortYr=y=>{const m=String(y).match(/^(\d{4})-(\d{2})(\d{2})$/);return m?m[1].slice(2)+'–'+m[3]:y;};
+  const roman=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+  const pctOf=p=>p.n?p.c/p.n*100:-1;
+  const best={points:Math.max(...people.map(p=>p.points)),won:Math.max(...people.map(p=>p.won)),parlays:Math.max(...people.map(p=>p.parlays)),pct:Math.max(...people.map(pctOf))};
+  h+='<div class="hof-rule">Titles</div><div class="hof-members">'+people.map((p,i)=>{
+    const t=p.titles.length,pct=p.n?(p.c/p.n*100).toFixed(1)+'%':'—';
+    const stat=(v,l,top)=>'<div class="hm-s'+(top?' top':'')+'"><b>'+v+'</b><span>'+l+'</span><i class="hm-c"'+(top?' title="Most in the league"':' aria-hidden="true"')+'>'+(top?CROWN:'')+'</i></div>';
+    return '<article class="hof-member'+(t?' won':'')+'"><div class="hm-top"><span class="hm-rank">'+(roman[i]||i+1)+'</span><span class="hm-name'+(t?' gold':'')+'">'+esc(p.name)+'</span>'+
+      (t?'<span class="hm-count"><b class="gold">'+t+'</b><small>'+(t===1?'Title':'Titles')+'</small></span>':'')+'</div>'+
+      (t?'<div class="hm-crowns">'+p.titles.map(y=>'<span class="hm-yr">'+CROWN+'<span>'+esc(shortYr(y))+'</span></span>').join('')+'</div>':'<div class="hm-none">Still chasing the crown</div>')+
+      '<div class="hm-stats">'+stat(p.seasons,'Seasons')+stat(p.points,'Points',p.points>0&&p.points===best.points)+stat(p.won,'Weeks won',p.won>0&&p.won===best.won)+stat(p.parlays,'Parlays',p.parlays>0&&p.parlays===best.parlays)+stat(pct,'Correct',p.n>0&&pctOf(p)===best.pct)+'</div></article>';
+  }).join('')+'</div>';
   const topPts=people.slice().sort((a,b)=>b.points-a.points)[0],topWon=people.slice().sort((a,b)=>b.won-a.won)[0];
   const group=(title,cards)=>'<div class="hof-group"><h3 class="hof-sub gold">'+title+'</h3><div class="hof-grid">'+cards+'</div></div>';
   h+='<div class="hof-rule">Records</div>'+
@@ -2044,15 +2176,20 @@ function readNewPlayers(){
 }
 function viewFutures(){
   if(archSeason())return archFutures(archSeason());
-  const fr=S.cfg.futuresResult||{},me=S.me,mine=me&&S.entries[me]&&S.entries[me].futures,open=S.cfg.futuresOpen!==false;
-  let h='<div class="bar"><h2 class="weekhead">'+esc(curSeasonLabel())+' Future Picks</h2>'+seasonPicker()+'</div><p class="muted">AFC winner +10 | NFC winner +10 | Super Bowl winner +20</p>';
+  const fr=S.cfg.futuresResult||{},open=S.cfg.futuresOpen!==false;
+  const anyRes=fr.afc||fr.nfc||fr.sb,allRes=fr.afc&&fr.nfc&&fr.sb;
+  let h=pageHero({eyebrow:curSeasonLabel()+' Season',title:'Futures',pill:allRes?{t:'Final',c:'fin'}:open?{t:'Open',c:'prog'}:{t:'Locked',c:''},html:futHeroHtml(fr)});
   const pending=players().filter(p=>!(S.entries[p.key]&&S.entries[p.key].futures&&S.entries[p.key].futures.at));
   if(S.isOwner&&open&&pending.length){
     const sel=(id,label,list)=>'<label for="'+id+'">'+label+' <select id="'+id+'" data-f><option value="">Choose</option>'+list.map(t=>'<option>'+t+'</option>').join('')+'</select></label>';
-    h+='<section class="card"><h3>Enter future picks</h3><div class="pad stack"><div class="bar"><label for="fu-who">Player <select id="fu-who" data-f>'+pending.map(p=>'<option value="'+esc(p.key)+'">'+esc(p.name)+'</option>').join('')+'</select></label>'+sel('fu-afc','AFC winner',AFC)+sel('fu-nfc','NFC winner',NFC)+sel('fu-sb','Super Bowl winner',AFC.concat(NFC).sort())+'</div><div><button class="btn primary" data-act="futsubmit">Submit future picks</button></div><p class="muted small">Future picks lock when you submit.</p></div></section>';
+    h+='<section class="dcard fform"><div class="thead">Enter future picks</div><div class="fsel"><label for="fu-who">Player <select id="fu-who" data-f>'+pending.map(p=>'<option value="'+esc(p.key)+'">'+esc(p.name)+'</option>').join('')+'</select></label>'+sel('fu-afc','AFC winner',AFC)+sel('fu-nfc','NFC winner',NFC)+sel('fu-sb','Super Bowl winner',AFC.concat(NFC).sort())+'</div><div class="dlg-bar"><button class="btn primary" data-act="futsubmit">Submit future picks</button></div><p class="dfoot">Future picks lock when you submit.</p></section>';
   }
-  const mark=(pick,res)=>!pick?'':teamTag(pick)+(res?(pick===res?' <span class="badge win">✓</span>':' <span class="badge miss">✕</span>'):'');
-  h+='<section class="card"><div class="tw"><table><thead><tr><th>Player</th><th class="l">AFC winner</th><th class="l">NFC winner</th><th class="l">Super Bowl winner</th></tr></thead><tbody>'+players().map(p=>{const f=S.entries[p.key]&&S.entries[p.key].futures;const ok=f&&f.at;return '<tr><td>'+esc(p.name)+'</td>'+(ok?'<td class="l">'+mark(f.afc,fr.afc)+'</td><td class="l">'+mark(f.nfc,fr.nfc)+'</td><td class="l">'+mark(f.sb,fr.sb)+'</td>':'<td class="l muted" colspan="3">Not entered yet</td>')+'</tr>';}).join('')+'</tbody></table></div></section>';
+  const sets=players().map(p=>{const f=S.entries[p.key]&&S.entries[p.key].futures;return f&&f.at?[f.afc,f.nfc,f.sb]:null;});
+  const pts=f=>!f||!anyRes?null:(fr.afc&&f[0]===fr.afc?10:0)+(fr.nfc&&f[1]===fr.nfc?10:0)+(fr.sb&&f[2]===fr.sb?20:0);
+  const cards=players().map((p,i)=>({p,f:sets[i],pts:pts(sets[i])}));
+  if(anyRes)cards.sort((a,b)=>(b.pts||0)-(a.pts||0));
+  if(sets.some(Boolean))h+=futPopular(sets);
+  h+='<div class="fgrid">'+cards.map(x=>futCard(x.p.name,x.p.key,x.f,fr,x.pts,S.me)).join('')+'</div>';
   if(!open)h+='<p class="muted small">Future picks are closed.</p>';
   return h;
 }

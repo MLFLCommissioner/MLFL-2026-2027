@@ -403,6 +403,9 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 
 .card.game>header{position:relative}
 .card.game>header.has-wx{padding-right:100px}
+.card.game>header .when{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px}
+.when .wdate::before{content:"·";margin-right:7px;opacity:.7}
+.when .tvch{font-size:.62rem;letter-spacing:.08em;padding:1px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.35);line-height:1.4;white-space:nowrap}
 .gwx{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;max-width:96px}
 .gwx-t{display:flex;align-items:center;gap:5px;font-size:1.3rem;font-weight:900;line-height:1}
 .gwx-i{font-size:1.15rem;line-height:1}
@@ -572,7 +575,6 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 @keyframes eggin{from{transform:translateY(60vh) scale(.4) rotate(-20deg)}to{transform:none}}
 @keyframes egglaugh{0%,100%{transform:rotate(-2.5deg) scale(1)}50%{transform:rotate(2.5deg) scale(1.03)}}
 @keyframes eggout{to{transform:scale(.2) rotate(15deg);opacity:0}}
-@media (prefers-reduced-motion:reduce){.egg img{animation:none}}
 </style>
 </head>
 <body>
@@ -666,6 +668,12 @@ function kickTag(iso){
   if(!iso)return '';
   const d=chi(iso,{weekday:'short'}),h=Number(chi(iso,{hour:'numeric',hourCycle:'h23'}));
   if(d==='Thu')return 'TNF';if(d==='Mon')return 'MNF';if(d==='Sun'&&h<11)return 'INT';if(d==='Sun'&&h>=18)return 'SNF';return '';
+}
+// Kickoff line on a game card: time, then the date, then the TV channel (until the game is final).
+function whenLine(g){
+  if(!g.kick)return '<span class="when">'+esc(kickText(g))+'</span>';
+  const tv=!gscore(g,true)&&S.season==='cur'&&S.tv&&S.tv[g.away+'|'+g.home];
+  return '<span class="when"><span>'+esc(kickText(g))+'</span><span class="wdate">'+esc(chi(g.kick,{month:'short',day:'numeric'}))+'</span>'+(tv?'<span class="tvch" title="TV">'+esc(tv)+'</span>':'')+'</span>';
 }
 function kickText(g){if(!g.kick)return g.tag||'';const t=kickTag(g.kick);return chi(g.kick,{weekday:'short',hour:'numeric',minute:'2-digit'})+(t?' · '+t:'');}
 function mascot(full){return String(full).trim().split(' ').pop();}
@@ -1546,6 +1554,11 @@ async function recLoad(week){
     const rec=x=>{const r=(x.records||x.record||[]);const t=Array.isArray(r)?(r.find(y=>/total|overall/i.test(y.type||y.name||''))||r[0]):null;return t&&t.summary?String(t.summary):'';};
     const k=espnName(a.team)+'|'+espnName(h.team),v={a:rec(a),h:rec(h)};
     if((v.a||v.h)&&JSON.stringify(S.rec[k])!==JSON.stringify(v)){S.rec[k]=v;changed=true;}
+    // TV: national channel names from ESPN (e.g. CBS, FOX, NBC, ESPN, Prime Video, Netflix).
+    const names=[];((c.broadcasts||[]).filter(b=>!b.market||/national/i.test(b.market))).forEach(b=>(b.names||[]).forEach(n=>names.push(n)));
+    if(!names.length)(c.geoBroadcasts||[]).filter(b=>!b.market||/national/i.test((b.market&&b.market.type)||b.market)).forEach(b=>{const n=b.media&&(b.media.shortName||b.media.name);if(n)names.push(n);});
+    const tv=[...new Set(names.map(x=>String(x).trim()).filter(Boolean))].slice(0,2).join(' / ');
+    S.tv=S.tv||{};if(tv&&S.tv[k]!==tv){S.tv[k]=tv;changed=true;}
   }));
   if(changed)requestRender();
 }
@@ -1701,7 +1714,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const nl=(lock.s?1:0)+(lock.o?1:0);
   const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. '+(S.me&&S.me!==sel?'Lock in your own picks for this game to see '+(nl===1?'it':'them')+'.':'Hidden until picks lock.')+'</div>':'';
   const wx=wxTag(g);
-  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3><span class="when">'+esc(kickText(g))+'</span></header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
+  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3>'+whenLine(g)+'</header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
     cells[0]+cells[1]+(r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw))+cells[2]+cells[3]+(r.combo?'':cell(r.ow))+hidden+'</div>'+injBlock(gid,g)+'</article>';
 }
 function legLabel(week,code,own){

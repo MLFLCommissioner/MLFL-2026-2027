@@ -1700,8 +1700,10 @@ async function wxLoad(week){
       venues[nmOf(a)+'|'+nmOf(h)]={indoor:c.venue?c.venue.indoor:undefined,city:c.venue&&c.venue.address&&c.venue.address.city,name:c.venue&&c.venue.fullName,wx:ev.weather||c.weather||null};
     }));
   }catch(e){}
-  // 2) Open-Meteo for outdoor games at the home team's stadium.
-  await Promise.all(todo.map(async g=>{
+  // 2) Open-Meteo for outdoor games at the home team's stadium: one request for all of them
+  //    (a request per game sometimes got turned away when a whole week loaded at once).
+  const out=[];
+  todo.forEach(g=>{
     const v=venues[g.away+'|'+g.home]||{},st=STADIUMS[g.home],k=wxKey(g);
     const neutral=!!(v.city&&st&&String(v.city).toLowerCase()!==st[2].toLowerCase());
     if(v.indoor===true||(v.indoor==null&&!neutral&&DOMES.has(g.home))){S.wx[k]={indoor:true,venue:v.name};return;}
@@ -1709,14 +1711,25 @@ async function wxLoad(week){
       const w=v.wx;if(w&&(w.temperature!=null||w.highTemperature!=null))S.wx[k]={t:Math.round(w.temperature!=null?w.temperature:w.highTemperature),icon:ESPN_WX(w.displayValue),txt:w.displayValue||'',venue:v.name};
       return;
     }
-    try{
-      const hr=new Date(Math.floor(new Date(g.kick).getTime()/3600000)*3600000).toISOString().slice(0,13)+':00';
-      const u='https://api.open-meteo.com/v1/forecast?latitude='+st[0]+'&longitude='+st[1]+'&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=GMT&start_hour='+hr+'&end_hour='+hr;
-      const j=await fetch(u).then(r=>r.ok?r.json():null);const H=j&&j.hourly;if(!H||!H.time||!H.time.length)return;
-      const [icon,txt]=WMO(H.weather_code[0]);
-      S.wx[k]={t:Math.round(H.temperature_2m[0]),icon,txt,pop:H.precipitation_probability?H.precipitation_probability[0]:null,wind:H.wind_speed_10m?Math.round(H.wind_speed_10m[0]):null};
-    }catch(e){}
-  }));
+    out.push({g,k,st,v,hr:new Date(Math.floor(new Date(g.kick).getTime()/3600000)*3600000).toISOString().slice(0,13)+':00'});
+  });
+  if(out.length){
+    const days=out.map(o=>o.hr.slice(0,10)).sort(),u='https://api.open-meteo.com/v1/forecast?latitude='+out.map(o=>o.st[0]).join(',')+'&longitude='+out.map(o=>o.st[1]).join(',')+
+      '&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=GMT&start_date='+days[0]+'&end_date='+days[days.length-1];
+    let res=null;
+    for(let tries=0;tries<2&&!res;tries++){try{res=await fetch(u).then(r=>r.ok?r.json():null);}catch(e){}if(!res&&!tries)await new Promise(r=>setTimeout(r,1500));}
+    const list=res?(Array.isArray(res)?res:[res]):[];
+    out.forEach((o,i)=>{
+      const H=list[i]&&list[i].hourly,ix=H&&H.time?H.time.indexOf(o.hr):-1;
+      if(ix<0){
+        // No forecast this time: use ESPN's if it has one, and try again in 5 minutes.
+        const w=o.v.wx;if(w&&(w.temperature!=null||w.highTemperature!=null))S.wx[o.k]={t:Math.round(w.temperature!=null?w.temperature:w.highTemperature),icon:ESPN_WX(w.displayValue),txt:w.displayValue||''};
+        S.wxAt[o.k]=now-40*60000;return;
+      }
+      const [icon,txt]=WMO(H.weather_code[ix]);
+      S.wx[o.k]={t:Math.round(H.temperature_2m[ix]),icon,txt,pop:H.precipitation_probability?H.precipitation_probability[ix]:null,wind:H.wind_speed_10m?Math.round(H.wind_speed_10m[ix]):null};
+    });
+  }
   requestRender();
 }
 function wxTag(g){

@@ -1969,9 +1969,9 @@
      "kick": "2026-11-20T01:15:00.000Z",
      "sp": -12.5,
      "tot": 44.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 3,
+     "sh": 26,
+     "fin": true
     },
     "403a88701352da05b0710a9e883b803e": {
      "o": 1,
@@ -1983,9 +1983,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -15.5,
      "tot": 40.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 7,
+     "sh": 34,
+     "fin": true
     },
     "4527f57f5bc32742d8194af1ccf7da7e": {
      "o": 2,
@@ -1997,9 +1997,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -2.5,
      "tot": 43.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 33,
+     "sh": 35,
+     "fin": true
     },
     "4c5b1c0843a260278e95eb93e7787576": {
      "o": 3,
@@ -2011,9 +2011,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -16.5,
      "tot": 44.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 9,
+     "sh": 26,
+     "fin": true
     },
     "3ea90704fb576633bd1e2fa5aafd9ea3": {
      "o": 4,
@@ -2025,9 +2025,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -11.5,
      "tot": 48.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 13,
+     "sh": 21,
+     "fin": true
     },
     "5e63079b678f8c13419adc169fff02d3": {
      "o": 5,
@@ -2039,9 +2039,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -8.5,
      "tot": 55.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 30,
+     "sh": 51,
+     "fin": true
     },
     "41e2dd69bddd65d7e823d9ed61cc2afc": {
      "o": 6,
@@ -2053,9 +2053,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": -6.5,
      "tot": 45.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 21,
+     "sh": 31,
+     "fin": true
     },
     "cbe45bafcc2615fc1d96cbc12840377a": {
      "o": 7,
@@ -2067,9 +2067,9 @@
      "kick": "2026-11-22T18:00:00.000Z",
      "sp": 4.5,
      "tot": 37.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 16,
+     "sh": 19,
+     "fin": true
     },
     "4b20b742b6168aaca4f25d87f11b1526": {
      "o": 8,
@@ -2081,9 +2081,9 @@
      "kick": "2026-11-22T21:05:00.000Z",
      "sp": -3,
      "tot": 41.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 27,
+     "sh": 24,
+     "fin": true
     },
     "1940706a79cbcbafacdcbf231069716b": {
      "o": 9,
@@ -2095,9 +2095,9 @@
      "kick": "2026-11-22T21:25:00.000Z",
      "sp": -10,
      "tot": 40.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 24,
+     "sh": 38,
+     "fin": true
     },
     "8ba112fabf4e87639338a5f437c5abfe": {
      "o": 10,
@@ -2109,9 +2109,9 @@
      "kick": "2026-11-22T21:25:00.000Z",
      "sp": 6,
      "tot": 46.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 18,
+     "sh": 23,
+     "fin": true
     },
     "60e1d27b083a335b722c2c852ea85612": {
      "o": 11,
@@ -2123,9 +2123,9 @@
      "kick": "2026-11-23T01:20:00.000Z",
      "sp": -3,
      "tot": 46.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 10,
+     "sh": 35,
+     "fin": true
     },
     "3a60ed1d20004aa4d4772b2c1a2272e7": {
      "o": 12,
@@ -2137,9 +2137,9 @@
      "kick": "2026-11-24T01:15:00.000Z",
      "sp": 6.5,
      "tot": 53.5,
-     "sa": null,
-     "sh": null,
-     "fin": false
+     "sa": 20,
+     "sh": 22,
+     "fin": true
     }
    }
   },

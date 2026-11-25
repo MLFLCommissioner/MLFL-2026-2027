@@ -586,7 +586,7 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 @keyframes eggout{to{transform:scale(.2) rotate(15deg);opacity:0}}
 
 .tproj{display:grid;grid-template-columns:1fr 1fr;margin-top:12px;padding:12px 8px 10px;border-radius:12px;background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);text-align:center}
-.tproj .tpc{display:flex;flex-direction:column;align-items:center;gap:3px}.tproj.one{grid-template-columns:1fr}.tproj .tpc+.tpc{border-left:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.tproj .tpc{display:flex;flex-direction:column;align-items:center;gap:3px}.tproj.one{grid-template-columns:1fr}.tproj .tpnote b.tpb{font-family:inherit;font-size:inherit;font-weight:800}.tproj .tpc+.tpc{border-left:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
 .tproj b{font-family:var(--display);font-weight:900;font-size:1.6rem;line-height:1}
 .tproj .tpl{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
 .tproj small{font-size:.66rem;opacity:.6}
@@ -830,10 +830,12 @@ function projWeek(week,wk,live){
     if(ps!=null&&po!=null){exp+=mult*(ps+po+ps*po);best+=mult*((ps>0)+(po>0)+(ps>0&&po>0));}
     else{const q=ps!=null?ps:po;exp+=mult*q;best+=mult*(q>0?1:0);}
   }
-  // The parlay is left out on purpose.
-  return any?{exp,best}:null;
+  // The parlay is left out of the projection on purpose; we only note whether it can still hit for the best case.
+  const legs=hasParlay(week)?(wk.parlay||[]):[];
+  const parlayAlive=legs.length===5&&legs.every(l=>{const c=pickChance(games[l.g],l.m,l.v,l.l!=null?(l.m==='s'?(l.v==='home'?l.l:-l.l):l.l):null,true);return c==null||c>0;});
+  return any?{exp,best,parlayAlive}:null;
 }
-function projBoth(week,wk){const s=projWeek(week,wk,false);if(!s)return null;const l=projWeek(week,wk,true);return {start:s.exp,live:l.exp,best:l.best};}
+function projBoth(week,wk){const s=projWeek(week,wk,false);if(!s)return null;const l=projWeek(week,wk,true);return {start:s.exp,live:l.exp,best:l.best,parlay:l.parlayAlive};}
 // Only a player who has sent picks for the week (or the commissioner) sees projections.
 function canProj(n){if(S.isOwner)return true;const w=S.me&&subWeek(S.me,n);return !!(w&&countPicks(w));}
 function espnGames(json){
@@ -1917,7 +1919,7 @@ function totalsCard(n,sel,sc,sub){
   let extra='';
   if(pj){
     extra='<div class="tproj one"><div class="tpc"><span class="tpl">Projected</span><b>'+r1(pj.live)+'</b><small>updates live · parlay not included</small></div>'+
-      '<div class="tpnote">Best case '+pj.best+'</div></div>';
+      '<div class="tpnote">Best case <b class="tpb">'+pj.best+'</b>'+(pj.parlay?' · <b class="tpb">'+(pj.best+20)+'</b> with the parlay':'')+'</div></div>';
   }
   return totalsBox('',String(sc.total)+(sc.manualTotal?'*':''),sc.pct,sc.evaluated?sc.correct+' of '+sc.evaluated+' correct':'',
     [{l:'Spread',v:sc.spread},{l:'Over/Under',v:sc.ou},{l:'Combos',v:sc.combo},{l:'Parlay',v:sc.parlay,hl:sc.parlay>0}],'',

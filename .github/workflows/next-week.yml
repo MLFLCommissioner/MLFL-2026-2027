@@ -1,14 +1,14 @@
 # Sets up the next week's odds board on its own once the current week is finished.
-# Builds the board at about 9:20 AM Central on Wednesday (or Tuesday, in a week with a Wednesday game).
-# It checks every hour Tuesday through Thursday morning; most runs end in a few seconds without changing anything.
+# Builds the board at about 9:20 AM Central on Wednesday.
+# It checks every hour Wednesday through Thursday morning; most runs end in a few seconds without changing anything.
 # If something is not ready at 9 (a missing final score or missing lines), it tries again each hour.
 # Needs the repository secret ODDS_API_KEY (Settings > Secrets and variables > Actions).
 name: Set up next week
 
 on:
   schedule:
-    - cron: '23 14-23 * * 2,3'   # Tue/Wed, about 8 AM-6 PM Central
-    - cron: '23 0-4 * * 3,4'     # Tue/Wed evenings
+    - cron: '23 14-23 * * 3'     # Wednesday, about 8 AM-6 PM Central
+    - cron: '23 0-4 * * 4'       # Wednesday evening
     - cron: '23 11-17 * * 4'     # Thursday morning, last chance before Thursday night
   workflow_dispatch: {}
 

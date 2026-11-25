@@ -34,17 +34,48 @@ const parse = (json) => (json.events || []).map((ev) => {
   return { away: names(a), home: names(h), sa: parseInt(a.score, 10), sh: parseInt(h.score, 10), completed: !!st.completed };
 });
 let events = [];
+// ESPN turns away requests that do not look like a web browser (error 403), so ask like one,
+// and try ESPN's other scoreboard addresses if the first says no.
+const HOSTS = [ESPN, 'https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard', 'https://cdn.espn.com/core/nfl/scoreboard'];
+const HDRS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.espn.com/nfl/scoreboard',
+  'Origin': 'https://www.espn.com',
+};
 async function grab(q) {
-  try {
-    const res = await fetch(ESPN + q, { headers: { 'User-Agent': 'MLFL-score-robot' } });
-    if (!res.ok) { console.log(`ESPN answered ${res.status} for "${q || 'this week'}".`); return; }
-    events = events.concat(parse(await res.json()));
-  } catch (e) { console.log(`Could not reach ESPN for "${q || 'this week'}": ${e.message}`); }
+  for (const host of HOSTS) {
+    const url = host + (host.includes('cdn.espn.com') ? (q ? q + '&' : '?') + 'xhr=1' : q);
+    try {
+      const res = await fetch(url, { headers: HDRS });
+      if (!res.ok) { console.log(`ESPN (${new URL(host).host}) answered ${res.status} for "${q || 'this week'}".`); continue; }
+      let json = await res.json();
+      if (json && json.content && json.content.sbData) json = json.content.sbData; // cdn.espn.com wraps the same data
+      const got = parse(json);
+      if (got.length || !q) { events = events.concat(got); return; }
+    } catch (e) { console.log(`Could not reach ESPN (${new URL(host).host}) for "${q || 'this week'}": ${e.message}`); }
+  }
 }
 const found = (g) => { const A = key(g.away), H = key(g.home); return events.some((e) => (has(e.away, A) && has(e.home, H)) || (has(e.away, H) && has(e.home, A))); };
 // This week's scoreboard first; then single game days for anything not on it.
 await grab('');
 for (const d of [...new Set(targets.filter((t) => !found(t.g)).map((t) => etDay(t.g.kick)))]) await grab(`?dates=${d}`);
+// Backup: if ESPN gave nothing, ask The Odds API's scores feed (last 3 days), at most once an hour to save credits.
+const OKEY = (process.env.ODDS_API_KEY || '').trim();
+if (!events.length && OKEY && (process.env.FORCE_ODDS || new Date().getUTCMinutes() < 10)) {
+  try {
+    const res = await fetch('https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?daysFrom=3&apiKey=' + encodeURIComponent(OKEY));
+    if (res.ok) {
+      const list = await res.json();
+      events = list.filter((x) => x.completed && Array.isArray(x.scores)).map((x) => {
+        const sc = (t) => parseInt(((x.scores.find((s) => s.name === t) || {}).score), 10);
+        return { away: [key(x.away_team)], home: [key(x.home_team)], sa: sc(x.away_team), sh: sc(x.home_team), completed: true };
+      });
+      console.log(`Used The Odds API scores instead: ${events.length} finished games. Credits left: ${res.headers.get('x-requests-remaining')}`);
+    } else console.log(`The Odds API answered ${res.status}.`);
+  } catch (e) { console.log('Could not reach The Odds API: ' + e.message); }
+}
 if (!events.length) { console.log('No scoreboard data; trying again next run.'); process.exit(0); }
 
 let saved = 0;

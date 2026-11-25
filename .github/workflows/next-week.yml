@@ -32,6 +32,8 @@ jobs:
           node-version: 20
       - name: Save any missing final scores first
         run: node scripts/update-scores.mjs
+        env:
+          FORCE_ODDS: '1'
       - name: Build the next week if it is time
         run: node scripts/next-week.mjs
       - name: Save it

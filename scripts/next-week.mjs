@@ -1,5 +1,5 @@
-// MLFL next-week robot. GitHub runs this hourly Tuesday to Thursday (see .github/workflows/next-week.yml); it builds the board
-// Wednesday from 9 AM Central, or Tuesday from 9 AM in a week with a Wednesday game.
+// MLFL next-week robot. GitHub runs this hourly Wednesday and Thursday morning (see .github/workflows/next-week.yml);
+// it builds the board Wednesday from 9 AM Central.
 // When the current week is finished and the next week has no games yet, it builds the next week's
 // odds board from The Odds API (DraftKings spreads and totals, same as the Commissioner tab button)
 // and makes it the current week. If anything is not ready yet it changes nothing and tries again next run.
@@ -19,23 +19,12 @@ const cur = Number(cfg.currentWeek);
 if (!cur) stop('No current week set.');
 if (cur >= 22) stop('The season is over (Super Bowl week is the last one).');
 
-// 0. When: Wednesday from 9 AM Central. In a week whose first game is on Wednesday (like Thanksgiving Eve),
-//    it builds on Tuesday from 9 AM instead so players get a full day to pick.
-const ct = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit' })
+// 0. When: Wednesday from 9 AM Central (it checks hourly, so about 9:20). If something is not ready,
+//    it tries again each hour through Thursday morning.
+const ct = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
   .formatToParts(now).map((p) => [p.type, p.value]));
 const day = ct.weekday, hr = Number(ct.hour);
-async function wednesdayGame() {
-  // ESPN's free scoreboard for tomorrow's date (Central): any NFL game on it means a Wednesday game.
-  const t = new Date(Date.UTC(+ct.year, +ct.month - 1, +ct.day + 1));
-  const ymd = t.toISOString().slice(0, 10).replace(/-/g, '');
-  try {
-    const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=' + ymd, { headers: { 'User-Agent': 'MLFL-week-robot' } });
-    if (!r.ok) return false;
-    return ((await r.json()).events || []).length > 0;
-  } catch (e) { return false; }
-}
-if (!['Tue', 'Wed', 'Thu'].includes(day)) stop(`It is ${day}; the robot only builds weeks Tuesday to Thursday.`);
-if (day === 'Tue' && hr < 9) stop('Too early on Tuesday.');
+if (!['Wed', 'Thu'].includes(day)) stop(`It is ${day}; the robot builds the next week on Wednesday at 9 AM.`);
 if (day === 'Wed' && hr < 9) stop('Waiting for 9 AM Wednesday.');
 
 // 1. Is the current week finished? Every game needs a final score.
@@ -52,7 +41,6 @@ const next = cur + 1;
 const round = next >= 19 ? ROUNDS[next - 19] : '';
 const label = round || `Week ${next}`;
 if (weeks[next] && Object.keys(weeks[next].games || {}).length) stop(`${label} already has games. The commissioner set it up, so nothing to do.`);
-if (day === 'Tue' && !(await wednesdayGame())) stop('No game on Wednesday this week, so the board gets built Wednesday at 9 AM.');
 if (!KEY) stop('No ODDS_API_KEY secret is set in the repository, so the odds board cannot be built.');
 
 // 3. Get the lines.

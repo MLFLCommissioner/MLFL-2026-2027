@@ -1026,6 +1026,27 @@ async function liveTick(){
   finally{liveBusy=false;}
 }
 setInterval(liveTick,15000);
+// Backup for the score robot: while the commissioner has the site open, final scores ESPN shows for this
+// week and last week get saved into the league file (ESPN answers browsers even when it blocks GitHub).
+let finalsBusy=false,finalsAt=0;
+async function ownerFinals(){
+  if(finalsBusy||document.hidden||!S.isOwner||!GH.token||S.season!=='cur'||!S.weeks||!S.cfg||Date.now()-finalsAt<120000)return;
+  const cur=S.cfg.currentWeek,ns=[cur-1,cur].filter(n=>S.weeks[n]);
+  const need=[];ns.forEach(n=>Object.values(S.weeks[n].games||{}).forEach(g=>{if(!g.fin&&g.kick&&Date.now()>new Date(g.kick).getTime()+2*3600000&&Date.now()<new Date(g.kick).getTime()+14*86400000)need.push(g);}));
+  if(!need.length)return;
+  finalsBusy=true;finalsAt=Date.now();
+  try{
+    let list=[];
+    for(const d of [...new Set(need.map(g=>etDay(g.kick)))]){try{const r=await fetch(ESPN+'?dates='+d,{cache:'no-store'});if(r.ok)list=list.concat(espnGames(await r.json()));}catch(e){}}
+    const done=[];
+    need.forEach(g=>{const m=liveMatch(list,g);if(m&&m.completed&&m.sa!=null&&m.sh!=null&&!isNaN(m.sa)&&!isNaN(m.sh))done.push([g,m]);});
+    if(!done.length)return;
+    done.forEach(([g,m])=>{g.sa=m.sa;g.sh=m.sh;g.fin=true;});
+    if(!(await persist()))done.forEach(([g])=>{g.fin=false;g.sa=null;g.sh=null;});
+    else requestRender();
+  }finally{finalsBusy=false;}
+}
+setInterval(ownerFinals,30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(liveTick,500);});
 const S={season:'cur',got:{},cfg:null,weeks:{},entries:{},form:{},drafts:{},newRows:[],delRows:{},view:'picks',busy:false};
 const $=(s,r)=>(r||document).querySelector(s);
@@ -2670,7 +2691,7 @@ async function init(){
   try{const qc=new URLSearchParams(location.search).get('code');if(qc){S.form.pcode=qc;S.view='commish';}}catch(e){}
   render();
   Object.assign(GH,detectRepo());GH.token=ls.get('mlfl.token')||'';S.owner=S.isOwner=!!GH.token;
-  await loadData();await verifyMe();requestRender(true);setTimeout(liveTick,800);
+  await loadData();await verifyMe();requestRender(true);setTimeout(liveTick,800);setTimeout(ownerFinals,3000);
   // Opened from the pick-code email: go straight to the confirm screen (nothing saves until you confirm).
   if(S.form.pcode&&new URLSearchParams(location.search).get('code')){
     try{history.replaceState(null,'',location.pathname+'#commish');}catch(e){}

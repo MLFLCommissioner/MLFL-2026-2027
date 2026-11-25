@@ -1,0 +1,52 @@
+# Sets up the next week's odds board on its own once the current week is finished.
+# Builds the board at about 9:20 AM Central on Wednesday (or Tuesday, in a week with a Wednesday game).
+# It checks every hour Tuesday through Thursday morning; most runs end in a few seconds without changing anything.
+# If something is not ready at 9 (a missing final score or missing lines), it tries again each hour.
+# Needs the repository secret ODDS_API_KEY (Settings > Secrets and variables > Actions).
+name: Set up next week
+
+on:
+  schedule:
+    - cron: '23 14-23 * * 2,3'   # Tue/Wed, about 8 AM-6 PM Central
+    - cron: '23 0-4 * * 3,4'     # Tue/Wed evenings
+    - cron: '23 11-17 * * 4'     # Thursday morning, last chance before Thursday night
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-scores
+  cancel-in-progress: false
+
+jobs:
+  nextweek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build the next week if it is time
+        run: node scripts/next-week.mjs
+      - name: Save it
+        run: |
+          if git diff --quiet -- data.json; then echo "Nothing to save."; exit 0; fi
+          git config user.name "MLFL week robot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "Set up the next week"
+          for i in 1 2 3; do
+            if git push; then exit 0; fi
+            # Someone saved in the meantime: start again from their version.
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard "origin/$GITHUB_REF_NAME"
+            node scripts/next-week.mjs
+            if git diff --quiet -- data.json; then echo "Nothing to save."; exit 0; fi
+            git add data.json
+            git commit -m "Set up the next week"
+          done
+          exit 1

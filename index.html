@@ -949,6 +949,7 @@ function tdTrack(g,m){
 // the score, so look up the game's most recent scoring play once. The game clock doesn't run between a score and
 // the kickoff, so if that scoring play happened at this exact quarter and clock, the banner belongs up.
 const SUMMARY='https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=';
+const INJ_ALL='https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries';
 // One summary request per game per stoppage, shared by the lookups below.
 function summaryFor(eid,stamp){
   S.sumC=S.sumC||{};const k=eid+'|'+stamp;
@@ -1562,23 +1563,35 @@ async function injLoad(week){
       if(a&&h)ids[espnName(a.team)+'|'+espnName(h.team)]={id:String(ev.id||c.id||''),aid:String((a.team&&a.team.id)||a.id||''),hid:String((h.team&&h.team.id)||h.id||'')};}));
   }catch(e){}
   let changed=false;
+  // The game summary only lists a few players per team, so also read ESPN's full league injury list
+  // (every team, everyone listed) and combine the two.
+  let all=null;
+  try{const L=await fetch(INJ_ALL,{cache:'no-store'}).then(r=>r.ok?r.json():null);if(L&&Array.isArray(L.injuries))all=L.injuries;}catch(e){}
+  const fromAll=(tid,name)=>{if(!all)return [];const t=all.find(t=>String(t.id||(t.team&&t.team.id)||'')===tid)||all.find(t=>mascot(t.displayName||(t.team&&t.team.displayName)||'')===name);return (t&&t.injuries)||[];};
   await Promise.all(todo.map(async g=>{
     const m=ids[g.away+'|'+g.home];if(!m||!m.id)return;
     try{
-      const j=await fetch(SUMMARY+encodeURIComponent(m.id),{cache:'no-store'}).then(r=>r.ok?r.json():null);if(!j)return;
-      const out={away:[],home:[]};
-      (j.injuries||[]).forEach(t=>{
-        const tid=String((t.team&&t.team.id)||''),side=tid===m.aid?'away':tid===m.hid?'home':null;if(!side)return;
-        (t.injuries||[]).forEach(x=>{
+      const j=await fetch(SUMMARY+encodeURIComponent(m.id),{cache:'no-store'}).then(r=>r.ok?r.json():null);
+      if(!j&&!all)return;
+      const out={away:[],home:[]},seen={away:{},home:{}};
+      const teams=[];((j&&j.injuries)||[]).forEach(t=>{const tid=String((t.team&&t.team.id)||'');teams.push([tid===m.aid?'away':tid===m.hid?'home':null,t.injuries||[]]);});
+      teams.push(['away',fromAll(m.aid,g.away)],['home',fromAll(m.hid,g.home)]);
+      teams.forEach(([side,list])=>{
+        if(!side)return;
+        (list||[]).forEach(x=>{
           const raw=String(x.status||(x.type&&(x.type.description||x.type.name))||(x.details&&x.details.fantasyStatus&&x.details.fantasyStatus.description)||'');
-          const st=/reserve|\bir\b|\bpup\b|physically unable|suspen|non-football/i.test(raw)?'IR':/^out|\bout\b/i.test(raw)?'Out':/doubt/i.test(raw)?'Doubtful':/question/i.test(raw)?'Questionable':null;if(!st)return;
+          const st=/reserve|\bir\b|\bpup\b|physically unable|suspen|non-football/i.test(raw)?'Out':/^out|\bout\b/i.test(raw)?'Out':/doubt/i.test(raw)?'Doubtful':/question/i.test(raw)?'Questionable':null;if(!st)return;
           const a=x.athlete||{},pos=(a.position&&(a.position.abbreviation||a.position.name))||'';
           const why=(x.details&&[x.details.side,x.details.type].filter(v=>v&&!/not specified/i.test(v)).join(' '))||'';
-          out[side].push({st,name:a.shortName||a.displayName||'',pos,why});
+          const nm=a.shortName||a.displayName||'',k=String(a.id||a.displayName||nm).toLowerCase();if(!nm||seen[side][k]||seen[side][nm.toLowerCase()])return;seen[side][k]=seen[side][nm.toLowerCase()]=1;
+          out[side].push({st,name:nm,pos,why});
         });
       });
-      const SEV={Out:0,IR:1,Doubtful:2,Questionable:3},POS=['QB','RB','WR','TE','K','OT','T','G','OG','C','DE','DT','LB','CB','S','FS','SS'];
-      ['away','home'].forEach(k=>out[k].sort((x,y)=>SEV[x.st]-SEV[y.st]||((POS.indexOf(x.pos)+99)%99)-((POS.indexOf(y.pos)+99)%99)));
+      // Most important first: quarterbacks, then the other ball-handlers, then pass rushers and the secondary,
+      // then linemen, then kickers. Within each group: Out, then Doubtful, then Questionable.
+      const SEV={Out:0,Doubtful:1,Questionable:2},TIER={QB:0,RB:1,WR:1,TE:1,FB:2,DE:2,EDGE:2,OLB:2,CB:2,S:3,FS:3,SS:3,LB:3,ILB:3,MLB:3,DT:4,NT:4,DL:4,OT:4,T:4,G:5,OG:5,C:5,OL:5,K:6,PK:6,P:6,LS:7};
+      const tier=x=>x.pos in TIER?TIER[x.pos]:5;
+      ['away','home'].forEach(k=>out[k].sort((x,y)=>tier(x)-tier(y)||SEV[x.st]-SEV[y.st]));
       S.inj[wxKey(g)]=out;changed=true;
     }catch(e){}
   }));
@@ -1612,7 +1625,7 @@ function injBlock(gid,g){
   const open=S.injOpen&&S.injOpen[gid];
   const team=(t,list)=>list.length?'<div class="injt"><div class="injth">'+logo(t)+esc(t)+'</div><ul>'+list.map(x=>'<li><span class="ist i'+(x.st==='IR'?'R':x.st[0])+'">'+(x.st==='IR'?'IR':x.st[0])+'</span><span class="inm">'+(x.pos?'<small>'+esc(x.pos)+'</small> ':'')+esc(x.name)+'</span>'+(x.why?'<span class="iwhy">'+esc(x.why)+'</span>':'')+'</li>').join('')+'</ul></div>':'';
   return '<div class="inj'+(open?' open':'')+'"><button class="injbar" data-act="injtog" data-g="'+esc(gid)+'" aria-expanded="'+!!open+'"><span class="injl">Injury report</span><span class="injs">'+sum+'</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'+
-    (open?'<div class="injbody">'+team(g.away,r.away)+team(g.home,r.home)+'<p class="injnote">O = Out · IR = Injured reserve · D = Doubtful · Q = Questionable. From ESPN, updated every 30 minutes until kickoff.</p></div>':'')+'</div>';
+    (open?'<div class="injbody">'+team(g.away,r.away)+team(g.home,r.home)+'<p class="injnote">O = Out (including injured reserve) · D = Doubtful · Q = Questionable. From ESPN, updated every 30 minutes until kickoff.</p></div>':'')+'</div>';
 }
 async function wxLoad(week){
   if(!week||S.season!=='cur')return;

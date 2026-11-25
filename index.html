@@ -425,7 +425,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .injl{font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.6;white-space:nowrap}
 .injs{flex:1;display:flex;gap:10px;justify-content:flex-end;font-size:.85rem}
 .injs b{display:inline-flex;align-items:center;gap:4px;font-weight:800}.injs .ist{font-style:normal;width:18px;height:18px;font-size:.62rem}
-.ist.iO{color:#ff8f84;background:rgba(229,83,75,.18)}.ist.iD{color:#ffb36b;background:rgba(255,160,80,.16)}.ist.iQ{color:#f2c94c;background:rgba(242,201,76,.16)}
+.ist.iO{color:#ff8f84;background:rgba(229,83,75,.18)}.ist.iR{color:#ff8f84;background:rgba(229,83,75,.12);font-size:.56rem;letter-spacing:-.02em}.ist.iD{color:#ffb36b;background:rgba(255,160,80,.16)}.ist.iQ{color:#f2c94c;background:rgba(242,201,76,.16)}
 .injbar svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.6;transition:transform .2s;flex:none}
 .inj.open .injbar svg{transform:rotate(180deg)}
 .injbody{padding:0 12px 10px;display:grid;gap:10px}
@@ -1571,13 +1571,13 @@ async function injLoad(week){
         const tid=String((t.team&&t.team.id)||''),side=tid===m.aid?'away':tid===m.hid?'home':null;if(!side)return;
         (t.injuries||[]).forEach(x=>{
           const raw=String(x.status||(x.type&&(x.type.description||x.type.name))||(x.details&&x.details.fantasyStatus&&x.details.fantasyStatus.description)||'');
-          const st=/^out|\bout\b/i.test(raw)&&!/reserve|ir\b/i.test(raw)?'Out':/doubt/i.test(raw)?'Doubtful':/question/i.test(raw)?'Questionable':null;if(!st)return;
+          const st=/reserve|\bir\b|\bpup\b|physically unable|suspen|non-football/i.test(raw)?'IR':/^out|\bout\b/i.test(raw)?'Out':/doubt/i.test(raw)?'Doubtful':/question/i.test(raw)?'Questionable':null;if(!st)return;
           const a=x.athlete||{},pos=(a.position&&(a.position.abbreviation||a.position.name))||'';
           const why=(x.details&&[x.details.side,x.details.type].filter(v=>v&&!/not specified/i.test(v)).join(' '))||'';
           out[side].push({st,name:a.shortName||a.displayName||'',pos,why});
         });
       });
-      const SEV={Out:0,Doubtful:1,Questionable:2},POS=['QB','RB','WR','TE','K','OT','T','G','OG','C','DE','DT','LB','CB','S','FS','SS'];
+      const SEV={Out:0,IR:1,Doubtful:2,Questionable:3},POS=['QB','RB','WR','TE','K','OT','T','G','OG','C','DE','DT','LB','CB','S','FS','SS'];
       ['away','home'].forEach(k=>out[k].sort((x,y)=>SEV[x.st]-SEV[y.st]||((POS.indexOf(x.pos)+99)%99)-((POS.indexOf(y.pos)+99)%99)));
       S.inj[wxKey(g)]=out;changed=true;
     }catch(e){}
@@ -1607,12 +1607,12 @@ async function recLoad(week){
 function injBlock(gid,g){
   const r=S.inj&&S.inj[wxKey(g)];if(!r||kicked(g))return '';
   const all=r.away.concat(r.home);if(!all.length)return '';
-  const cnt=st=>all.filter(x=>x.st===st).length,o=cnt('Out'),d=cnt('Doubtful'),q=cnt('Questionable');
-  const sum=[o?'<b title="Out"><i class="ist iO">O</i>'+o+'</b>':'',d?'<b title="Doubtful"><i class="ist iD">D</i>'+d+'</b>':'',q?'<b title="Questionable"><i class="ist iQ">Q</i>'+q+'</b>':''].filter(Boolean).join('');
+  const cnt=st=>all.filter(x=>x.st===st).length,o=cnt('Out')+cnt('IR'),d=cnt('Doubtful'),q=cnt('Questionable');
+  const sum=[o?'<b title="Out or on injured reserve"><i class="ist iO">O</i>'+o+'</b>':'',d?'<b title="Doubtful"><i class="ist iD">D</i>'+d+'</b>':'',q?'<b title="Questionable"><i class="ist iQ">Q</i>'+q+'</b>':''].filter(Boolean).join('');
   const open=S.injOpen&&S.injOpen[gid];
-  const team=(t,list)=>list.length?'<div class="injt"><div class="injth">'+logo(t)+esc(t)+'</div><ul>'+list.map(x=>'<li><span class="ist i'+x.st[0]+'">'+x.st[0]+'</span><span class="inm">'+(x.pos?'<small>'+esc(x.pos)+'</small> ':'')+esc(x.name)+'</span>'+(x.why?'<span class="iwhy">'+esc(x.why)+'</span>':'')+'</li>').join('')+'</ul></div>':'';
+  const team=(t,list)=>list.length?'<div class="injt"><div class="injth">'+logo(t)+esc(t)+'</div><ul>'+list.map(x=>'<li><span class="ist i'+(x.st==='IR'?'R':x.st[0])+'">'+(x.st==='IR'?'IR':x.st[0])+'</span><span class="inm">'+(x.pos?'<small>'+esc(x.pos)+'</small> ':'')+esc(x.name)+'</span>'+(x.why?'<span class="iwhy">'+esc(x.why)+'</span>':'')+'</li>').join('')+'</ul></div>':'';
   return '<div class="inj'+(open?' open':'')+'"><button class="injbar" data-act="injtog" data-g="'+esc(gid)+'" aria-expanded="'+!!open+'"><span class="injl">Injury report</span><span class="injs">'+sum+'</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'+
-    (open?'<div class="injbody">'+team(g.away,r.away)+team(g.home,r.home)+'<p class="injnote">O = Out · D = Doubtful · Q = Questionable. From ESPN, updated every 30 minutes until kickoff.</p></div>':'')+'</div>';
+    (open?'<div class="injbody">'+team(g.away,r.away)+team(g.home,r.home)+'<p class="injnote">O = Out · IR = Injured reserve · D = Doubtful · Q = Questionable. From ESPN, updated every 30 minutes until kickoff.</p></div>':'')+'</div>';
 }
 async function wxLoad(week){
   if(!week||S.season!=='cur')return;

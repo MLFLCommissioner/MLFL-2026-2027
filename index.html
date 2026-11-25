@@ -950,6 +950,7 @@ function tdTrack(g,m){
 // the kickoff, so if that scoring play happened at this exact quarter and clock, the banner belongs up.
 const SUMMARY='https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=';
 const INJ_ALL='https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries';
+const ROSTER=id=>'https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/'+encodeURIComponent(id)+'/roster';
 // One summary request per game per stoppage, shared by the lookups below.
 function summaryFor(eid,stamp){
   S.sumC=S.sumC||{};const k=eid+'|'+stamp;
@@ -1576,6 +1577,11 @@ async function injLoad(week){
       const out={away:[],home:[]},seen={away:{},home:{}};
       const teams=[];((j&&j.injuries)||[]).forEach(t=>{const tid=String((t.team&&t.team.id)||'');teams.push([tid===m.aid?'away':tid===m.hid?'home':null,t.injuries||[]]);});
       teams.push(['away',fromAll(m.aid,g.away)],['home',fromAll(m.hid,g.home)]);
+      // ESPN's injury lists drop players who have been on injured reserve a long time; the team roster still marks them.
+      const roster=async tid=>{if(!tid)return [];try{const r=await fetch(ROSTER(tid),{cache:'no-store'}).then(x=>x.ok?x.json():null);const out=[];
+        ((r&&r.athletes)||[]).forEach(grp=>((grp&&grp.items)||(grp&&grp.displayName?[grp]:[])).forEach(a=>{const inj=(a.injuries||[])[0];if(inj&&inj.status)out.push({status:inj.status,athlete:a,details:inj.details||{}});}));return out;}catch(e){return [];}};
+      const [ra,rh]=await Promise.all([roster(m.aid),roster(m.hid)]);
+      teams.push(['away',ra],['home',rh]);
       teams.forEach(([side,list])=>{
         if(!side)return;
         (list||[]).forEach(x=>{

@@ -1777,17 +1777,36 @@ function lastPlayRow(L){
 // After a kickoff ESPN has no ball spot until the first snap. The kickoff text says where the return ended
 // ("…from SF 35 to MIN 0. M.Price to MIN 17 for 17 yards"), so put the receiving team there.
 function kickSpot(L){
-  const lp=L.lp;if(!lp||!/kickoff|kicks|free kick|onside/i.test(lp.tt+' '+(lp.raw||''))||!L.aab||!L.hab)return null;
+  const lp=L.lp;if(!lp||!L.aab||!L.hab)return null;
+  if(/punt/i.test(lp.tt+' '+(lp.raw||''))&&!/kicks/i.test(lp.raw||''))return puntSpot(L);
+  if(!/kickoff|kicks|free kick|onside/i.test(lp.tt+' '+(lp.raw||'')))return null;
   // Play text and the scoreboard sometimes spell a team differently (WAS / WSH, LA / LAR, JAC / JAX).
   const AL={WAS:'WSH',WSH:'WSH',LA:'LAR',LAR:'LAR',JAC:'JAX',JAX:'JAX'},nk=x=>AL[x]||x,A=nk(L.aab),H=nk(L.hab);
   const t=String(lp.raw||''),from=(t.match(/kicks[^.]*? from ([A-Z]{2,3}) -?\d+/)||[])[1];if(!from)return null;
   const side=nk(from)===A?'home':nk(from)===H?'away':null;if(!side)return null;
   const spots=[...t.matchAll(/\b(?:to|at)(?: the)? ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>nk(x[1])===A||nk(x[1])===H);
-  const last=spots[spots.length-1];if(!last||/touchback|end zone/i.test(t)&&spots.length<2)return null;
+  // Touchback on a kickoff: the receiving team starts 1st & 10 at its own 35.
+  if(/touchback/i.test(t)&&spots.length<2){const ab=side==='away'?L.aab:L.hab;return {poss:side,spot:side==='away'?35:65,dd:'1st & 10 at '+ab+' 35'};}
+  const last=spots[spots.length-1];if(!last||/end zone/i.test(t)&&spots.length<2)return null;
   const yl=Number(last[2]),own=nk(last[1])===A,x=own?yl:100-yl;
   // A kickoff always leads to 1st & 10 for the receiving team at the spot where the return ended.
   const spotTxt=yl===50?'50':(own?L.aab:L.hab)+' '+yl;
   return {poss:side,spot:x,dd:'1st & 10 at '+spotTxt};
+}
+// After a punt: 1st & 10 for the receiving team where the punt ended (return, fair catch, downed or out of bounds),
+// or at its own 20 on a touchback. If the punting team recovers a muff, it keeps the ball there.
+function puntSpot(L){
+  const lp=L.lp;if(!lp.side)return null;
+  const AL={WAS:'WSH',WSH:'WSH',LA:'LAR',LAR:'LAR',JAC:'JAX',JAX:'JAX'},nk=x=>AL[x]||x,A=nk(L.aab),H=nk(L.hab);
+  const t=String(lp.raw||''),recv=lp.side==='away'?'home':'away';
+  if(/blocked/i.test(t))return null;
+  const rec=(t.match(/recovered by ([A-Z]{2,3})/i)||[])[1];
+  const poss=rec?(nk(rec.toUpperCase())===A?'away':nk(rec.toUpperCase())===H?'home':recv):recv;
+  if(/touchback/i.test(t)&&!rec){const ab=poss==='away'?L.aab:L.hab;return {poss,spot:poss==='away'?20:80,dd:'1st & 10 at '+ab+' 20'};}
+  const spots=[...t.matchAll(/\b(?:to|at)(?: the)? ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>nk(x[1])===A||nk(x[1])===H);
+  const last=spots[spots.length-1];if(!last)return null;
+  const yl=Number(last[2]),own=nk(last[1])===A,x=own?yl:100-yl,spotTxt=yl===50?'50':(own?L.aab:L.hab)+' '+yl;
+  return {poss,spot:x,dd:'1st & 10 at '+spotTxt};
 }
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime

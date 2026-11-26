@@ -1891,7 +1891,10 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
   const canEdit=open&&!!draft&&!dead&&slots>0,missed=sc.legs.filter(r=>r===false||r==='push').length,won=sc.legs.filter(r=>r===true).length;
   // Each locked leg: its team (or both teams for an over/under), the matchup, and where it stands.
   const segs=[],rows=[];
-  locked.forEach((l,i)=>{
+  // Once all five legs are in, list them in the order the games are played (ties keep the order they were picked).
+  const kt=l=>{const g=week.games[l.g];return g&&g.kick?new Date(g.kick).getTime():Infinity;};
+  const order=locked.map((l,i)=>i);if(locked.length===5)order.sort((x,y)=>kt(locked[x])-kt(locked[y])||x-y);
+  order.forEach((i,pos)=>{const l=locked[i];
     const g=week.games[l.g],pend=i>=realLocked.length,r=pend?null:sc.legs[i],show=pend||!g||visible(g);
     const lab=legLabel(week,l.g+'|'+l.m+'|'+l.v,l.l),gg=g&&legGame(g,l);
     let st,cls;
@@ -1907,7 +1910,7 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
     else{st='Waiting';cls='soon';}
     segs.push(cls.split(' ')[0]==='live'&&cls.includes('good')?'good':cls.split(' ')[0]);
     const logoH=!show||!gg?'<span class="llogo lock">🔒</span>':l.m==='s'?'<span class="llogo">'+logo(l.v==='away'?gg.away:gg.home)+'</span>':'<span class="llogo ou2" title="'+(l.v==='over'?'Over':'Under')+'">'+logo(gg.away)+logo(gg.home)+'<span class="ouarrow '+l.v+'" aria-hidden="true">'+(l.v==='over'?'▲':'▼')+'</span></span>';
-    rows.push('<li class="pleg '+cls+'"><span class="lnum">'+(i+1)+'</span>'+logoH+
+    rows.push('<li class="pleg '+cls+'"><span class="lnum">'+(pos+1)+'</span>'+logoH+
       '<span class="llab">'+(show?'<b>'+esc(l.m==='s'?lab:ouLabel(gg||g,l.v))+'</b>'+(gg?'<small>'+esc(gg.away+' vs '+gg.home)+'</small>':''):'<b>Locked in</b><small>Hidden until picks lock</small>')+'</span>'+
       '<span class="lres '+cls+'">'+esc(st)+'</span></li>');
   });

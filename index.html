@@ -1335,6 +1335,29 @@ function fitLabels(){
 }
 let fitT;window.addEventListener('resize',()=>{clearTimeout(fitT);fitT=setTimeout(fitLabels,120);});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitLabels());
+// Make the children of `cur` match the children of `next`, keeping every element that is still the same kind.
+function morphKids(cur,next){
+  const a=cur.childNodes,b=[...next.childNodes];
+  b.forEach((nb,i)=>{
+    const ca=a[i];
+    if(!ca){cur.appendChild(nb);return;}
+    if(ca.nodeType!==nb.nodeType||ca.nodeName!==nb.nodeName||(ca.nodeType===1&&(ca.id!==nb.id))){cur.replaceChild(nb,ca);return;}
+    if(ca.nodeType===3||ca.nodeType===8){if(ca.nodeValue!==nb.nodeValue)ca.nodeValue=nb.nodeValue;return;}
+    if(ca.nodeType!==1)return;
+    if(ca.outerHTML===nb.outerHTML)return;
+    for(const at of [...ca.attributes])if(!nb.hasAttribute(at.name))ca.removeAttribute(at.name);
+    for(const at of [...nb.attributes])if(ca.getAttribute(at.name)!==at.value)ca.setAttribute(at.name,at.value);
+    if(ca.tagName==='DETAILS')ca.open=nb.hasAttribute('open');
+    morphKids(ca,nb);
+    // Form controls keep their live state in properties, not attributes: copy it over (except the one being typed in).
+    if(ca!==document.activeElement){
+      if(ca.tagName==='SELECT'){const o=nb.querySelector('option[selected]');ca.value=o?o.value:(nb.options[0]&&nb.options[0].value)||'';}
+      else if(ca.tagName==='INPUT'){if(ca.type==='checkbox'||ca.type==='radio')ca.checked=nb.hasAttribute('checked');else ca.value=nb.getAttribute('value')||'';}
+      else if(ca.tagName==='TEXTAREA')ca.value=nb.value;
+    }
+  });
+  while(cur.childNodes.length>b.length)cur.removeChild(cur.lastChild);
+}
 function render(){
   const act=document.activeElement&&document.activeElement.id;
   S.isOwner=!!S.owner&&(S.view==='commish'||cmodeOn()||!(S.cfg&&gateOn()));
@@ -1357,11 +1380,20 @@ function render(){
   // Remember where any sideways-scrolling table was scrolled to, so a live-score refresh doesn't snap it back.
   const scrKey=el=>{const sec=el.closest('section,details'),t=sec&&sec.querySelector('h3,summary'),all=[...(sec||$('#view')).querySelectorAll('.tw,.wrap,.scroll,[data-scroll]')];return S.view+'|'+(t?t.textContent:'')+'|'+all.indexOf(el);};
   const scr={};if(S.lastView===S.view)document.querySelectorAll('#view .tw,#view .wrap,#view .scroll,#view [data-scroll]').forEach(el=>{if(el.scrollLeft||el.scrollTop)scr[scrKey(el)]=[el.scrollLeft,el.scrollTop];});
-  $('#view').innerHTML=h;S.lastView=S.view;
+  // Same page as before (a live-score refresh, say): update only what changed, so pictures aren't reloaded and
+  // the page doesn't shift under your finger. A different page is drawn fresh.
+  // Keep the card you're looking at in the same spot on screen: if something above it grows or shrinks during a
+  // refresh (a new play, a banner), scroll by the same amount. iPhone Safari doesn't do this on its own.
+  const same=S.lastView===S.view&&$('#view').firstChild,ANC='#view .card,#view section,#view article';
+  let anc=null;if(same&&window.scrollY>0){const els=[...document.querySelectorAll(ANC)];const i=els.findIndex(e=>e.getBoundingClientRect().bottom>60);if(i>=0)anc={i,top:els[i].getBoundingClientRect().top,n:els.length};}
+  if(S.lastView===S.view&&$('#view').firstChild){const t=document.createElement('div');t.innerHTML=h;morphKids($('#view'),t);}
+  else $('#view').innerHTML=h;
+  S.lastView=S.view;
   document.querySelectorAll('#view .tw,#view .wrap,#view .scroll,#view [data-scroll]').forEach(el=>{const v=scr[scrKey(el)];if(v){el.scrollLeft=v[0];el.scrollTop=v[1];}});
   document.querySelectorAll('#view [data-f]').forEach(el=>{if(el.id in S.form){if(el.type==='checkbox')el.checked=!!S.form[el.id];else el.value=S.form[el.id];}});
   if(act){const el=document.getElementById(act);if(el&&$('#view').contains(el)&&el.tagName!=='SELECT'&&el.tagName!=='BUTTON')el.focus({preventScroll:true});}
   fitLabels();
+  if(anc){const els=[...document.querySelectorAll(ANC)];if(els.length===anc.n&&els[anc.i]){const d=els[anc.i].getBoundingClientRect().top-anc.top;if(Math.abs(d)>=1)window.scrollBy(0,d);}}
   hofMusicSync();
 }
 

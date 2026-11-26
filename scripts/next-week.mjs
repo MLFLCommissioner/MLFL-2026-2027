@@ -1,5 +1,5 @@
-// MLFL next-week robot. GitHub runs this hourly Wednesday and Thursday morning (see .github/workflows/next-week.yml);
-// it builds the board Wednesday from 9 AM Central.
+// MLFL next-week robot. GitHub runs this hourly Wednesday to Thursday evening (see .github/workflows/next-week.yml);
+// it builds the board Thursday from 9 AM Central, or Wednesday from 9 AM in a week with a Wednesday game.
 // When the current week is finished and the next week has no games yet, it builds the next week's
 // odds board from The Odds API (DraftKings spreads and totals, same as the Commissioner tab button)
 // and makes it the current week. If anything is not ready yet it changes nothing and tries again next run.
@@ -19,18 +19,31 @@ const cur = Number(cfg.currentWeek);
 if (!cur) stop('No current week set.');
 if (cur >= 22) stop('The season is over (Super Bowl week is the last one).');
 
-// 0. When: Wednesday from 9 AM Central (it checks hourly, so about 9:20). If something is not ready,
-//    it tries again each hour through Thursday morning.
-const ct = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
+// 0. When: Thursday from 9 AM Central (it checks hourly, so about 9:20). In a week with a Wednesday game
+//    it builds on Wednesday from 9 AM instead. If something is not ready, it tries again each hour.
+const ct = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit' })
   .formatToParts(now).map((p) => [p.type, p.value]));
 const day = ct.weekday, hr = Number(ct.hour);
-if (!['Wed', 'Thu'].includes(day)) stop(`It is ${day}; the robot builds the next week on Wednesday at 9 AM.`);
-if (day === 'Wed' && hr < 9) stop('Waiting for 9 AM Wednesday.');
+// Any NFL game on today's date (Central)? Asked of ESPN's scoreboard, the same one the score robot reads.
+async function gameToday() {
+  const ymd = ct.year + ct.month + ct.day;
+  const H = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36', 'Accept': 'application/json', 'Referer': 'https://www.espn.com/nfl/scoreboard', 'Origin': 'https://www.espn.com' };
+  for (const host of ['https://site.api.espn.com', 'https://site.web.api.espn.com']) {
+    try {
+      const r = await fetch(host + '/apis/site/v2/sports/football/nfl/scoreboard?dates=' + ymd, { headers: H });
+      if (r.ok) return ((await r.json()).events || []).length > 0;
+    } catch (e) { /* try the next address */ }
+  }
+  return false;
+}
+if (!['Wed', 'Thu', 'Fri'].includes(day)) stop(`It is ${day}; the robot builds the next week on Thursday at 9 AM (Wednesday in a week with a Wednesday game).`);
+if (hr < 9 && day !== 'Fri') stop(`Waiting for 9 AM ${day === 'Wed' ? 'Wednesday' : 'Thursday'}.`);
+if (day === 'Wed' && !(await gameToday())) stop('No game today (Wednesday), so the board gets built Thursday at 9 AM.');
 
 // 1. Is the current week finished? Every game needs a final score.
-//    From Wednesday afternoon, a game that kicked off over 36 hours ago and still has no final
+//    From Thursday afternoon (Wednesday afternoon in a Wednesday-game week), a game that kicked off over 36 hours ago and still has no final
 //    (postponed, or ESPN never posted it) no longer holds things up.
-const late = (day === 'Wed' && hr >= 14) || day === 'Thu';
+const late = (day === 'Wed' && hr >= 13) || (day === 'Thu' && hr >= 13) || day === 'Fri';
 const games = Object.values((weeks[cur] && weeks[cur].games) || {});
 if (!games.length) stop(`Week ${cur} has no games, so there is nothing to finish.`);
 const waiting = games.filter((g) => !(g.fin && g.sa != null && g.sh != null) && !(late && g.kick && now - new Date(g.kick) > 36 * HOUR));

@@ -1033,6 +1033,28 @@ async function prevBackfill(g,m){
     }
   }catch(e){}
 }
+// During a stoppage (timeout, two-minute warning, end of a quarter) ESPN's down and distance can lag one play
+// behind. Read the last real play's ending down and distance from the game summary and use that instead.
+async function ddFix(g,m){
+  const lp=m.lp;if(m.state!=='in'||!lp||!lp.endq||!m.eid||!m.clock||!m.period)return;
+  S.ddC=S.ddC||{};const key=g.away+'|'+g.home+'|'+g.kick,stamp=m.period+'|'+m.clock,c=S.ddC[key];
+  if(c&&c.stamp===stamp){if(c.dd&&g.live===m)m.dd=c.dd;return;}
+  S.ddC[key]={stamp};
+  try{
+    const j=await summaryFor(m.eid,stamp);if(!j||!j.drives)return;
+    const ds=[].concat(j.drives.previous||[],j.drives.current?[j.drives.current]:[]),plays=[];
+    ds.forEach(d=>(d.plays||[]).forEach(p=>plays.push(p)));
+    for(let i=plays.length-1;i>=0;i--){
+      const p=plays[i],tt=String((p.type&&p.type.text)||''),tx=String(p.text||'');
+      if(/timeout|end (of )?(quarter|period|half)|end quarter|two-minute|official|injury/i.test(tt+' '+tx))continue;
+      const e=p.end||{},dd=e.downDistanceText||e.shortDownDistanceText||'';
+      if(!dd||/kickoff|extra point|two-point|field goal|punt/i.test(tt))return;
+      S.ddC[key].dd=dd;
+      if(g.live&&g.live.lp&&g.live.lp.endq&&g.live.dd!==dd){g.live.dd=dd;requestRender();}
+      return;
+    }
+  }catch(e){}
+}
 async function tdBackfill(g,m){
   S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};
   const key=g.away+'|'+g.home+'|'+g.kick,cur=S.tdm.get(key)||{},k=m.lp&&m.lp.kind;
@@ -1079,7 +1101,7 @@ async function liveTick(){
     let changed=false,doneNotSaved=false;
     const miss=need.filter(g=>!liveMatch(list,g)).map(g=>g.away+' vs '+g.home);
     S.liveStatus='Scoreboard reached: '+list.length+' NFL games listed'+(miss.length?'; not matched: '+miss.join(', '):'; all games on now matched')+'.';S.liveAt=Date.now();changed=true;
-    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);tdBackfill(g,m);prevBackfill(g,m);const old=JSON.stringify(g.live||null);g.live=m;if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
+    need.forEach(g=>{const m=liveMatch(list,g);if(!m)return;tdTrack(g,m);tdBackfill(g,m);prevBackfill(g,m);const old=JSON.stringify(g.live||null);g.live=m;ddFix(g,m);if(JSON.stringify(m)!==old)changed=true;if(m.completed)doneNotSaved=true;});
     if(doneNotSaved&&!S.isOwner&&Date.now()-(S.loadedAt||0)>5*60000){const keep=Object.values(w.games).map(g=>[g,g.live]);await loadData();keep.forEach(([g,l])=>{const ng=Object.values((S.weeks[n]||{}).games||{}).find(x=>x.away===g.away&&x.home===g.home);if(ng&&!ng.fin&&l)ng.live=l;});changed=true;}
     if(changed)requestRender();
   }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}

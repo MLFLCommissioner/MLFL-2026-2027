@@ -1951,7 +1951,9 @@ function totalsCard(n,sel,sc,sub){
   const week=S.weeks[n],pj=!weekComplete(week)&&canProj(n)&&projBoth(week,sub),r1=x=>Math.round(x*10)/10;
   let extra='';
   if(pj){
-    extra='<div class="tproj one"><div class="tpc"><span class="tpl">Projected</span><b>'+r1(pj.live)+'</b><small>updates live · parlay not included</small></div>'+
+    // Two numbers while the parlay can still hit: without it, and with its 20 points added if all five legs win.
+    extra='<div class="tproj'+(pj.parlay?'':' one')+'"><div class="tpc"><span class="tpl">Projected</span><b>'+r1(pj.live)+'</b><small>'+(pj.parlay?'without the parlay':'updates live · no parlay')+'</small></div>'+
+      (pj.parlay?'<div class="tpc"><span class="tpl">With parlay</span><b>'+r1(pj.live+20)+'</b><small>if all 5 legs hit</small></div>':'')+
       '<div class="tpnote">Best case <b class="tpb">'+pj.best+'</b>'+(pj.parlay?' · <b class="tpb">'+(pj.best+20)+'</b> with the parlay':'')+'</div></div>';
   }
   return totalsBox('',String(sc.total)+(sc.manualTotal?'*':''),sc.pct,sc.evaluated?sc.correct+' of '+sc.evaluated+' correct':'',

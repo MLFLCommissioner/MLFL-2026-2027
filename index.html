@@ -1107,7 +1107,13 @@ async function liveTick(){
   }catch(e){/* the feed could not be reached; the cards keep showing the saved scores */S.liveStatus='Could not reach the scoreboard ('+((e&&e.message)||'blocked')+').';S.liveAt=Date.now();requestRender();}
   finally{liveBusy=false;}
 }
-setInterval(liveTick,15000);
+// Check every 5 seconds while a game in the week on screen is being played, every 15 seconds otherwise.
+// (liveTick itself does nothing when the page is hidden.)
+let liveLast=0;
+setInterval(()=>{
+  const w=S.weeks&&S.weeks[S.selWeek],playing=!!w&&Object.values(w.games||{}).some(g=>!gscore(g,true)&&kicked(g)&&!(g.live&&g.live.completed)&&g.kick&&Date.now()-new Date(g.kick).getTime()<5*3600000);
+  if(Date.now()-liveLast>=(playing?4900:14900)){liveLast=Date.now();liveTick();}
+},5000);
 // Backup for the score robot: while the commissioner has the site open, final scores ESPN shows for this
 // week and last week get saved into the league file (ESPN answers browsers even when it blocks GitHub).
 let finalsBusy=false,finalsAt=0;

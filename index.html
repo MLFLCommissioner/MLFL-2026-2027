@@ -1947,7 +1947,7 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
   return h+'</div></section>';
 }
 function totalsCard(n,sel,sc,sub){
-  const week=S.weeks[n],pj=canProj(n)&&projBoth(week,sub),r1=x=>Math.round(x*10)/10;
+  const week=S.weeks[n],pj=!weekComplete(week)&&canProj(n)&&projBoth(week,sub),r1=x=>Math.round(x*10)/10;
   let extra='';
   if(pj){
     extra='<div class="tproj one"><div class="tpc"><span class="tpl">Projected</span><b>'+r1(pj.live)+'</b><small>updates live · parlay not included</small></div>'+
@@ -1985,7 +1985,7 @@ function leaderBoard(title,sub,act,rows){
 }
 function rankTag(pos){return '<span class="rank'+(pos<=3?' r'+pos:'')+'">'+ordinal(pos)+'</span>';}
 function weekTable(week,n){
-  const showPj=canProj(n);
+  const showPj=!weekComplete(week)&&canProj(n);
   const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false),pj:showPj?projBoth(week,w):null};}).sort((a,b)=>b.sc.total-a.sc.total);
   return leaderBoard(wname(n)+' scoreboard',weekComplete(week)?'':'Includes games in progress','selp',rows.map(r=>({key:r.p.key,name:r.p.name,total:r.sc.total,pct:r.sc.pct,sel:r.p.key===S.selPlayer,
     chips:[['Spread',r.sc.spread],['O/U',r.sc.ou],['Combo',r.sc.combo],['Parlay',r.sc.parlay,r.sc.parlay>0]].concat(showPj&&r.pj?[['Proj',Math.round(r.pj.live*10)/10,true]]:[])})));

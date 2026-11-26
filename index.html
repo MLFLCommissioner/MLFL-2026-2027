@@ -1744,7 +1744,8 @@ async function wxLoad(week){
   requestRender();
 }
 function wxTag(g){
-  const w=S.wx&&S.wx[wxKey(g)];if(!w||gscore(g,true))return '';
+  // Only before kickoff: once a game starts (or ends) the weather corner goes away.
+  const w=S.wx&&S.wx[wxKey(g)];if(!w||gscore(g,true)||kicked(g)||(g.live&&g.live.state&&g.live.state!=='pre'))return '';
   if(w.indoor)return '<div class="gwx in" title="'+esc(w.venue||'Indoors')+'"><span class="gwx-i">🏟️</span><span class="gwx-s">Indoors</span></div>';
   const pop=w.pop!=null?w.pop+'%':'',wind=w.wind!=null?w.wind+' mph':'';
   const tip=[w.txt,pop&&pop+' chance of precip',wind&&wind+' wind'].filter(Boolean).join(', ');

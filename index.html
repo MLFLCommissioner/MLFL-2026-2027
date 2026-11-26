@@ -594,6 +594,8 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 
 .tos{display:flex;gap:4px;margin-top:5px}.sbt.home .tos,.tos.h{justify-content:flex-end}
 .tos i{width:14px;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}.tos i.on{background:#f2c94c}
+
+.card.game .rows.nores{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.card.game .rows.nores .res{display:none}
 </style>
 </head>
 <body>
@@ -1867,7 +1869,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   const nl=(lock.s?1:0)+(lock.o?1:0);
   const hidden=hiddenLock?'<div class="opt masked" style="grid-column:1 / span 3">'+nl+' pick'+(nl===1?'':'s')+' locked in. '+(S.me&&S.me!==sel?'Lock in your own picks for this game to see '+(nl===1?'it':'them')+'.':'Hidden until picks lock.')+'</div>':'';
   const wx=wxTag(g);
-  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3>'+whenLine(g)+'</header>'+scoreLine+fieldBar(g,L)+'<div class="rows">'+
+  return '<article class="card game"><header'+(wx?' class="has-wx"':'')+'>'+wx+'<h3 class="matchup">'+teamTag(g.away)+'<span class="vs">vs</span>'+teamTag(g.home)+'</h3>'+whenLine(g)+'</header>'+scoreLine+fieldBar(g,L)+'<div class="rows'+(gscore(g,true)?'':' nores')+'">'+
     cells[0]+cells[1]+(r.combo?'<div class="res combo">+'+3*sc.mult+'</div>':cell(r.sw))+cells[2]+cells[3]+(r.combo?'':cell(r.ow))+hidden+'</div>'+injBlock(gid,g)+'</article>';
 }
 function legLabel(week,code,own){

@@ -591,6 +591,9 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 .tproj .tpl{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
 .tproj small{font-size:.66rem;opacity:.6}
 .tproj .tpnote{grid-column:1/-1;font-size:.74rem;opacity:.75;margin-top:9px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+
+.tos{display:flex;gap:4px;margin-top:5px}.sbt.home .tos,.tos.h{justify-content:flex-end}
+.tos i{width:14px;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}.tos i.on{background:#f2c94c}
 </style>
 </head>
 <body>
@@ -846,6 +849,8 @@ function espnGames(json){
       eid:String(ev.id||c.id||''),clock:String((c.status||ev.status||{}).displayClock||''),period:Number((c.status||ev.status||{}).period)||0,aid:String(a.id||(a.team&&a.team.id)||''),hid:String(h.id||(h.team&&h.team.id)||'')};
     // Who has the ball and where: "possessionText" reads like "HOU 35" (a team's own side of the field) or "50".
     const sit=c.situation||{},idOf=x=>String(x.id||(x.team&&x.team.id)||''),ab=x=>String((x.team&&x.team.abbreviation)||'').toUpperCase();
+    // Timeouts left this half (ESPN's situation block, during the game only).
+    if(out.state==='in'){const n=x=>typeof x==='number'&&x>=0&&x<=3?x:null;out.ato=n(sit.awayTimeouts);out.hto=n(sit.homeTimeouts);}
     // The last play tells us when a touchdown was just scored (it stays the last play through the extra point until the kickoff).
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
@@ -1051,7 +1056,7 @@ async function tdBackfill(g,m){
 function liveMatch(list,g){
   const A=teamKey(g.away),H=teamKey(g.home),has=(arr,k)=>arr.some(x=>x===k||x.endsWith(k));
   const m=list.find(e=>has(e.away,A)&&has(e.home,H));if(m)return m;
-  const r=list.find(e=>has(e.away,H)&&has(e.home,A));return r?{sa:r.sh,sh:r.sa,state:r.state,completed:r.completed,detail:r.detail,clock:r.clock,period:r.period,poss:r.poss?(r.poss==='away'?'home':'away'):undefined,spot:r.spot!=null?100-r.spot:undefined,dd:r.dd,rz:r.rz}:null;
+  const r=list.find(e=>has(e.away,H)&&has(e.home,A));return r?{sa:r.sh,sh:r.sa,state:r.state,completed:r.completed,detail:r.detail,clock:r.clock,period:r.period,ato:r.hto,hto:r.ato,poss:r.poss?(r.poss==='away'?'home':'away'):undefined,spot:r.spot!=null?100-r.spot:undefined,dd:r.dd,rz:r.rz}:null;
 }
 function liveNeeded(w){
   const now=Date.now();return Object.values((w&&w.games)||{}).filter(g=>!g.fin&&g.kick&&now>=new Date(g.kick).getTime()-10*60000&&now<=new Date(g.kick).getTime()+7*86400000);
@@ -1563,7 +1568,9 @@ function preBug(g,mid){
     '<span class="sbm"><span class="sbpre">'+mid+'</span></span>'+
     '<span class="sbt home"><span class="sbrow">'+logo(g.home)+'</span>'+(rc.h?'<small class="sbrec">'+esc(rc.h)+'</small>':'')+'</span></div>';
 }
-function scoreBug(g,sa,sh,mode,detail){
+// Three marks per team, lit for each timeout left this half.
+function toPips(n,side){if(n==null)return '';let h='';for(let i=0;i<3;i++)h+='<i class="'+(i<n?'on':'')+'"></i>';return '<span class="tos '+side+'" title="'+n+' timeout'+(n===1?'':'s')+' left" aria-label="'+n+' timeouts left">'+h+'</span>';}
+function scoreBug(g,sa,sh,mode,detail,L){
   const Q={'1st':'Q1','2nd':'Q2','3rd':'Q3','4th':'Q4','OT':'OT'},d=String(detail||'').trim();
   let mid;
   if(mode==='final')mid='<span class="sbfinal">'+(/ot/i.test(d)?'Final / OT':'Final')+'</span>';
@@ -1576,9 +1583,9 @@ function scoreBug(g,sa,sh,mode,detail){
   const label=g.away+' '+sa+', '+g.home+' '+sh+(mode==='final'?', final':d?', '+d:'');
   const rc=teamRec(g);
   return '<div class="score sb'+(mode==='final'?' fin':' is-live')+'" role="group" aria-label="'+esc(label)+'">'+
-    '<span class="sbt'+(lead==='h'?' trail':'')+'"><span class="sbrow">'+logo(g.away)+'<span class="pts">'+sa+'</span></span>'+(rc.a?'<small class="sbrec">'+esc(rc.a)+'</small>':'')+'</span>'+
+    '<span class="sbt'+(lead==='h'?' trail':'')+'"><span class="sbrow">'+logo(g.away)+'<span class="pts">'+sa+'</span></span>'+(rc.a?'<small class="sbrec">'+esc(rc.a)+'</small>':'')+(mode!=='final'&&L?toPips(L.ato,'a'):'')+'</span>'+
     '<span class="sbm">'+mid+'</span>'+
-    '<span class="sbt home'+(lead==='a'?' trail':'')+'"><span class="sbrow"><span class="pts">'+sh+'</span>'+logo(g.home)+'</span>'+(rc.h?'<small class="sbrec">'+esc(rc.h)+'</small>':'')+'</span></div>';
+    '<span class="sbt home'+(lead==='a'?' trail':'')+'"><span class="sbrow"><span class="pts">'+sh+'</span>'+logo(g.home)+'</span>'+(rc.h?'<small class="sbrec">'+esc(rc.h)+'</small>':'')+(mode!=='final'&&L?toPips(L.hto,'h'):'')+'</span></div>';
 }
 /* ---- Kickoff weather ----
    Forecast for the kickoff hour at the home team's stadium, from Open-Meteo (free, no key). ESPN's scoreboard tells us
@@ -1842,7 +1849,7 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   let scoreLine;
   const L=g.live;
   if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre'))scoreLine=scoreBug(g,g.sa,g.sh,g.fin?'final':'live','');
-  else if(L&&L.state!=='pre'&&L.sa!=null)scoreLine=scoreBug(g,L.sa,L.sh,L.completed?'final':'live',L.completed?String(L.detail||''):String(L.detail||''));
+  else if(L&&L.state!=='pre'&&L.sa!=null)scoreLine=scoreBug(g,L.sa,L.sh,L.completed?'final':'live',L.completed?String(L.detail||''):String(L.detail||''),L);
   else{
     const since=g.kick?Date.now()-new Date(g.kick).getTime():0;
     scoreLine=preBug(g,(kicked(g)?(since>5*3600000?'Waiting for the final score':(L&&L.state==='pre')||(!L&&since<45*60000)?'Game starting soon':'In progress')

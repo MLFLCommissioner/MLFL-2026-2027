@@ -1110,7 +1110,14 @@ async function ddFix(g,m){
         // After a punt or kickoff, place the ball for the team that gets it.
         const ptid=String((p.team&&p.team.id)||(p.start&&p.start.team&&p.start.team.id)||dt||''),side=ptid&&ptid===m.aid?'away':ptid&&ptid===m.hid?'home':null;
         const k=kickSpot({aab:m.aab,hab:m.hab,lp:{tt,raw:playClean(tx),side}});
-        if(k){out.dd=k.dd;out.poss=k.poss;out.spot=k.spot;}
+        if(k){
+          // If ESPN already gives the ball to that team, its spot is the real one (the play text can't always tell a
+          // touchback at the 20 from one at the 35), so keep it and only fix the down text if that's stale.
+          if(/touchback/i.test(tx)&&!/punt/i.test(tt+' '+tx)&&m.poss===k.poss&&m.spot!=null&&m.spot>0&&m.spot<100){
+            const y=m.spot,at=y===50?'50':y<50?m.aab+' '+y:m.hab+' '+(100-y);
+            out.dd='1st & 10 at '+at;out.poss=m.poss;out.spot=m.spot;
+          }else{out.dd=k.dd;out.poss=k.poss;out.spot=k.spot;}
+        }
       }else if(!/extra point|two-point|field goal/i.test(tt)){
         const e=p.end||{},st=p.start||{};let dd=e.downDistanceText||'';
         // ESPN sometimes leaves the play's "after" down equal to the "before" down. Work it out ourselves.

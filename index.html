@@ -962,6 +962,8 @@ function playLine(tt,tx,ath){
   let m;
   if(!t&&!ty)return '';
   // Replay reversed the call: describe what actually counted (the text after "REVERSED.").
+  // ESPN sometimes writes the corrected play first and ends with "... challenged the ruling, and the play was REVERSED."
+  if((m=t.match(/^(.+?\.)\s+(?:[A-Z][A-Za-z']*(?: [A-Z][A-Za-z']*){0,3}\s+challenged\b|The Replay Official\b|Replay Assistant\b)[\s\S]*?\bREVERSED\.?\s*$/i))&&m[1].length>8)return playLine(ty,m[1],ath)+' · reversed on replay';
   if((m=t.match(/\bREVERSED\.\s*(.+)$/i)))return playLine(/pass|incomplete/i.test(m[1])?'Pass':ty,m[1],ath)+' · reversed on replay';
   // A score wiped out by a penalty ("TOUCHDOWN NULLIFIED by Penalty … No Play").
   if(/NULLIFIED|\bNo Play\b/i.test(t)&&/TOUCHDOWN|field goal|safety/i.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-[^,]+, ([^,]+?),/i);return (/TOUCHDOWN/i.test(t)?'Touchdown':'Score')+' wiped out'+(m?' · '+m[2]+' on '+m[1]:' by a penalty');}
@@ -1062,6 +1064,7 @@ const ROSTER=id=>'https://site.api.espn.com/apis/site/v2/sports/football/nfl/tea
 // One summary request per game per stoppage, shared by the lookups below.
 function summaryFor(eid,stamp){
   S.sumC=S.sumC||{};const k=eid+'|'+stamp;
+  if(!S.sumC[k]){const ks=Object.keys(S.sumC);if(ks.length>80)ks.slice(0,40).forEach(x=>delete S.sumC[x]);}
   if(!S.sumC[k])S.sumC[k]=fetch(SUMMARY+encodeURIComponent(eid),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   return S.sumC[k];
 }
@@ -1087,10 +1090,13 @@ async function prevBackfill(g,m){
 // behind. Read the last real play's ending down and distance from the game summary and use that instead.
 async function ddFix(g,m){
   const lp=m.lp;if(m.state!=='in'||!lp||!lp.endq||!m.eid||!m.clock||!m.period)return;
-  S.ddC=S.ddC||{};const key=g.away+'|'+g.home+'|'+g.kick,stamp=m.period+'|'+m.clock,c=S.ddC[key];
+  S.ddC=S.ddC||{};const key=g.away+'|'+g.home+'|'+g.kick,base=m.period+'|'+m.clock,now=Date.now(),c=S.ddC[key];
   const apply=(L,c)=>{let ch=false;if(c.dd&&L.dd!==c.dd){L.dd=c.dd;ch=true;}if(c.poss&&(L.poss!==c.poss||L.spot!==c.spot)){L.poss=c.poss;L.spot=c.spot;ch=true;}if(c.prev&&L.lp&&L.lp.prevPlay!==c.prev){L.lp.prevPlay=c.prev;ch=true;}return ch;};
-  if(c&&c.stamp===stamp){if(g.live===m)apply(m,c);return;}
-  S.ddC[key]={stamp};
+  // Keep the last answer on screen, but look again every 20s while the stoppage lasts:
+  // ESPN often logs the last play (or a replay reversal) a bit after the timeout starts.
+  if(c&&c.base===base){if(g.live===m)apply(m,c);if(c.busy||now-c.t<20000)return;}
+  const out=(c&&c.base===base)?c:{base};out.t=now;out.busy=true;S.ddC[key]=out;
+  const stamp=base+'|'+now;
   try{
     const j=await summaryFor(m.eid,stamp);if(!j||!j.drives)return;
     const ds=[].concat(j.drives.previous||[],j.drives.current?[j.drives.current]:[]),plays=[];
@@ -1098,7 +1104,6 @@ async function ddFix(g,m){
     for(let i=plays.length-1;i>=0;i--){
       const [p,dt]=plays[i],tt=String((p.type&&p.type.text)||''),tx=String(p.text||'');
       if(/timeout|end (of )?(quarter|period|half)|end quarter|two-minute|official|injury/i.test(tt+' '+tx))continue;
-      const out=S.ddC[key];
       // The real last play: shown under the stoppage tag even if it came and went between our checks (a punt, say).
       const line=playLine(tt,tx,null);if(line)out.prev=line;
       if(/punt|kickoff|kicks/i.test(tt+' '+tx)&&m.aab&&m.hab){
@@ -1107,12 +1112,19 @@ async function ddFix(g,m){
         const k=kickSpot({aab:m.aab,hab:m.hab,lp:{tt,raw:playClean(tx),side}});
         if(k){out.dd=k.dd;out.poss=k.poss;out.spot=k.spot;}
       }else if(!/extra point|two-point|field goal/i.test(tt)){
-        const e=p.end||{},dd=e.downDistanceText||e.shortDownDistanceText||'';if(dd)out.dd=dd;
+        const e=p.end||{},st=p.start||{};let dd=e.downDistanceText||'';
+        // ESPN sometimes leaves the play's "after" down equal to the "before" down. Work it out ourselves.
+        const sd=Number(st.down),sdist=Number(st.distance),gain=Number(p.statYardage)||0;
+        if(sd>=1&&sd<=3&&sdist>0&&!/penalty|fumble|intercept|touchdown|safety/i.test(tt+' '+tx)&&(!dd||Number(e.down)===sd||dd===st.downDistanceText)){
+          const at=(gain===0?st.possessionText:e.possessionText)||e.possessionText||st.possessionText||'';
+          dd=(gain>=sdist?'1st & '+(Number(e.yardsToEndzone)>0&&Number(e.yardsToEndzone)<=10?'Goal':'10'):ordinal(sd+1)+' & '+(sdist-gain))+(at?' at '+at:'');
+        }
+        if(dd)out.dd=dd;
       }
       if(g.live===m&&apply(m,out))requestRender();
       return;
     }
-  }catch(e){}
+  }catch(e){}finally{const o=S.ddC[key];if(o)o.busy=false;}
 }
 async function tdBackfill(g,m){
   S.tdm=S.tdm||new Map();S.tdChk=S.tdChk||{};

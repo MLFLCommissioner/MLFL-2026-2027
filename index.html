@@ -906,14 +906,29 @@ function scorerLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
   const t=playClean(tx),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
   const y=yd!=null?(yd==='0'?'':yd+'-yd '):'';let m;
-  if(/field goal/i.test(tt)){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
+  if(/field goal/i.test(tt)&&!(/blocked/i.test(tt+' '+t)&&/touchdown/i.test(tt+' '+t))){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
   if(/safety/i.test(tt))return '';
   if((m=t.match(/^(.+?) (\d+) yd pass from (.+?)(?: \(|$)/i)))return nm(m[1])+' · '+m[2]+'-yd pass from '+nm(m[3]);
   if((m=t.match(/^(.+?) (\d+) yd (?:run|rush)/i)))return nm(m[1])+' · '+m[2]+'-yd run';
   if((m=t.match(/^(.+?) (\d+) yd (interception|fumble|kickoff|punt|blocked [a-z ]+?) return/i)))return nm(m[1])+' · '+m[2]+'-yd '+m[3].toLowerCase()+' return';
   if((m=t.match(/^(.+?) pass\b.*?\bto ([A-Z][^,()]*?)(?= for | to the | to [A-Z]{2,3} -?\d| ran | pushed |,|\.? ?\(|$)/)))return nm(m[2])+' · '+y+'pass from '+nm(m[1]);
-  if(/return|intercept|fumble/i.test(tt+' '+t)){m=t.match(/(?:intercepted by|recovered by) (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: [A-Z][\w.'-]*)*?)(?= at | for |,|\.\s|\.$|$)/i)||t.match(/^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*)?) (?:kicks|punts)/);
-    const r=t.match(/\. ([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)?) (?:to|for|ran|pushed)[^.]*TOUCHDOWN/);if(r)return nm(r[1])+' · '+(/intercept/i.test(t)?'interception return':/fumble/i.test(t)?'fumble return':/punts? /i.test(t)?'punt return':/kicks? /i.test(t)?'kickoff return':'return');if(m&&/intercepted|recovered/i.test(m[0]))return nm(m[1])+' · '+(/intercept/i.test(t)?'interception return':'fumble recovery');}
+  // Defensive two-point return: a blocked or intercepted try taken back the other way.
+  if(/defensive two-point|defensive 2-pt|returned for (?:a )?(?:defensive )?two/i.test(tt+' '+t)){m=t.match(/(?:recovered|intercepted) by (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w'-]+))*?)(?= at | for | in |,|\.\s|\.$|$)/i);return (m?nm(m[1])+' · ':'')+'defensive two-point return';}
+  // Blocked punt or field goal taken back for a score: "… punt is BLOCKED by K.Moore II … RECOVERED by PHI-K.Moore II at DAL 20. K.Moore II for 20 yards, TOUCHDOWN."
+  if(/blocked/i.test(tt+' '+t)){
+    const kind=/field goal/i.test(tt+' '+t)?'blocked field goal':/punt/i.test(tt+' '+t)?'blocked punt':'blocked kick';
+    m=t.match(/recovered by (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w'-]+))*?)(?= at | for | in |,|\.\s|\.$|$)/i)||t.match(/blocked by (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w'-]+))*?)(?= at | for | in |,|\.\s|\.$|$)/i);
+    const yy=(t.match(/for (\d+) yards?,? (?:TOUCHDOWN|touchdown)/)||t.match(/(\d+) yd blocked/i)||[])[1];
+    const who=m?nm(m[1]):(ath&&ath[0]?nm(ath[0].shortName||ath[0].displayName):'');
+    if(who)return who+' · '+(yy&&yy!=='0'?yy+'-yd ':'')+kind+' return';
+  }
+  if(/return|intercept|fumble|muff/i.test(tt+' '+t)){
+    const kind=/intercept/i.test(t)?'interception return':/muff/i.test(t)?'muffed punt recovery':/fumble/i.test(t)?'fumble return':/punts? /i.test(t)?'punt return':/kicks? /i.test(t)?'kickoff return':'return';
+    const ry=(t.match(/for (\d+) yards?,? TOUCHDOWN/i)||[])[1],yy=ry&&ry!=='0'?ry+'-yd ':'';
+    const r=t.match(/\. ([A-Z][\w.'-]+(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w.'-]+))?) (?:to|for|ran|pushed)[^.]*TOUCHDOWN/);if(r)return nm(r[1])+' · '+yy+kind;
+    m=t.match(/(?:intercepted by|recovered by) (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w'-]+))*?)(?= at | for | in |,|\.\s|\.$|$)/i);
+    if(m)return nm(m[1])+' · '+yy+(/in (?:the )?end zone/i.test(t)&&!/intercept/i.test(t)?(/muff/i.test(t)?'muffed punt recovery':'fumble recovery')+' in the end zone':kind);
+  }
   if((m=t.match(/^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*)?) (?:left|right|up the middle|middle|scrambles|rushe?d?|runs?|kneels|to the)/)))return nm(m[1])+' · '+y+'run';
   const a=(ath||[]).map(x=>x&&(x.shortName||x.displayName||x.fullName)).filter(Boolean);
   if(a.length)return /pass/i.test(tt)&&a.length>1?nm(a[1])+' · pass from '+nm(a[0]):nm(a[0]);

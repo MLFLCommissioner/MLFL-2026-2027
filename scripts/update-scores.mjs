@@ -20,7 +20,7 @@ const targets = [];
 const upcoming = [];
 for (const [n, w] of Object.entries(data.weeks || {})) {
   for (const [gid, g] of Object.entries(w.games || {})) {
-    if (g.fin || !g.kick) continue;
+    if (g.fin || g.nc || !g.kick) continue;
     const k = Date.parse(g.kick);
     if (now >= k && now <= k + 7 * DAY) targets.push({ n, gid, g, k });
     else if (now < k && k - now <= 5 * DAY) upcoming.push({ n, gid, g, k });

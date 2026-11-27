@@ -46,7 +46,7 @@ if (day === 'Wed' && !(await gameToday())) stop('No game today (Wednesday), so t
 const late = (day === 'Wed' && hr >= 13) || (day === 'Thu' && hr >= 13) || day === 'Fri';
 const games = Object.values((weeks[cur] && weeks[cur].games) || {});
 if (!games.length) stop(`Week ${cur} has no games, so there is nothing to finish.`);
-const waiting = games.filter((g) => !(g.fin && g.sa != null && g.sh != null) && !(late && g.kick && now - new Date(g.kick) > 36 * HOUR));
+const waiting = games.filter((g) => !g.nc && !(g.fin && g.sa != null && g.sh != null) && !(late && g.kick && now - new Date(g.kick) > 36 * HOUR));
 if (waiting.length) stop(`Week ${cur} is not finished yet: ${waiting.map((g) => g.away + ' vs ' + g.home).join(', ')}.`);
 
 // 2. Which week comes next? Weeks 1-18, then the playoff rounds in slots 19-22.

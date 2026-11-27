@@ -596,6 +596,8 @@ nav a[aria-current="page"]{color:var(--board-ink);background:color-mix(in srgb,v
 .tos i{width:14px;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}.tos i.on{background:#f2c94c}
 
 .card.game .rows.nores{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.card.game .rows.nores .res{display:none}
+.pleg.void{opacity:.55}.pleg.void .llab b{text-decoration:line-through}
+.ptrack i.void{background:repeating-linear-gradient(45deg,rgba(255,255,255,.18) 0 4px,transparent 4px 8px);border-style:solid}
 </style>
 </head>
 <body>
@@ -645,12 +647,16 @@ function scoreWeek(week,wk,finalOnly){
   }
   const legs=hasParlay(week)?((wk&&wk.parlay)||[]):[];
   if(legs.length){
-    let miss=false,wins=0;
+    let miss=false,wins=0,voids=0;
     for(const l of legs){
       const g=legGame(games[l.g],l),r=!g?null:(l.m==='s'?evalSpread(g,l.v,finalOnly):evalOU(g,l.v,finalOnly));
-      out.legs.push(r);if(r===false||r==='push')miss=true;else if(r===true)wins++;
+      if(games[l.g]&&games[l.g].nc){out.legs.push('void');voids++;continue;}
+      out.legs.push(r);if(r===false)miss=true;else if(r==='push')voids++;else if(r===true)wins++;
     }
-    if(miss)out.parlayState='miss';else if(legs.length===5&&wins===5){out.parlayState='hit';out.parlay=20;}else out.parlayState='pending';
+    // A leg that pushes, or is in a game that's a no contest (canceled, or postponed out of the week), is dropped:
+    // the parlay pays 5 less for each one (four legs left = +15). A leg that loses ends it.
+    out.parlayLegs=5-voids;out.parlayPays=Math.max(0,20-5*voids);
+    if(miss)out.parlayState='miss';else if(legs.length===5&&voids<4&&wins===5-voids){out.parlayState='hit';out.parlay=out.parlayPays;}else out.parlayState='pending';
   }
   out.total=out.spread+out.ou+out.combo+out.parlay;
   out.pct=out.evaluated?out.correct/out.evaluated*100:null;
@@ -659,7 +665,7 @@ function scoreWeek(week,wk,finalOnly){
   if(man){if(man.total!=null){out.total=man.total;out.manualTotal=true;}if(man.pct!=null)out.pct=man.pct;}
   return out;
 }
-function weekComplete(w){const g=Object.values((w&&w.games)||{});return g.length>0&&g.every(x=>(x.fin&&x.sa!=null&&x.sh!=null)||(x.live&&x.live.completed&&x.live.sa!=null));}
+function weekComplete(w){const g=Object.values((w&&w.games)||{});return g.length>0&&g.every(x=>x.nc||(x.fin&&x.sa!=null&&x.sh!=null)||(x.live&&x.live.completed&&x.live.sa!=null));}
 function computeSeason(cfg,weeks,entries){
   const players=(cfg&&cfg.players)||[],rows={},winners={};
   players.forEach(p=>{const b=p.base||{};rows[p.key]={key:p.key,name:p.name,points:b.points||0,won:b.won||0,cppSum:(b.cpp||0)*(b.weeks||0),cppN:b.weeks||0,byWeek:{},fut:0};});
@@ -830,17 +836,22 @@ function projWeek(week,wk,live){
   if(!week||!wk||wk.manual)return null;
   const games=week.games||{},picks=wk.p||{},mult=weekMult(week);let exp=0,best=0,any=false;
   for(const gid in games){
-    const g=games[gid],p=picks[gid]||{},ps=pickChance(g,'s',p.s,null,live),po=pickChance(g,'o',p.o,null,live);
+    const g=games[gid];if(g.nc)continue;
+    const p=picks[gid]||{},ps=pickChance(g,'s',p.s,null,live),po=pickChance(g,'o',p.o,null,live);
     if(ps==null&&po==null)continue;any=true;
     if(ps!=null&&po!=null){exp+=mult*(ps+po+ps*po);best+=mult*((ps>0)+(po>0)+(ps>0&&po>0));}
     else{const q=ps!=null?ps:po;exp+=mult*q;best+=mult*(q>0?1:0);}
   }
   // The parlay is left out of the projection on purpose; we only note whether it can still hit for the best case.
   const legs=hasParlay(week)?(wk.parlay||[]):[];
-  const parlayAlive=legs.length===5&&legs.every(l=>{const c=pickChance(games[l.g],l.m,l.v,l.l!=null?(l.m==='s'?(l.v==='home'?l.l:-l.l):l.l):null,true);return c==null||c>0;});
-  return any?{exp,best,parlayAlive}:null;
+  const legLine=l=>l.l!=null?(l.m==='s'?(l.v==='home'?l.l:-l.l):l.l):null;
+  const dropped=l=>{const g=games[l.g];if(!g)return false;if(g.nc)return true;const gg=legGame(g,l);return (l.m==='s'?evalSpread(gg,l.v,false):evalOU(gg,l.v,false))==='push';};
+  const nDrop=legs.filter(dropped).length;
+  const parlayAlive=legs.length===5&&nDrop<4&&legs.every(l=>{if(dropped(l))return true;const c=pickChance(games[l.g],l.m,l.v,l.l!=null?(l.m==='s'?(l.v==='home'?l.l:-l.l):l.l):null,true);return c==null||c>0;});
+  const pay=20-5*nDrop;
+  return any?{exp,best,parlayAlive,pay}:null;
 }
-function projBoth(week,wk){const s=projWeek(week,wk,false);if(!s)return null;const l=projWeek(week,wk,true);return {start:s.exp,live:l.exp,best:l.best,parlay:l.parlayAlive};}
+function projBoth(week,wk){const s=projWeek(week,wk,false);if(!s)return null;const l=projWeek(week,wk,true);return {start:s.exp,live:l.exp,best:l.best,parlay:l.parlayAlive,pay:l.pay};}
 // Only a player who has sent picks for the week (or the commissioner) sees projections.
 function canProj(n){if(S.isOwner)return true;const w=S.me&&subWeek(S.me,n);return !!(w&&countPicks(w));}
 function espnGames(json){
@@ -906,7 +917,11 @@ function scorerLine(tt,tx,ath){
   const nm=x=>String(x||'').trim().replace(/\.(?=[A-Z])/g,'. ').replace(/\s+/g,' ');
   const t=playClean(tx),yd=(t.match(/for (-?\d+) yards?/i)||t.match(/(\d+) (?:yd|yard)s?\b/i)||[])[1];
   const y=yd!=null?(yd==='0'?'':yd+'-yd '):'';let m;
-  if(/field goal/i.test(tt)&&!(/blocked/i.test(tt+' '+t)&&/touchdown/i.test(tt+' '+t))){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
+  // Lateral on the scoring play: the player who got it last scored.
+  if(/TOUCHDOWN/i.test(t)&&(m=t.match(/[Ll]ateral to (?:[A-Z]{2,3}-)?([A-Z][\w'-]*(?:\.\s?[A-Z][\w'-]*)*(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w'-]+))*?)(?= to | for |,|\.\s|$)/))){const f=t.match(/to ([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)?) to [A-Z]{2,3} -?\d+ for -?\d+ yards?\. [Ll]ateral/)||t.match(/^([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)?) /);return nm(m[1])+' · lateral'+(f?' from '+nm(f[1]):'');}
+  // Missed field goal caught and run back for a touchdown.
+  if(/field goal/i.test(tt+' '+t)&&/no good|missed|short|wide/i.test(t)&&/TOUCHDOWN/i.test(t)){m=t.match(/\. ([A-Z][\w.'-]+(?: (?:Jr\.|Sr\.|II|III|IV|[A-Z][\w.'-]+))?) (?:to|for|ran|pushed)[^.]*TOUCHDOWN/);const ry=(t.match(/for (\d+) yards?,? TOUCHDOWN/i)||[])[1];if(m)return nm(m[1])+' · '+(ry?ry+'-yd ':'')+'missed field goal return';}
+  if(/field goal/i.test(tt)&&!(/blocked|no good|missed/i.test(tt+' '+t)&&/touchdown/i.test(tt+' '+t))){m=t.match(/^(.+?) (\d+) (?:yard|yd)s? field goal/i);if(m)return nm(m[1])+' · '+m[2]+'-yd field goal';}
   if(/safety/i.test(tt))return '';
   if((m=t.match(/^(.+?) (\d+) yd pass from (.+?)(?: \(|$)/i)))return nm(m[1])+' · '+m[2]+'-yd pass from '+nm(m[3]);
   if((m=t.match(/^(.+?) (\d+) yd (?:run|rush)/i)))return nm(m[1])+' · '+m[2]+'-yd run';
@@ -943,6 +958,21 @@ function playLine(tt,tx,ath){
   const yds=v=>{const n=parseInt(v,10);return isNaN(n)?'':n===0?'no gain':n+'-yd ';};
   let m;
   if(!t&&!ty)return '';
+  // Replay reversed the call: describe what actually counted (the text after "REVERSED.").
+  if((m=t.match(/\bREVERSED\.\s*(.+)$/i)))return playLine(/pass|incomplete/i.test(m[1])?'Pass':ty,m[1],ath)+' · reversed on replay';
+  // A score wiped out by a penalty ("TOUCHDOWN NULLIFIED by Penalty … No Play").
+  if(/NULLIFIED|\bNo Play\b/i.test(t)&&/TOUCHDOWN|field goal|safety/i.test(t)){m=t.match(/PENALTY on ([A-Z]{2,3})-[^,]+, ([^,]+?),/i);return (/TOUCHDOWN/i.test(t)?'Touchdown':'Score')+' wiped out'+(m?' · '+m[2]+' on '+m[1]:' by a penalty');}
+  // Two-point try: who ran it or caught it, and whether it was good.
+  if(/TWO-POINT CONVERSION ATTEMPT|two-point (?:attempt|try)/i.test(t)){
+    const rest=t.replace(/^.*?TWO-POINT CONVERSION ATTEMPT\.?\s*/i,''),ok=/SUCCEEDS|is good/i.test(rest)&&!/FAILS/i.test(rest);
+    const pm=rest.match(R('^N pass\\b.*?\\bto N\\b')),rm=rest.match(R('^N (?:rushes|right|left|up the middle|scrambles|runs)'));
+    const inc=/incomplete|intercepted/i.test(rest);
+    return 'Two-point try · '+(pm?(inc?'pass to '+nm(pm[2])+' '+(/intercepted/i.test(rest)?'intercepted':'incomplete'):nm(pm[2])+' catch from '+nm(pm[1])):rm?nm(rm[1])+' run':'')+(pm||rm?' · ':'')+(ok?'good':'no good');
+  }
+  if((m=t.match(R('^N (\\d+) (?:yard|yd)s? fair catch kick is (GOOD|good|No Good|NO GOOD|no good)'))))return nm(m[1])+' · '+m[2]+'-yd fair catch kick'+(/good/i.test(m[3])&&!/no/i.test(m[3])?'':' no good');
+  // Fumble that goes out the back of the end zone: touchback, the other team's ball.
+  if(/FUMBLES/i.test(t)&&/end zone/i.test(t)&&/touchback/i.test(t)){m=t.match(R('^N '));return (m?nm(m[1])+' · ':'')+'fumble out of the end zone · touchback';}
+  if(/INTERCEPTED/i.test(t)&&/end zone/i.test(t)&&/touchback/i.test(t)){m=t.match(R('INTERCEPTED by (?:[A-Z]{2,3}-)?N'));return 'Intercepted in the end zone'+(m?' by '+nm(m[1]):'')+' · touchback';}
   if(/touchdown|field goal good|safety/i.test(ty)||/TOUCHDOWN/.test(t)){const w=scorerLine(ty,t,ath);if(w)return w+(/touchdown/i.test(ty+t)&&!/field goal/i.test(ty)?' · TD':'');}
   if(/field goal/i.test(ty)&&(m=t.match(R('^N (\\d+) (?:yard|yd)s? field goal is ([Nn]o [Gg]ood|NO GOOD|[Bb]locked|BLOCKED)'))))return nm(m[1])+' · '+m[2]+'-yd field goal '+m[3].toLowerCase();
   if(/timeout/i.test(ty)||/^timeout/i.test(t)){
@@ -1871,13 +1901,23 @@ function kickSpot(L){
   const t=String(lp.raw||''),from=(t.match(/kicks[^.]*? from ([A-Z]{2,3}) -?\d+/)||[])[1];if(!from)return null;
   const side=nk(from)===A?'home':nk(from)===H?'away':null;if(!side)return null;
   const spots=[...t.matchAll(/\b(?:to|at)(?: the)? ([A-Z]{2,3}) (\d{1,2})\b/g)].filter(x=>nk(x[1])===A||nk(x[1])===H);
-  // Touchback on a kickoff: the receiving team starts 1st & 10 at its own 35.
-  if(/touchback/i.test(t)&&spots.length<2){const ab=side==='away'?L.aab:L.hab;return {poss:side,spot:side==='away'?35:65,dd:'1st & 10 at '+ab+' 35'};}
+  // Touchback on a kickoff (current rules): kicked into the end zone in the air = own 35; landed short of the goal line
+  // and rolled or was downed in the end zone = own 20. Kicked out of bounds = own 40.
+  if(/touchback|out of bounds/i.test(t)){
+    const ab=side==='away'?L.aab:L.hab,land=t.match(/kicks -?\d+ yards? from [A-Z]{2,3} \d+ to (?:the )?([A-Z]{2,3}) (-?\d+)/);
+    let yl=null;
+    if(/out of bounds/i.test(t)&&!/touchback/i.test(t))yl=40;
+    else if(/touchback/i.test(t))yl=land&&Number(land[2])>0?20:35;
+    if(yl!=null&&(/touchback/i.test(t)||spots.length<2))return {poss:side,spot:side==='away'?yl:100-yl,dd:'1st & 10 at '+ab+' '+yl};
+  }
   const last=spots[spots.length-1];if(!last||/end zone/i.test(t)&&spots.length<2)return null;
   const yl=Number(last[2]),own=nk(last[1])===A,x=own?yl:100-yl;
-  // A kickoff always leads to 1st & 10 for the receiving team at the spot where the return ended.
+  // 1st & 10 where the play ended, for whoever ended up with the ball: usually the receiving team, but the kicking
+  // team keeps it after recovering an onside kick or a fumble/muff ("RECOVERED by PHI-…" names the team).
+  const recs=[...t.matchAll(/recovered by ([A-Z]{2,3})-/gi)],rec=recs.length?nk(recs[recs.length-1][1].toUpperCase()):null;
+  const poss=rec===A?'away':rec===H?'home':side;
   const spotTxt=yl===50?'50':(own?L.aab:L.hab)+' '+yl;
-  return {poss:side,spot:x,dd:'1st & 10 at '+spotTxt};
+  return {poss,spot:x,dd:'1st & 10 at '+spotTxt};
 }
 // After a punt: 1st & 10 for the receiving team where the punt ended (return, fair catch, downed or out of bounds),
 // or at its own 20 on a touchback. If the punting team recovers a muff, it keeps the ball there.
@@ -1926,7 +1966,8 @@ function gameCard(gid,g,n,sel,sub,draft,sent,sc,open,visible){
   };
   let scoreLine;
   const L=g.live;
-  if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre'))scoreLine=scoreBug(g,g.sa,g.sh,g.fin?'final':'live','');
+  if(g.nc)scoreLine=preBug(g,'<span class="cdl">No contest</span>Picks on this game score 0');
+  else if(g.sa!=null&&g.sh!=null&&(g.fin||!L||L.state==='pre'))scoreLine=scoreBug(g,g.sa,g.sh,g.fin?'final':'live','');
   else if(L&&L.state!=='pre'&&L.sa!=null)scoreLine=scoreBug(g,L.sa,L.sh,L.completed?'final':'live',L.completed?String(L.detail||''):String(L.detail||''),L);
   else{
     const since=g.kick?Date.now()-new Date(g.kick).getTime():0;
@@ -1966,7 +2007,7 @@ function parlayHitNumber(key,n){
 function parlayCard(week,n,sel,sub,draft,sc,open,visible){
   if(!hasParlay(week))return '<section class="card pcard"><div class="pbox"><div class="thead">'+esc(wname(n))+' parlay</div><p class="phelp" style="text-align:center">No parlay this week. It needs at least five games on the board.</p></div></section>';
   const pendL=(S.curPend&&S.curPend.legs)||[],realLocked=(sub&&sub.parlay)||[],locked=realLocked.concat(pendL),dead=sc.parlayState==='miss',slots=5-locked.length;
-  const canEdit=open&&!!draft&&!dead&&slots>0,missed=sc.legs.filter(r=>r===false||r==='push').length,won=sc.legs.filter(r=>r===true).length;
+  const canEdit=open&&!!draft&&!dead&&slots>0,missed=sc.legs.filter(r=>r===false).length,won=sc.legs.filter(r=>r===true).length;
   // Each locked leg: its team (or both teams for an over/under), the matchup, and where it stands.
   const segs=[],rows=[];
   // Once all five legs are in, list them in the order the games are played (ties keep the order they were picked).
@@ -1979,7 +2020,8 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
     if(pend){st='Pending';cls='pend';}
     else if(r===true){st='Won';cls='win';}
     else if(r===false){st='Lost';cls='miss';}
-    else if(r==='push'){st='Push';cls='miss';}
+    else if(r==='push'){st='Push · dropped';cls='void';}
+    else if(r==='void'){st='No contest';cls='void';}
     else if(g&&g.live&&g.live.state==='in'&&!g.live.completed&&g.live.sa!=null&&gg){
       const LV=Object.assign({},gg,{sa:g.live.sa,sh:g.live.sh}),cv=l.m==='s'?evalSpread(LV,l.v):evalOU(LV,l.v);
       st=cv===true?(l.m==='s'?'Covering':'On pace'):cv==='push'?'Even':'Behind';cls=cv===true?'live good':'live';
@@ -2000,7 +2042,7 @@ function parlayCard(week,n,sel,sub,draft,sc,open,visible){
   else if(!locked.length)stat='<div class="pstat"><b>'+(canEdit?'Build your parlay':'No parlay')+'</b><small>'+(canEdit?'Pick any 5 legs. All 5 must win.':'No parlay entered this week.')+'</small></div>';
   else if(locked.length<5)stat='<div class="pstat"><b>'+(weekComplete(week)?'Not finished':'Still alive')+'</b><small>'+locked.length+' of 5 legs in'+(won?' · '+won+' won':'')+'</small></div>';
   else stat='<div class="pstat alive"><b>Still alive</b><small>'+won+' of 5 won · '+(5-won)+' to go</small></div>';
-  let h='<section class="card pcard" aria-label="5-game parlay"><div class="pbox"><div class="thead">'+esc(wname(n))+' parlay <span>·</span> <b>'+esc(pname(sel))+'</b></div><div class="tnote">+20 if all 5 hit</div>'+
+  let h='<section class="card pcard" aria-label="5-game parlay"><div class="pbox"><div class="thead">'+esc(wname(n))+' parlay <span>·</span> <b>'+esc(pname(sel))+'</b></div><div class="tnote">'+(sc.parlayLegs<5&&sc.parlayLegs>1?'+'+sc.parlayPays+' if all '+sc.parlayLegs+' hit · '+(5-sc.parlayLegs)+' leg'+(5-sc.parlayLegs===1?'':'s')+' dropped (push or no contest)':'+20 if all 5 hit')+'</div>'+
     '<div class="ptop">'+stat+'<div class="ptrack" aria-hidden="true">'+segs.map(c=>'<i class="'+c+'"></i>').join('')+'</div></div>'+
     (rows.length?'<ol class="plegs">'+rows.join('')+'</ol>':'');
   if(canEdit){
@@ -2028,8 +2070,8 @@ function totalsCard(n,sel,sc,sub){
   if(pj){
     // Two numbers while the parlay can still hit: without it, and with its 20 points added if all five legs win.
     extra='<div class="tproj'+(pj.parlay?'':' one')+'"><div class="tpc"><span class="tpl">Projected</span><b>'+r1(pj.live)+'</b><small>'+(pj.parlay?'without the parlay':'updates live · no parlay')+'</small></div>'+
-      (pj.parlay?'<div class="tpc"><span class="tpl">With parlay</span><b>'+r1(pj.live+20)+'</b><small>if all 5 legs hit</small></div>':'')+
-      '<div class="tpnote">Best case <b class="tpb">'+pj.best+'</b>'+(pj.parlay?' · <b class="tpb">'+(pj.best+20)+'</b> with the parlay':'')+'</div></div>';
+      (pj.parlay?'<div class="tpc"><span class="tpl">With parlay</span><b>'+r1(pj.live+pj.pay)+'</b><small>if all '+(pj.pay/5+1)+' legs hit</small></div>':'')+
+      '<div class="tpnote">Best case <b class="tpb">'+pj.best+'</b>'+(pj.parlay?' · <b class="tpb">'+(pj.best+pj.pay)+'</b> with the parlay':'')+'</div></div>';
   }
   return totalsBox('',String(sc.total)+(sc.manualTotal?'*':''),sc.pct,sc.evaluated?sc.correct+' of '+sc.evaluated+' correct':'',
     [{l:'Spread',v:sc.spread},{l:'Over/Under',v:sc.ou},{l:'Combos',v:sc.combo},{l:'Parlay',v:sc.parlay,hl:sc.parlay>0}],'',
@@ -2064,9 +2106,9 @@ function leaderBoard(title,sub,act,rows){
 function rankTag(pos){return '<span class="rank'+(pos<=3?' r'+pos:'')+'">'+ordinal(pos)+'</span>';}
 function weekTable(week,n){
   const showPj=!weekComplete(week)&&canProj(n);
-  const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false),pj:showPj?projBoth(week,w):null};}).sort((a,b)=>{const pk=r=>r.pj?r.pj.live+(r.pj.parlay?20:0):-1;return b.sc.total-a.sc.total||pk(b)-pk(a);});
+  const rows=players().map(p=>{const w=subWeek(p.key,n);return {p,w,sc:scoreWeek(week,w,false),pj:showPj?projBoth(week,w):null};}).sort((a,b)=>{const pk=r=>r.pj?r.pj.live+(r.pj.parlay?r.pj.pay:0):-1;return b.sc.total-a.sc.total||pk(b)-pk(a);});
   return leaderBoard(wname(n)+' scoreboard',weekComplete(week)?'':'Includes games in progress','selp',rows.map(r=>({key:r.p.key,name:r.p.name,total:r.sc.total,pct:r.sc.pct,sel:r.p.key===S.selPlayer,
-    chips:[['Spread',r.sc.spread],['O/U',r.sc.ou],['Combo',r.sc.combo],['Parlay',r.sc.parlay,r.sc.parlay>0]].concat(showPj&&r.pj?[['Proj',Math.round(r.pj.live*10)/10+(r.pj.parlay?' / '+Math.round((r.pj.live+20)*10)/10:''),true]]:[])})));
+    chips:[['Spread',r.sc.spread],['O/U',r.sc.ou],['Combo',r.sc.combo],['Parlay',r.sc.parlay,r.sc.parlay>0]].concat(showPj&&r.pj?[['Proj',Math.round(r.pj.live*10)/10+(r.pj.parlay?' / '+Math.round((r.pj.live+r.pj.pay)*10)/10:''),true]]:[])})));
 }
 
 /* ---------- Past seasons (read-only) ---------- */
@@ -2216,7 +2258,7 @@ function viewStandings(){
   else h+=stWeeks(s.list,s.nums,s.winners,n=>S.weeks[n]&&S.weeks[n].round?ROUND_SHORT[S.weeks[n].round]||S.weeks[n].round:'Wk '+n,'goweek',hasBase?[{h:'Carried over',v:r=>{const p=players().find(x=>x.key===r.key);return (p&&p.base&&p.base.points)||0;}}]:[]);
   const tile=(v,l,hl)=>'<div class="ttile'+(hl?' hl':'')+'"><span class="tv">'+v+'</span><span class="tl">'+l+'</span></div>';
   h+='<section class="dcard"><div class="thead">How points work</div><div class="ttiles n6 rules">'+tile('+1','Correct pick')+tile('+3','Both in a game')+tile('0','Push')+tile('+20','5-leg parlay',1)+tile('×2','Postseason')+tile('+10/+20','Futures')+'</div>'+
-    '<ul class="dlist"><li>Postseason picks are +2 each and +6 for both in a game. The parlay stays at +20.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over. A push or a loss on any leg scores 0. No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>Picks lock 30 minutes before the first game of each day (Central time); every game that day locks together. Monday games lock with Sunday\'s.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></section>';
+    '<ul class="dlist"><li>Postseason picks are +2 each and +6 for both in a game. The parlay stays at +20.</li><li>Parlay legs lock as they are sent. If a locked leg loses, the parlay is over. A leg that pushes, or is in a game called a no contest, is dropped and the parlay pays 5 less: +15 with four legs left, +10 with three. No parlay in a week with fewer than five games.</li><li>Futures: AFC winner +10, NFC winner +10, Super Bowl winner +20.</li><li>Picks lock 30 minutes before the first game of each day (Central time); every game that day locks together. Monday games lock with Sunday\'s.</li><li>The highest total in a finished week wins the week. Ties share the win.</li></ul></section>';
   return h;
 }
 
@@ -2485,8 +2527,8 @@ function viewCommish(){
   h+='<section class="card"><h3>Build Odds Board and Update Scores · Week '+esc(n)+'</h3><div class="pad stack"><p class="muted small">Enter your key, then press a button. Your key stays in this browser and is never saved to the league.</p><label for="oddskey">Odds API key <input type="text" id="oddskey" value="'+esc(key)+'" autocomplete="off" size="34"></label><div class="bar"><button class="btn primary" data-act="importodds">Build odds board</button><button class="btn primary" data-act="importscores">Update scores</button></div><p class="muted small">If a button cannot reach the odds service, do it by hand:</p><ol class="steps"><li><a id="lnk-odds" href="'+esc(oddsUrl(key))+'" target="_blank" rel="noopener">Open this week\'s lines</a> or <a id="lnk-scores" href="'+esc(scoresUrl(key))+'" target="_blank" rel="noopener">open the latest scores</a> in a new tab.</li><li>Select everything on that page, copy it, and paste it here.<textarea id="paste" data-f aria-label="Pasted data from the odds service"></textarea></li><li>Press the button again.</li></ol></div></section>';
   const rows=sortedGames(week).filter(([gid])=>!S.delRows[gid]).concat(S.newRows.filter(id=>!S.delRows[id]).map(id=>[id,{}]));
   const inp=(gid,k,type,val,extra)=>'<input type="'+type+'" id="g-'+esc(gid)+'-'+k+'" data-f data-k="'+k+'" value="'+esc(val==null?'':val)+'" '+(extra||'')+' aria-label="'+k+'">';
-  h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th></th></tr></thead><tbody>'+
-    rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
+  h+='<section class="card"><h3>Games · Week '+esc(n)+'</h3><div class="tw"><table><thead><tr><th>Away</th><th class="l">Home</th><th>Home spread</th><th>Total</th><th class="l">Kickoff</th><th>Away pts</th><th>Home pts</th><th>Final</th><th title="Canceled or postponed out of the week: picks on it score 0 and parlay legs in it are dropped">No contest</th><th></th></tr></thead><tbody>'+
+    rows.map(([gid,g])=>'<tr data-gid="'+esc(gid)+'"><td>'+inp(gid,'away','text',g.away)+'</td><td class="l">'+inp(gid,'home','text',g.home)+'</td><td>'+inp(gid,'sp','number',g.sp,'step="0.5"')+'</td><td>'+inp(gid,'tot','number',g.tot,'step="0.5"')+'</td><td class="l">'+inp(gid,'kick','datetime-local',toLocalInput(g.kick))+'</td><td>'+inp(gid,'sa','number',g.sa,'min="0"')+'</td><td>'+inp(gid,'sh','number',g.sh,'min="0"')+'</td><td><input type="checkbox" id="g-'+esc(gid)+'-fin" data-f data-k="fin"'+(g.fin?' checked':'')+' aria-label="Final"></td><td><input type="checkbox" id="g-'+esc(gid)+'-nc" data-f data-k="nc"'+(g.nc?' checked':'')+' aria-label="No contest"></td><td><button class="btn danger" data-act="delrow" data-g="'+esc(gid)+'" aria-label="Remove game">✕</button></td></tr>').join('')+
     '</tbody></table></div><div class="pad bar"><button class="btn" data-act="addrow">Add a game</button><button class="btn primary" data-act="saveboard">Save games and scores</button><span class="muted small">Home spread is the home team\'s line, such as -2.5. The away line is the opposite.</span></div></section>';
   return h+adminRest();
 }
@@ -2765,7 +2807,7 @@ const acts={
       const gid=tr.dataset.gid,f=k=>tr.querySelector('[data-k="'+k+'"]'),num=k=>{const v=f(k).value.trim();if(v==='')return null;const x=Number(v);if(isNaN(x)){bad=true;return null;}return x;};
       const away=f('away').value.trim(),home=f('home').value.trim();if(!away||!home)return;
       const g=Object.assign({},old[gid],{o:o++,away,home,sp:num('sp'),tot:num('tot'),kick:f('kick').value?new Date(f('kick').value).toISOString():'',sa:num('sa'),sh:num('sh')});
-      g.fin=f('fin').checked&&g.sa!=null&&g.sh!=null;games[gid]=g;
+      g.fin=f('fin').checked&&g.sa!=null&&g.sh!=null;if(f('nc')&&f('nc').checked)g.nc=true;else delete g.nc;games[gid]=g;
     });
     if(bad){toast('One of the numbers is not valid. Fix it and save again.');return;}
     week.games=games;

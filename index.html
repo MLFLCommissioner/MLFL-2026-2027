@@ -868,7 +868,10 @@ function espnGames(json){
     if(out.state==='in'&&sit.lastPlay){
       const lp=sit.lastPlay,tt=String((lp.type&&lp.type.text)||''),tx=String(lp.text||''),tid=String((lp.team&&lp.team.id)||'');
       out.aab=ab(a);out.hab=ab(h);
-      out.lp={id:String(lp.id||''),tt,raw:playClean(tx),who:/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx)?missLine(tt,tx):scorerLine(tt,tx,lp.athletesInvolved),pat:patResult(tt,tx),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
+      // The kicker's own team (from the players ESPN lists on the play), for missed field goals: ESPN sometimes
+      // files the play under the team that gets the ball back.
+      const kai=((lp.athletesInvolved||[])[0]||{}),kt=String((kai.team&&kai.team.id)||''),kside=kt&&kt===idOf(a)?'away':kt&&kt===idOf(h)?'home':null;
+      out.lp={id:String(lp.id||''),tt,raw:playClean(tx),kside,who:/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx)?missLine(tt,tx):scorerLine(tt,tx,lp.athletesInvolved),pat:patResult(tt,tx),play:playLine(tt,tx,lp.athletesInvolved),side:tid&&tid===idOf(a)?'away':tid&&tid===idOf(h)?'home':null,
         kind:(/touchdown/i.test(tt)||Number(lp.scoreValue)>=6)?'td':(/field goal good/i.test(tt)||(/field goal/i.test(tt)&&!/miss|block|no good/i.test(tt)&&Number(lp.scoreValue)===3))?'fg':(/safety/i.test(tt)&&Number(lp.scoreValue||2)===2)?'sf':(/field goal/i.test(tt)&&/miss|block|no good/i.test(tt+' '+tx))?'fgx':/extra point|two-point|2-pt|conversion|\bpat\b/i.test(tt+' '+tx)?'pat':/timeout|end of|end (quarter|period|half)|two-minute|official|commercial/i.test(tt+' '+tx)?'hold':'other'};
     }
     if(out.state==='in'&&sit.possession!=null){
@@ -1024,7 +1027,9 @@ function tdTrack(g,m){
   }
   else if(k==='fgx'){
     // Missed or blocked field goal: show it until the next play.
-    td=m.lp.side?{kind:'fgx',side:m.lp.side,who:m.lp.who||''}:null;
+    // Whose kick it was: the kicker's team if ESPN says, else the team that doesn't have the ball now, else the play's team.
+    const ks=m.lp.kside||(m.poss?(m.poss==='away'?'home':'away'):m.lp.side);
+    td=ks?{kind:'fgx',side:ks,who:m.lp.who||'',dist:Number((String(m.lp.raw||'').match(/(\d+) (?:yard|yd)s? field goal/i)||[])[1])||null}:null;
   }
   else if(k==='pat'&&td&&td.kind==='td'){if(m.lp.pat)td=Object.assign({},td,{pat:m.lp.pat});}
   else if(k==='pat'&&!td&&m.lp.side){
@@ -1936,7 +1941,13 @@ function puntSpot(L){
 }
 function fieldBar(g,L){
   if(L&&/halftime/i.test(String(L.detail||'')))return ''; // the score line already says Halftime
-  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety',fgx:'Missed field goal'}[L.td.kind]||'Touchdown';return '<div class="field tdb'+(L.td.kind==='td'?'':' minor')+(L.td.kind==='fgx'?' miss':'')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+(L.td.kind==='fgx'?'':'!')+'</span>'+logo(t)+'</div>'+tdWhoRow(L.td)+'</div>';}
+  if(L&&L.state==='in'&&L.td&&L.td.side){const t=L.td.side==='away'?g.away:g.home,w={td:'Touchdown',fg:'Field goal',sf:'Safety',fgx:'Missed field goal'}[L.td.kind]||'Touchdown';const ban='<div class="field tdb'+(L.td.kind==='td'?'':' minor')+(L.td.kind==='fgx'?' miss':'')+'" role="status"><div class="tdtext">'+logo(t)+'<span>'+w+' '+esc(t)+(L.td.kind==='fgx'?'':'!')+'</span>'+logo(t)+'</div>'+tdWhoRow(L.td)+'</div>';
+    if(L.td.kind!=='fgx')return ban;
+    // Missed field goal: the other team takes over at the spot of the kick (7 yards behind the line), or its own 20 if that's farther up.
+    const rcv=L.td.side==='away'?'home':'away',ab=rcv==='away'?L.aab:L.hab;let sp=null;
+    if(L.poss===rcv&&L.spot!=null)sp={poss:rcv,spot:L.spot,dd:L.dd||''};
+    else if(L.td.dist){const yl=Math.max(20,Math.min(50,L.td.dist-10));sp={poss:rcv,spot:rcv==='away'?yl:100-yl,dd:'1st & 10 at '+(ab||'')+' '+yl};}
+    return ban+(sp?fieldBar(g,Object.assign({},L,{td:null,lp:null},sp)):'');}
   if(!L||L.state!=='in')return '';
   if(!L.poss||L.spot==null){const k=kickSpot(L);if(k)L=Object.assign({},L,k);else return fieldIdle(L);}
   const x=Math.max(0,Math.min(100,L.spot)),toRight=L.poss==='away',team=L.poss==='away'?g.away:g.home;

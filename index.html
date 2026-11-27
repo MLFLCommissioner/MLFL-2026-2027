@@ -1088,19 +1088,28 @@ async function prevBackfill(g,m){
 async function ddFix(g,m){
   const lp=m.lp;if(m.state!=='in'||!lp||!lp.endq||!m.eid||!m.clock||!m.period)return;
   S.ddC=S.ddC||{};const key=g.away+'|'+g.home+'|'+g.kick,stamp=m.period+'|'+m.clock,c=S.ddC[key];
-  if(c&&c.stamp===stamp){if(c.dd&&g.live===m)m.dd=c.dd;return;}
+  const apply=(L,c)=>{let ch=false;if(c.dd&&L.dd!==c.dd){L.dd=c.dd;ch=true;}if(c.poss&&(L.poss!==c.poss||L.spot!==c.spot)){L.poss=c.poss;L.spot=c.spot;ch=true;}if(c.prev&&L.lp&&L.lp.prevPlay!==c.prev){L.lp.prevPlay=c.prev;ch=true;}return ch;};
+  if(c&&c.stamp===stamp){if(g.live===m)apply(m,c);return;}
   S.ddC[key]={stamp};
   try{
     const j=await summaryFor(m.eid,stamp);if(!j||!j.drives)return;
     const ds=[].concat(j.drives.previous||[],j.drives.current?[j.drives.current]:[]),plays=[];
-    ds.forEach(d=>(d.plays||[]).forEach(p=>plays.push(p)));
+    ds.forEach(d=>(d.plays||[]).forEach(p=>plays.push([p,String((d.team&&d.team.id)||'')])));
     for(let i=plays.length-1;i>=0;i--){
-      const p=plays[i],tt=String((p.type&&p.type.text)||''),tx=String(p.text||'');
+      const [p,dt]=plays[i],tt=String((p.type&&p.type.text)||''),tx=String(p.text||'');
       if(/timeout|end (of )?(quarter|period|half)|end quarter|two-minute|official|injury/i.test(tt+' '+tx))continue;
-      const e=p.end||{},dd=e.downDistanceText||e.shortDownDistanceText||'';
-      if(!dd||/kickoff|extra point|two-point|field goal|punt/i.test(tt))return;
-      S.ddC[key].dd=dd;
-      if(g.live&&g.live.lp&&g.live.lp.endq&&g.live.dd!==dd){g.live.dd=dd;requestRender();}
+      const out=S.ddC[key];
+      // The real last play: shown under the stoppage tag even if it came and went between our checks (a punt, say).
+      const line=playLine(tt,tx,null);if(line)out.prev=line;
+      if(/punt|kickoff|kicks/i.test(tt+' '+tx)&&m.aab&&m.hab){
+        // After a punt or kickoff, place the ball for the team that gets it.
+        const ptid=String((p.team&&p.team.id)||(p.start&&p.start.team&&p.start.team.id)||dt||''),side=ptid&&ptid===m.aid?'away':ptid&&ptid===m.hid?'home':null;
+        const k=kickSpot({aab:m.aab,hab:m.hab,lp:{tt,raw:playClean(tx),side}});
+        if(k){out.dd=k.dd;out.poss=k.poss;out.spot=k.spot;}
+      }else if(!/extra point|two-point|field goal/i.test(tt)){
+        const e=p.end||{},dd=e.downDistanceText||e.shortDownDistanceText||'';if(dd)out.dd=dd;
+      }
+      if(g.live===m&&apply(m,out))requestRender();
       return;
     }
   }catch(e){}
